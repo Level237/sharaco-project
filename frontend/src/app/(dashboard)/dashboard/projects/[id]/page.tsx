@@ -35,7 +35,7 @@ export default function ProjectDetailPage() {
     if (isLoading) {
         return (
             <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <Loader2 className="h-8 w-8 text-sky-500 animate-spin" />
+                <Loader2 className="h-8 w-8 text-[#2563EB] animate-spin" />
             </div>
         )
     }
@@ -60,18 +60,27 @@ export default function ProjectDetailPage() {
                 <ContextMenuTrigger asChild>
                     <div className="flex-1 min-h-[calc(100vh-4rem)] bg-[#141414] dark:bg-[#121212] flex flex-col text-slate-200 rounded-tl-2xl overflow-hidden -m-4 md:-m-8">
                         {/* Top Bar (Breadcrumb) */}
-                        <div className="flex items-center px-4 h-12 bg-[#1e1e1e] dark:bg-[#1a1a1a] border-b border-black/50 shadow-sm text-sm shrink-0">
-                            <button onClick={() => router.back()} className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-slate-400 hover:text-white mr-2">
-                                <ArrowLeft className="w-4 h-4" />
-                            </button>
+                        <div className="flex items-center justify-between px-4 h-12 bg-[#1e1e1e] dark:bg-[#1a1a1a] border-b border-black/50 shadow-sm text-sm shrink-0">
+                            <div className="flex items-center">
+                                <button onClick={() => router.back()} className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-slate-400 hover:text-white mr-2">
+                                    <ArrowLeft className="w-4 h-4" />
+                                </button>
 
-                            <div className="flex items-center gap-1 font-medium text-[13px] bg-black/20 rounded-md px-2 py-1 ring-1 ring-white/5">
-                                <Link href="/dashboard/projects" className="px-2 py-1 hover:bg-white/10 rounded transition-colors text-slate-400 hover:text-white">
-                                    Projets
-                                </Link>
-                                <span className="text-slate-600">/</span>
-                                <span className="px-2 py-1 text-slate-200">{project.name}</span>
+                                <div className="flex items-center gap-1 font-medium text-[13px] bg-black/20 rounded-md px-2 py-1 ring-1 ring-white/5">
+                                    <Link href="/dashboard/projects" className="px-2 py-1 hover:bg-white/10 rounded transition-colors text-slate-400 hover:text-white">
+                                        Projets
+                                    </Link>
+                                    <span className="text-slate-600">/</span>
+                                    <span className="px-2 py-1 text-slate-200">{project.name}</span>
+                                </div>
                             </div>
+
+                            <Link href={`/dashboard/quotes/create?project_id=${project.id}`}>
+                                <Button size="sm" className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white text-xs h-8 px-3 gap-1.5 rounded-lg shadow-sm">
+                                    <PlusCircle className="w-3.5 h-3.5" />
+                                    Nouveau devis
+                                </Button>
+                            </Link>
                         </div>
 
                         {/* Content Area */}
@@ -82,18 +91,20 @@ export default function ProjectDetailPage() {
                 </ContextMenuTrigger>
 
                 <ContextMenuContent className="w-64 bg-[#1a1a1a] border-[#333] text-slate-200">
-                    <ContextMenuItem className="focus:bg-sky-600 focus:text-white cursor-pointer">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Nouveau devis
+                    <ContextMenuItem asChild className="focus:bg-[#2563EB] focus:text-white cursor-pointer">
+                        <Link href={`/dashboard/quotes/create?project_id=${project.id}`} className="flex items-center w-full">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Nouveau devis
+                        </Link>
                     </ContextMenuItem>
                     <ContextMenuSeparator className="bg-[#333]" />
-                    <ContextMenuItem className="focus:bg-sky-600 focus:text-white cursor-pointer">
+                    <ContextMenuItem className="focus:bg-[#2563EB] focus:text-white cursor-pointer">
                         <RefreshCw className="mr-2 h-4 w-4" />
                         Actualiser
                     </ContextMenuItem>
                     <ContextMenuSeparator className="bg-[#333]" />
                     <ContextMenuItem
-                        className="focus:bg-sky-600 focus:text-white cursor-pointer"
+                        className="focus:bg-[#2563EB] focus:text-white cursor-pointer"
                         onSelect={() => setTimeout(() => setIsPropertiesOpen(true), 150)}
                     >
                         <Settings className="mr-2 h-4 w-4" />

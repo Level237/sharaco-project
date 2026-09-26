@@ -81,9 +81,26 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
         }
     }
 
-    const handleDownload = () => {
-        window.open(invoicesApi.getPdfUrl(invoiceId), '_blank')
-    }
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const handleDownload = async () => {
+        setIsDownloading(true);
+        try {
+            await invoicesApi.downloadPdf(invoiceId, `${invoice?.number || 'facture'}.pdf`);
+            toast({
+                title: "Succès",
+                description: "Le téléchargement de la facture a démarré.",
+            });
+        } catch (err: any) {
+            toast({
+                title: "Erreur",
+                description: err.message || "Impossible de télécharger le PDF.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsDownloading(false);
+        }
+    };
 
     // ✅ NOUVEAU : Ouvre juste le modal, l'envoi réel est dans le modal
     const handleOpenEmailModal = () => {
@@ -169,7 +186,20 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                                 {statusConfig.label}
                             </div>
                             
-                            
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleDownload}
+                                disabled={isDownloading}
+                                className="h-8 gap-1.5 text-xs rounded-md border-slate-200 dark:border-slate-800"
+                            >
+                                {isDownloading ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                    <Download className="h-3.5 w-3.5" />
+                                )}
+                                <span>PDF</span>
+                            </Button>
                         </div>
                     </div>
                 </header>

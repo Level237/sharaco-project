@@ -24,8 +24,9 @@ function QuoteBuilderContent() {
     const { toast } = useToast();
 
     const isChoosing = searchParams.has('choose-template');
+    const queryProjectId = searchParams.get('project_id');
     const [isCreating, setIsCreating] = useState(false);
-    const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+    const [selectedProjectId, setSelectedProjectId] = useState<string>(queryProjectId || "");
 
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [selectedLayoutStyle, setSelectedLayoutStyle] = useState<string>("");
@@ -85,7 +86,7 @@ function QuoteBuilderContent() {
                 items: [{ description: "", quantity: 1, unit_price_cents: 0, tax_rate: 0 }],
                 notes: ""
             });
-            router.push(`/dashboard/quotes/${document.id}`);
+            router.push(`/dashboard/quotes/create/${document.id}`);
         } catch (error: any) {
             toast({ title: "Erreur", description: error.message, variant: "destructive" });
             setIsCreating(false);
@@ -116,6 +117,7 @@ function QuoteBuilderContent() {
                 type: "DEVIS",
                 layout_style: selectedLayoutStyle,
                 client_id: finalClientId,
+                project_id: selectedProjectId || undefined,
                 items: [{ description: "", quantity: 1, unit_price_cents: 0, tax_rate: 0 }],
                 notes: ""
             });
@@ -319,12 +321,15 @@ function QuoteBuilderContent() {
                         </CardHeader>
                         <CardContent>
                             <Label className="text-zinc-400 mb-2 block text-xs sm:text-sm">Sélectionner un projet</Label>
-                            <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                            <Select 
+                                value={selectedProjectId || "none"} 
+                                onValueChange={(val) => setSelectedProjectId(val === "none" ? "" : val)}
+                            >
                                 <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white h-11">
                                     <SelectValue placeholder="Aucun projet" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-zinc-800 border-zinc-700">
-                                    <SelectItem value="">Aucun projet</SelectItem>
+                                    <SelectItem value="none">Aucun projet</SelectItem>
                                     {projects.map((project: any) => (
                                         <SelectItem key={project.id} value={project.id}>
                                             {project.name}

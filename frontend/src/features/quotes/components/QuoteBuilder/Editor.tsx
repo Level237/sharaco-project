@@ -175,6 +175,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
 
                 setDraft({
                     id: doc.id,
+                    projectId: (doc as any).project_id || null,
                     clientId: doc.client_id,
                     clientName: clientData.name,
                     clientEmail: clientData.email,

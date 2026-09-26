@@ -223,6 +223,7 @@ class DocumentRead(BaseModel):
 class DocumentUpdate(BaseModel):
     """Mise à jour complète d'un document."""
     client_id: Optional[UUID] = None
+    project_id: Optional[UUID] = None
     template_id: Optional[UUID] = None
     layout_style: Optional[str] = None
     due_date: Optional[datetime] = None

@@ -24,6 +24,7 @@ export interface Milestone {
 
 export interface QuoteDraft {
     id?: string | null;              // UUID du document (si sauvegardé)
+    projectId?: string | null;       // ID du projet lié (optionnel)
     clientId?: string;        // ID du client en DB
     clientName: string;
     clientEmail: string;

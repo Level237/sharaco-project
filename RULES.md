@@ -173,3 +173,24 @@ Ces endpoints sont accessibles par les clients finaux sans compte ni Bearer toke
       ↓
 7. Vérification de l'interface et du bon affichage dans le navigateur
 ```
+
+---
+
+## 11. Charte Graphique & Couleur Principale Obligatoire
+
+> [!IMPORTANT]
+> **Couleur Primaire Officielle : `#2563EB` (Bleu Royal / Tailwind `blue-600`)**  
+> Cette couleur est **la couleur principale absolue** du projet Sharaco et doit être respectée de manière stricte et cohérente sur l'ensemble de la stack.
+
+- 🎨 **Composants Frontend & UI** :
+  - Tous les boutons d'action principale (CTA : création, enregistrement, validation, envoi email, téléchargement).
+  - Les spinners de chargement (`<Loader2 className="... text-[#2563EB] ..." />`), barres de progression et indicateurs actifs.
+  - Les bordures et contours d'accentuation / focus (`focus:ring-[#2563EB]`, `border-[#2563EB]`).
+  - Les liens interactifs majeurs et badges de mise en valeur.
+- 📄 **Éditeur de Devis & Factures (Quotes & Invoices)** :
+  - Valeur par défaut obligatoire du champ `primary_color` : `#2563EB` (définie dans `DocumentCreate`, `DocumentUpdate`, `QuoteDraft` et les tables de base de données).
+  - Couleur d'accentuation principale dans les templates de rendu PDF (titres, totaux, bordures d'en-tête de tableaux).
+- 🚫 **Interdiction des divergences arbitraires** :
+  - Ne pas substituer cette couleur par d'autres bleus ou teintes disparates (ex. `#0ea5e9` sky-500, `#3b82f6` blue-500, `#0284c7`) pour les éléments primaires et l'identité de marque.
+  - Toute modification de la couleur de marque doit faire l'objet d'une mise à jour concertée et globale.
+

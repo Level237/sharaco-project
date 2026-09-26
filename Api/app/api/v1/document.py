@@ -1320,6 +1320,17 @@ async def update_document(
         if not client:
             raise HTTPException(status_code=404, detail="Client introuvable")
 
+    if document_data.project_id is not None:
+        from app.models.projet import Project
+        project_result = await db.execute(
+            select(Project).where(
+                Project.id == document_data.project_id,
+                Project.user_id == current_user.id
+            )
+        )
+        if not project_result.scalar_one_or_none():
+            raise HTTPException(status_code=404, detail="Projet introuvable ou n'appartient pas à cet utilisateur")
+
     if document_data.payment_schedule is not None:
         try:
             await PaymentScheduleService.set_schedule(
@@ -1335,6 +1346,7 @@ async def update_document(
             db=db,
             document=document,
             client_id=document_data.client_id,
+            project_id=document_data.project_id,
             template_id=document_data.template_id,
             layout_style=document_data.layout_style,
             due_date=document_data.due_date,

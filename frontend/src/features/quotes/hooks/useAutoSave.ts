@@ -55,6 +55,7 @@ export function useAutoSave({ draft, enabled = true }: UseAutoSaveProps) {
             const payload = {
     type: 'DEVIS',
     client_id: draftRef.current.clientId,
+    project_id: draftRef.current.projectId || undefined,
     items: draftRef.current.items.map((item: any) => ({
         description: item.description || "Article",
         quantity: Math.max(1, item.quantity || 1),

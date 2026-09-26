@@ -46,6 +46,7 @@ export default function QuoteDetailPage() {
     const [loading, setLoading] = useState(true);
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
     const { toast } = useToast();
 
     const { deleteDocument, isDeleting } = useDeleteDocument({
@@ -67,8 +68,23 @@ export default function QuoteDetailPage() {
         if (quoteId) loadQuote();
     }, [quoteId, loadQuote]);
 
-    const handleDownload = () => {
-        window.open(quotesApi.getPdfUrl(quoteId), '_blank');
+    const handleDownload = async () => {
+        setIsDownloading(true);
+        try {
+            await quotesApi.downloadPdf(quoteId, `${quote?.number || 'devis'}.pdf`);
+            toast({
+                title: "Succès",
+                description: "Le téléchargement du devis a démarré.",
+            });
+        } catch (err: any) {
+            toast({
+                title: "Erreur",
+                description: err.message || "Impossible de télécharger le PDF.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     const handleSendEmail = () => {
@@ -289,11 +305,16 @@ export default function QuoteDetailPage() {
 
                             <Button
                                 onClick={handleDownload}
+                                disabled={isDownloading}
                                 variant="outline"
-                                className="group h-12 sm:h-14 flex flex-col justify-center items-center gap-0.5 sm:gap-1 rounded-md sm:rounded-lg border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 shadow-sm transition-all duration-200 text-xs sm:text-sm"
+                                className="group h-12 sm:h-14 flex flex-col justify-center items-center gap-0.5 sm:gap-1 rounded-md sm:rounded-lg border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 shadow-sm transition-all duration-200 text-xs sm:text-sm disabled:opacity-60 cursor-pointer"
                             >
-                                
-                                <span>Télécharger PDF</span>
+                                {isDownloading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
+                                ) : (
+                                    <Download className="h-4 w-4 text-slate-500 group-hover:text-slate-900 dark:text-slate-400 dark:group-hover:text-white transition-colors" />
+                                )}
+                                <span>{isDownloading ? "Téléchargement..." : "Télécharger PDF"}</span>
                             </Button>
                         </div>
 

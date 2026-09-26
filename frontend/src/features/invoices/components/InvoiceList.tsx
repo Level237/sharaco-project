@@ -135,9 +135,7 @@ export function InvoiceList({ invoices, onDeleteSuccess, projectId, searchQuery 
 
     const handleDownloadPdf = async (id: string, number?: string) => {
         try {
-            // Using download mechanism, but adapted if we don't have invoicesApi.downloadPdf
-            // We can just open the PDF URL in a new tab as a fallback
-            window.open(invoicesApi.getPdfUrl(id), '_blank');
+            await invoicesApi.downloadPdf(id, `${number || 'facture'}.pdf`);
         } catch (error) {
             console.error('Erreur téléchargement PDF:', error)
         }

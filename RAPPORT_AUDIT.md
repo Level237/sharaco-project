@@ -140,6 +140,28 @@
   *Fichiers* : `QuoteList.tsx`, `InvoiceList.tsx`, `ProjectQuoteGrid.tsx`, `PaymentTimeline.tsx`, `TemplateSelector.tsx`, `UserDropdown.tsx`, `RegisterForm.tsx`  
   *Action réalisée* : Typage explicite des transitions (`Variants`), remplacement des balises HTML animées par `motion.*`, et harmonisation des props de `react-international-phone`.
 
+- [x] **4.7 CTA Devis dans les Projets Vides & Liaison directe `project_id`**  
+  *Fichiers* :  
+  - Frontend : `ProjectDocuments.tsx`, `projects/[id]/page.tsx`, `quotes/create/page.tsx`, `Editor.tsx`, `useAutoSave.ts`, `useDocumentUpdate.ts`, `QuoteBuilder.ts`.  
+  - Backend : `document.py` (API), `documentService.py`, `document.py` (Schemas), `test_documents.py`.  
+  *Actions réalisées* :  
+  - CTA interactif ajouté dans l'état vide d'un projet pointant vers `/dashboard/quotes/create?project_id=${projectId}`.  
+  - Bouton "Nouveau devis" ajouté dans la barre supérieure du détail de projet et dans le menu contextuel.  
+  - Prise en compte du query parameter `project_id` sur la page de création de devis et conservation tout au long de la chaîne (création directe, création avec client, auto-save et mises à jour).  
+  - Schéma `DocumentUpdate` et service `update_document` mis à jour pour persister `project_id`.  
+  - Redirection de création corrigée vers l'éditeur builder `/dashboard/quotes/create/${document.id}`.
+
+- [x] **4.8 Correction de l'authentification lors du téléchargement de PDF**  
+  *Fichiers* :  
+  - Frontend : `quotes/[id]/page.tsx`, `quotesApi.ts`, `invoicesApi.ts`, `InvoiceDetail.tsx`, `InvoiceList.tsx`.  
+  - Backend : `Api/app/core/deps.py`.  
+  *Cause identifiée* : L'appel direct `window.open(...)` sans en-tête `Authorization: Bearer <token>` déclenchait une erreur HTTP 401 `{"detail":"Not authenticated"}` de FastAPI.  
+  *Actions réalisées* :  
+  - Mise à jour de `get_current_user` dans `deps.py` pour supporter le token d'authentification soit par header `Authorization`, soit via le paramètre de requête `?token=<token>`.  
+  - Utilisation de `downloadPdf` (avec fetch authentifié en Bearer, conversion en Blob et déclenchement du download sans quitter la page) dans la vue de détail devis (`quotes/[id]/page.tsx`), factures (`InvoiceDetail.tsx`) et liste factures (`InvoiceList.tsx`).  
+  - Ajout du paramètre `?token=...` dans `quotesApi.getPdfUrl` et `invoicesApi.getPdfUrl` comme fallback pour toute ouverture directe d'onglet.  
+  - Ajout de l'état de chargement (`isDownloading`), du spinner `<Loader2>`, de l'icône `<Download>` et des notifications Toast.
+
 ---
 
 ### 🗄️ Phase 5 : Base de Données, Tests & Validation Finale
@@ -155,7 +177,7 @@
   ```bash
   cd frontend && ./node_modules/.bin/tsc --noEmit
   ```
-  *Résultat* : **0 erreur** (83 erreurs résolues avec succès).
+  *Résultat* : **0 erreur** (83 erreurs initiales résolues avec succès).
 
 - [x] **5.3 Valider le build de production Next.js**  
   *Action* :  
@@ -166,5 +188,5 @@
 
 - [x] **5.4 Mettre en place les tests automatisés (Backend)**  
   *Fichier* : `Api/tests/test_documents.py`  
-  *Action* : Tests unitaires automatisés validant les calculs financiers (HT/TVA/TTC en centimes), les arrondis sans perte et les transitions de statut.  
-  *Résultat* : **4/4 tests passés avec succès (OK)**.
+  *Action* : Tests unitaires validant les calculs financiers, les arrondis en centimes, les transitions de statut, ainsi que la validation de `project_id` dans `DocumentCreate` et `DocumentUpdate`.  
+  *Résultat* : **5/5 tests passés avec succès (OK)**.

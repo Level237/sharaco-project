@@ -475,8 +475,9 @@ class DocumentService:
                                due_date=None, items=None, notes=None,
                                primary_color=None, secondary_color=None, accent_color=None,
                                background_color=None, text_color=None, font_family=None,
-                               show_bank_details=None, show_tax_id=None):
+                               show_bank_details=None, show_tax_id=None, project_id=None):
         if client_id is not None: document.client_id = client_id
+        if project_id is not None: document.project_id = project_id
         if template_id is not None: document.template_id = template_id
         if layout_style is not None: document.layout_style = layout_style
         if due_date is not None: document.due_date = to_naive_utc(due_date)

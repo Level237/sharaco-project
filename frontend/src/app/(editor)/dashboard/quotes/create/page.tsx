@@ -31,7 +31,7 @@ function QuoteBuilderContent() {
     const [selectedLayoutStyle, setSelectedLayoutStyle] = useState<string>("");
 
     const { data: clientsData } = useClients();
-    const clients = clientsData?.items || clientsData || [];
+    const clients = Array.isArray(clientsData) ? clientsData : ((clientsData as any)?.items || []);
     const [clientMode, setClientMode] = useState<"select" | "create">("create");
     const [selectedClientIdModal, setSelectedClientIdModal] = useState<string>("");
 

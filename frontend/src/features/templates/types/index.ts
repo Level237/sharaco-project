@@ -1,3 +1,10 @@
+export interface Layout {
+  id: string;
+  name: string;
+  description?: string;
+  preview_url?: string;
+}
+
 export interface DocumentTemplate {
   id: string;
   name: string;
@@ -13,7 +20,7 @@ export interface DocumentTemplate {
   footer_text?: string;
   show_bank_details: boolean;
   show_tax_id: boolean;
-  layout_style: 'classic' | 'modern' | 'minimal' | "bold" | "elegant";
+  layout_style: 'classic' | 'modern' | 'minimal' | 'bold' | 'elegant' | 'premium' | 'bento' | 'studio';
   is_default: boolean;
   created_at: string;
   updated_at: string;

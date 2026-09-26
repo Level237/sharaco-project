@@ -7,7 +7,7 @@ import { api } from '@/lib/api';
 export interface ActivityItem {
     id: string;
     type: 'PROJECT' | 'DOCUMENT';
-    action: 'CREATED' | 'UPDATED' | 'SENT' | 'ACCEPTED' | 'REFUSED' | 'VIEWED';
+    action: 'CREATED' | 'UPDATED' | 'SENT' | 'ACCEPTED' | 'REFUSED' | 'VIEWED' | 'PAID';
     title: string;
     subtitle?: string;
     icon: string;

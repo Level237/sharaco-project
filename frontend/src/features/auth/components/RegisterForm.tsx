@@ -113,7 +113,7 @@ export function RegisterForm() {
         setIsSubmitting(true);
 
         try {
-            let response;
+            let response: any;
 
             if (oauthToken) {
                 response = await api.post("/api/v1/auth/complete-google-registration", {

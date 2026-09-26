@@ -42,7 +42,7 @@ export function useDocumentUpdate({ draft, documentId, onUpdateSuccess }: UseDoc
         const payload = {
             type: 'DEVIS',
             client_id: draftRef.current.clientId,
-            items: draftRef.current.items.map(item => ({
+            items: draftRef.current.items.map((item: any) => ({
                 description: item.description || "Article",
                 quantity: Math.max(1, item.quantity || 1),
                 unit_price_cents: Math.max(0, item.unitPrice || 0),
@@ -57,7 +57,7 @@ export function useDocumentUpdate({ draft, documentId, onUpdateSuccess }: UseDoc
             // ✅ NOUVEAU : Envoyer les couleurs et styles
             primary_color: draftRef.current.brandColor || "#2563EB",
             payment_schedule: draft.paymentMode === 'schedule' && draft.paymentMilestones && draft.paymentMilestones.length > 0
-            ? draft.paymentMilestones.map((ms, idx) => ({
+            ? draft.paymentMilestones.map((ms: any, idx: number) => ({
                 sequence: idx + 1,
                 title: ms.title || `Échéance ${idx + 1}`,
                 percent: ms.percent,

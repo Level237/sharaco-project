@@ -14,8 +14,8 @@
 │ Domaine                               │ Note       │ État                       │
 ├───────────────────────────────────────┼────────────┼────────────────────────────┤
 │ 1. Backend FastAPI (Api/)             │ 8.8 / 10   │ 🟢 Config .env OK, 85 rtes │
-│ 2. Frontend Next.js (frontend/)       │ 6.0 / 10   │ 🟡 75 erreurs TS (en baisse│
-│ 3. Contrat & Cohérence des Données    │ 6.5 / 10   │ 🟠 Écarts types & 404 URLs │
+│ 2. Frontend Next.js (frontend/)       │ 7.5 / 10   │ 🟡 39 erreurs TS (-53%)    │
+│ 3. Contrat & Cohérence des Données    │ 8.5 / 10   │ 🟢 Types & schémas alignés │
 └───────────────────────────────────────┴────────────┴────────────────────────────┘
 ```
 
@@ -41,56 +41,46 @@
 
 ---
 
-### 📏 Phase 2 : Synchronisation des Schémas & Types (Contrat API ↔ Frontend)
+### 📏 Phase 2 : Synchronisation des Schémas & Types (TERMINÉE ✅)
 
-- [ ] **2.1 Aligner l'interface `Document` sur le schéma backend `DocumentRead`**  
+- [x] **2.1 Aligner l'interface `Document` sur le schéma backend `DocumentRead`**  
   *Fichier* : `frontend/src/features/quotes/types/index.ts`  
-  - [ ] Ajouter `grand_total_cents?: number;` (actuellement nommé `total_cents`).
-  - [ ] Ajouter `notes?: string | null;`.
-  - [ ] Ajouter `client_token?: string;` et `share_token?: string;`.
-  - [ ] Ajouter `phone?: string;` dans l'objet imbriqué `client`.
+  - [x] `grand_total_cents?: number;` ajouté.
+  - [x] `notes?: string | null;` ajouté.
+  - [x] `client_token?: string;` et `share_token?: string;` ajoutés.
+  - [x] `phone?: string;` ajouté dans l'objet imbriqué `client`.
 
-- [ ] **2.2 Intégrer le statut `OVERDUE` dans `DocumentStatus`**  
+- [x] **2.2 Intégrer le statut `OVERDUE` dans `DocumentStatus`**  
   *Fichier* : `frontend/src/features/quotes/types/index.ts`  
-  *Problème* : L'API possède 7 statuts dont `OVERDUE`. Le frontend n'en a que 6, ce qui fait échouer les conditions dans `InvoiceDetail.tsx` et `InvoiceList.tsx`.  
-  *Action* :  
-  ```typescript
-  export type DocumentStatus = 'DRAFT' | 'SENT' | 'VIEWED' | 'ACCEPTED' | 'REFUSED' | 'PAID' | 'OVERDUE';
-  ```
+  *Action réalisée* : Ajouté `OVERDUE` dans `DocumentStatus` et synchronisé dans `QuoteList` et `InvoiceDetail`.
 
-- [ ] **2.3 Compléter le schéma de création `DocumentCreate`**  
+- [x] **2.3 Compléter le schéma de création `DocumentCreate`**  
   *Fichier* : `frontend/src/features/quotes/types/index.ts`  
-  *Action* : Ajouter `layout_style?: string;` (accepté par le backend et envoyé par `quotes/create/page.tsx`).
+  *Action réalisée* : `layout_style?: string;` ajouté.
 
-- [ ] **2.4 Aligner l'interface `User` avec le modèle backend**  
+- [x] **2.4 Aligner l'interface `User` avec le modèle backend**  
   *Fichier* : `frontend/src/features/auth/types/index.ts`  
-  *Action* : Ajouter `currency?: string;`, `country?: string;`, `phone?: string;` dans `User`.
+  *Action réalisée* : `currency?: string;`, `country?: string;`, `phone?: string;` ajoutés dans `User`.
 
-- [ ] **2.5 Compléter l'interface `DocumentsStatsData`**  
+- [x] **2.5 Compléter l'interface `DocumentsStatsData`**  
   *Fichier* : `frontend/src/features/quotes/hooks/useDocumentsStats.ts`  
-  *Problème* : Le backend renvoie `drafts_cents` et `drafts_count`, mais l'interface TypeScript les omet.  
-  *Action* : Déclarer `drafts_cents: number;` et `drafts_count: number;`.
+  *Action réalisée* : `drafts_cents: number;` et `drafts_count: number;` déclarés.
 
-- [ ] **2.6 Ajouter l'action `'PAID'` dans `ActivityItem`**  
+- [x] **2.6 Ajouter l'action `'PAID'` dans `ActivityItem`**  
   *Fichier* : `frontend/src/features/activity/hooks/useActivity.ts`  
-  *Action* : Étendre l'union :  
-  ```typescript
-  action: 'CREATED' | 'UPDATED' | 'SENT' | 'ACCEPTED' | 'REFUSED' | 'VIEWED' | 'PAID';
-  ```
+  *Action réalisée* : Action `'PAID'` intégrée dans l'union.
 
-- [ ] **2.7 Exporter `QuoteDraft` depuis le point d'entrée des types quotes**  
+- [x] **2.7 Exporter `QuoteDraft` depuis le point d'entrée des types quotes**  
   *Fichier* : `frontend/src/features/quotes/types/index.ts`  
-  *Problème* : Importé par `useAutoSave.ts` et `useDocumentUpdate.ts`, mais non re-exporté.  
-  *Action* : Ajouter `export type { QuoteDraft } from './QuoteBuilder';`.
+  *Action réalisée* : `export type { QuoteDraft } from './QuoteBuilder';` configuré.
 
-- [ ] **2.8 Exporter le type `Layout` depuis `templates/types`**  
+- [x] **2.8 Exporter le type `Layout` depuis `templates/types`**  
   *Fichier* : `frontend/src/features/templates/types/index.ts`  
-  *Action* : Définir et exporter l'interface `Layout` requise par `templatesApi.ts`.
+  *Action réalisée* : Interface `Layout` définie et exportée avec tous les 8 styles.
 
-- [ ] **2.9 Aligner le type de retour de `authApi.register`**  
-  *Fichier* : `frontend/src/features/auth/api/authApi.ts`  
-  *Problème* : Retourne `RegisterResponse` (contenant `access_token`) et non `User`.  
-  *Action* : Créer le type `RegisterResponse` et l'utiliser dans `authApi.register`.
+- [x] **2.9 Aligner le type de retour de `authApi.register`**  
+  *Fichiers* : `frontend/src/features/auth/types/index.ts` et `frontend/src/features/auth/api/authApi.ts`  
+  *Action réalisée* : `RegisterResponse` défini et typé avec `access_token`.
 
 ---
 

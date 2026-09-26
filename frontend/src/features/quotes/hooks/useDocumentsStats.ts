@@ -14,6 +14,10 @@ export interface DocumentsStatsData {
     // 🔴 Retards de paiement
     overdue_cents: number;
     overdue_count: number;
+
+    // 📝 Brouillons
+    drafts_cents: number;
+    drafts_count: number;
     
     // 📊 Pipeline commercial (devis signés non facturés)
     pipeline_cents: number;

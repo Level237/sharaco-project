@@ -1,7 +1,7 @@
-// features/templates/types.ts
+// features/quotes/types/index.ts
 
 export type DocumentType = 'DEVIS' | 'FACTURE';
-export type DocumentStatus = 'DRAFT' | 'SENT' | 'VIEWED' | 'ACCEPTED' | 'REFUSED'| 'PAID';
+export type DocumentStatus = 'DRAFT' | 'SENT' | 'VIEWED' | 'ACCEPTED' | 'REFUSED' | 'PAID' | 'OVERDUE';
 
 export interface DocumentItem {
     id: string;
@@ -12,13 +12,17 @@ export interface DocumentItem {
     document_id: string;
 }
 
-// ✅ NOUVEAU : interface pour une échéance
+// Interface pour une échéance / jalon de paiement
 export interface MilestonePreview {
+    id?: string;
     sequence: number;
     title: string;
     percent: number;
+    amount_cents?: number;
+    status?: string;
     description?: string | null;
     trigger_date?: string | null;
+    invoice_id?: string | null;
 }
 
 export interface Document {
@@ -30,6 +34,9 @@ export interface Document {
     due_date?: string;
     sent_at?: string;
     viewed_at?: string;
+    paid_at?: string;
+    accepted_at?: string;
+    refused_at?: string;
     layout_style?: string;
     user_id: string;
     client_id: string;
@@ -37,7 +44,11 @@ export interface Document {
     items?: DocumentItem[];
     subtotal_cents?: number;
     tax_total_cents?: number;
-    total_cents?: number;
+    grand_total_cents?: number;
+    total_cents?: number; // Rétrocompatibilité
+    notes?: string | null;
+    client_token?: string;
+    share_token?: string;
     primary_color?: string;
     secondary_color?: string;
     accent_color?: string;
@@ -47,12 +58,17 @@ export interface Document {
     font_family?: string;
     show_bank_details?: boolean;
     show_tax_id?: boolean;
+    client_name?: string;
+    client_email?: string;
+    client_phone?: string;
+    client_address?: string;
     client?: {
         id: string;
         name: string;
         email?: string;
+        phone?: string;
+        address?: string;
     };
-    // ✅ AJOUTÉ : échéancier sur le document retourné
     payment_schedule?: MilestonePreview[];
 }
 
@@ -65,6 +81,7 @@ export interface DocumentCreate {
     client_phone?: string;
     client_address?: string;
     project_id?: string | null;
+    layout_style?: string;
     items: Array<{
         description: string;
         quantity: number;
@@ -74,7 +91,6 @@ export interface DocumentCreate {
     template_id?: string | null;
     due_date?: string | null;
     notes?: string | null;
-    // ✅ AJOUTÉ : échéancier à la création
     payment_schedule?: MilestonePreview[] | null;
 }
 
@@ -111,7 +127,8 @@ export interface DocumentPreviewRequest {
     show_tax_id?: boolean;
     notes?: string | null;
     reference?: string | null;
-    
-    // ✅ AJOUTÉ : échéancier de paiement
     payment_schedule?: MilestonePreview[] | null;
 }
+
+// Re-export de QuoteDraft pour useAutoSave et useDocumentUpdate
+export type { QuoteDraft } from './QuoteBuilder';

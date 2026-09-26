@@ -50,7 +50,9 @@ const statusConfig: Record<DocumentStatus, { label: string, icon: any, color: st
     REFUSED: { label: "Refusé", icon: Ban, color: "text-rose-500" },
     SENT: { label: "Envoyé", icon: FileCheck, color: "text-sky-500" },
     VIEWED: { label: "Consulté", icon: Eye, color: "text-amber-500" },
-    DRAFT: { label: "Brouillon", icon: FileText, color: "text-slate-500" }
+    DRAFT: { label: "Brouillon", icon: FileText, color: "text-slate-500" },
+    PAID: { label: "Payé", icon: CreditCard, color: "text-emerald-500" },
+    OVERDUE: { label: "En retard", icon: Ban, color: "text-rose-500" },
 }
 
 const containerVariants = {

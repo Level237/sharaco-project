@@ -135,6 +135,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
         PAID: { label: "Payée", color: "text-emerald-500", dot: "bg-emerald-500" },
         OVERDUE: { label: "En retard", color: "text-rose-500", dot: "bg-rose-500" },
         REFUSED: { label: "Refusée", color: "text-rose-500", dot: "bg-rose-500" },
+        ACCEPTED: { label: "Acceptée", color: "text-emerald-500", dot: "bg-emerald-500" },
     }[invoice.status] || { label: invoice.status, color: "text-slate-500", dot: "bg-slate-400" }
 
     return (

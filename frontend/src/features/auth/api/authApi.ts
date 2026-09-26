@@ -1,6 +1,6 @@
 
 import { api } from '@/lib/api';
-import type { LoginRequest, AuthResponse, RegisterRequest, User } from '../types';
+import type { LoginRequest, AuthResponse, RegisterRequest, RegisterResponse, User } from '../types';
 
 export const authApi = {
     login: async (data: LoginRequest): Promise<AuthResponse> => {
@@ -15,8 +15,8 @@ export const authApi = {
         return api.post<boolean>(`/api/v1/auth/verify-email?email=${email}`);
     },
 
-    register: async (data: RegisterRequest): Promise<User> => {
-        return api.post<User>('/api/v1/auth/register', data);
+    register: async (data: RegisterRequest): Promise<RegisterResponse> => {
+        return api.post<RegisterResponse>('/api/v1/auth/register', data);
     },
 
     getMe: async (): Promise<User> => {

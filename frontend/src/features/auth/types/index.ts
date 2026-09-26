@@ -6,6 +6,9 @@ export interface User {
     address?: string;
     tax_id?: string;
     payment_info?: string;
+    country?: string;
+    currency?: string;
+    phone?: string;
 }
 
 export interface LoginRequest {
@@ -16,6 +19,13 @@ export interface LoginRequest {
 export interface AuthResponse {
     access_token: string;
     token_type: string;
+}
+
+export interface RegisterResponse {
+    message: string;
+    token_type: string;
+    user_id: string;
+    access_token: string;
 }
 
 export interface RegisterRequest {

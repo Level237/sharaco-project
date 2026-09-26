@@ -7,6 +7,7 @@ from datetime import datetime
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+    full_name: Optional[str] = None
     company_name: Optional[str] = None
     address: Optional[str] = None
     tax_id: Optional[str] = None
@@ -19,7 +20,7 @@ class PasswordUpdate(BaseModel):
 class UserRead(BaseModel):
     id: UUID
     email: str
-    full_name:str
+    full_name: Optional[str] = None
     company_name: Optional[str] = None
     address: Optional[str] = None
     tax_id: Optional[str] = None
@@ -30,6 +31,8 @@ class UserRead(BaseModel):
 
 
 class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
     company_name: Optional[str] = None
     address: Optional[str] = None
     tax_id: Optional[str] = None

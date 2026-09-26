@@ -11,6 +11,7 @@ import { authApi } from '@/features/auth/api/authApi';
 import { toast } from 'sonner';
 import { OnboardingTour } from "@/features/dashboard/components/OnboardingTour";
 import { OverdueAlertBanner } from "@/features/dashboard/components/OverdueAlertBanner";
+import { CompleteProfileModal } from "@/features/dashboard/components/CompleteProfileModal";
 
 function DashboardContent() {
     const router = useRouter();
@@ -77,6 +78,9 @@ function DashboardContent() {
         <>
             {/* ✅ Tour automatique au premier lancement */}
             <OnboardingTour />
+
+            {/* ✅ Modal automatique si le profil est incomplet (nom complet ou nom entreprise manquant) */}
+            <CompleteProfileModal />
 
             <div className="flex-1  space-y-8 p-4 md:p-8 pt-6 min-h-screen">
                 <div data-tour="dashboard-title">

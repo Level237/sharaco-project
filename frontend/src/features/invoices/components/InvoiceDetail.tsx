@@ -11,12 +11,13 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { cn } from "@/lib/utils"
 import { SendEmailModal } from "@/features/quotes/components/sendEmailModal"
 
 export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
+    const [isMounted, setIsMounted] = useState(false)
     const { data: invoice, isLoading, error, refetch } = useInvoice(invoiceId)
     const updateStatus = useUpdateInvoiceStatus()
     const { toast } = useToast()
@@ -29,11 +30,16 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
     
     // ✅ NOUVEAU : Modal d'envoi
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+    const [isDownloading, setIsDownloading] = useState(false)
 
-    if (isLoading) {
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
+    if (!isMounted || isLoading) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[100dvh]">
-                <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+                <Loader2 className="h-5 w-5 animate-spin text-[#2563EB]" />
             </div>
         )
     }
@@ -80,8 +86,6 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
             setIsMarkingPaid(false);
         }
     }
-
-    const [isDownloading, setIsDownloading] = useState(false);
 
     const handleDownload = async () => {
         setIsDownloading(true);
@@ -147,7 +151,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
     // ═══════════════════════════════════════════════════════════════
     const statusConfig = {
         DRAFT: { label: "Brouillon", color: "text-slate-500", dot: "bg-slate-400" },
-        SENT: { label: "Envoyée", color: "text-sky-500", dot: "bg-sky-500" },
+        SENT: { label: "Envoyée", color: "text-[#2563EB]", dot: "bg-[#2563EB]" },
         VIEWED: { label: "Consultée", color: "text-blue-500", dot: "bg-blue-500" },
         PAID: { label: "Payée", color: "text-emerald-500", dot: "bg-emerald-500" },
         OVERDUE: { label: "En retard", color: "text-rose-500", dot: "bg-rose-500" },
@@ -194,7 +198,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                                 className="h-8 gap-1.5 text-xs rounded-md border-slate-200 dark:border-slate-800"
                             >
                                 {isDownloading ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2563EB]" />
                                 ) : (
                                     <Download className="h-3.5 w-3.5" />
                                 )}
@@ -257,19 +261,19 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                             <div className="space-y-0 text-sm">
                                 <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 py-3">
                                     <span className="text-slate-500">Sous-total</span>
-                                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                                    <span suppressHydrationWarning className="font-medium text-slate-900 dark:text-slate-100">
                                         {formatCurrency(invoice.subtotal_cents || 0)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 py-3">
                                     <span className="text-slate-500">TVA</span>
-                                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                                    <span suppressHydrationWarning className="font-medium text-slate-900 dark:text-slate-100">
                                         {formatCurrency(invoice.tax_total_cents || 0)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center pt-4">
                                     <span className="font-semibold text-slate-900 dark:text-slate-100">Total</span>
-                                    <span className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                                    <span suppressHydrationWarning className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                                         {formatCurrency(invoice.total_cents || invoice.grand_total_cents || 0)}
                                     </span>
                                 </div>
@@ -278,10 +282,13 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                             {invoice.due_date && (
                                 <div className="mt-4 p-3 rounded-md bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
                                     <div className="text-xs text-slate-500 mb-1">Échéance</div>
-                                    <div className={cn(
-                                        "text-sm font-semibold",
-                                        isOverdue ? "text-rose-500" : "text-slate-900 dark:text-slate-100"
-                                    )}>
+                                    <div 
+                                        suppressHydrationWarning
+                                        className={cn(
+                                            "text-sm font-semibold",
+                                            isOverdue ? "text-rose-500" : "text-slate-900 dark:text-slate-100"
+                                        )}
+                                    >
                                         {new Date(invoice.due_date).toLocaleDateString('fr-FR', {
                                             day: '2-digit',
                                             month: 'long',

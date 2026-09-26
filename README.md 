@@ -1,0 +1,83 @@
+# Sharaco — Fullstack
+
+> Plateforme SaaS de devis & facturation pour freelances, auto-écoles et PME.
+> Architecture **monorepo** : API Python (FastAPI) + Frontend React (Next.js).
+
+sharaco-fullstack/
+├── Api/ → Backend FastAPI (Python 3.11+)
+├── frontend/ → Frontend Next.js (TypeScript)
+├── README.md → Ce fichier
+├── RULES.md → Règles & contrat API ↔ Frontend
+└── ARCHITECTURE.md → Schéma de communication
+
+
+---
+
+## 🧩 Complémentarité des deux projets
+
+| Couche | Projet | Rôle | Tech |
+|--------|--------|------|------|
+| **Backend** | `Api/` | Source de vérité : données, logique métier, génération PDF, envoi emails | FastAPI, SQLModel, PostgreSQL, Playwright, Resend |
+| **Frontend** | `frontend/` | Interface utilisateur : éditeur temps réel, dashboard, vues client publiques | Next.js 14, TypeScript, Tailwind, TanStack Query, Zustand, Framer Motion |
+
+**Principe fondamental** : le frontend **ne contient aucune logique métier**. Il consomme l'API via HTTP. Toute règle (calcul TVA, numérotation, statuts, échéanciers) vit dans `Api/`.
+
+---
+
+## 🚀 Démarrage rapide
+
+### Prérequis
+- Python 3.11+
+- Node.js 20+
+- PostgreSQL 15+
+- Compte Resend (emails) + domaine vérifié
+
+### 1. Backend (`Api/`)
+```bash
+cd Api
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # remplir DB + RESEND_API_KEY + EMAIL_FROM
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
+
+→ API sur http://localhost:8000 • Docs Swagger sur http://localhost:8000/docs
+
+### 2. Frontend (frontend/)
+
+cd frontend
+npm install
+cp .env.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:8000
+npm run dev
+
+### Comment ils communiquent
+
+┌─────────────────┐   HTTP/JSON (Bearer token)   ┌─────────────────┐
+│   frontend/     │ ───────────────────────────▶  │      Api/       │
+│  (Next.js 3000) │ ◀───────────────────────────  │  (FastAPI 8000) │
+└─────────────────┘         JSON / HTML / PNG      └────────────────┘
+                                                            │
+                                              ┌─────────────┼─────────────┐
+                                              ▼             ▼             ▼
+                                         PostgreSQL     Resend       Playwright
+                                         (données)     (emails)      (PDF/PNG)
+
+Le frontend stocke le JWT dans localStorage (sharaco_token)
+Les endpoints publics (/client/{token}, /invoices/public/{token}) ne nécessitent pas de token
+Les previews PNG sont cachées côté API (hash du contenu)
+
+### 📚 Documentation
+RULES.md — Contrat strict entre API et frontend (noms de champs, conventions)
+ARCHITECTURE.md — Flux détaillés (devis → facture → paiement)
+Api/ → voir Api/README.md (à créer)
+frontend/ → voir frontend/README.md (à créer)
+
+
+✅ Checklist "tout est connecté"
+Avant toute livraison, vérifier :
+NEXT_PUBLIC_API_URL pointe vers la bonne API
+CORS autorise l'origine du frontend
+Le token est envoyé dans chaque requête privée
+Les noms de champs JSON matchent (snake_case backend ↔ mapping frontend)
+Les endpoints publics fonctionnent sans token
+La devise est cohérente (dashboard = PDF = emails)

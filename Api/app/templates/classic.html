@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document.type.value or 'DEVIS' }} - {{ document.number or 'N/A' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════════════
+           RESET & BASE
+        ═══════════════════════════════════════════════════════════════ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #1f2937;
+            line-height: 1.5;
+            background-color: #f3f4f6;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           PAGE CONTAINER
+        ═══════════════════════════════════════════════════════════════ */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 0;
+            position: relative;
+        }
+
+        @media screen {
+            body {
+                padding: 20px;
+            }
+            .page {
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body {
+                background: white;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           HEADER
+        ══════════════════════════════════════════════════════════════ */
+        .header {
+            padding: 40px 50px 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-table td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        .header-left {
+            width: 60%;
+        }
+
+        .header-right {
+            width: 40%;
+            text-align: right;
+        }
+
+        .logo-container {
+            margin-bottom: 15px;
+        }
+
+        .logo-container img {
+            max-height: 60px;
+            max-width: 200px;
+            object-fit: contain;
+        }
+
+        .company-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 24pt;
+            font-weight: 700;
+            color: {{ template.primary_color or '#1a1a1a' }};
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .company-address {
+            font-size: 13px;
+            color: #6b7280;
+            max-width: 300px;
+            line-height: 1.6;
+        }
+
+        .document-type {
+            font-family: 'Playfair Display', serif;
+            font-size: 32pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: {{ template.primary_color or '#1a1a1a' }};
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .document-number {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           META STRIP
+        ══════════════════════════════════════════════════════════════ */
+        .meta-strip {
+            background-color: #f9fafb;
+            padding: 20px 50px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .meta-table td {
+            vertical-align: top;
+            padding: 0 15px 0 0;
+        }
+
+        .meta-table td:last-child {
+            padding-right: 0;
+        }
+
+        .meta-label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-sent {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-paid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-overdue {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           PARTIES
+        ══════════════════════════════════════════════════════════════ */
+        .parties {
+            padding: 40px 50px;
+        }
+
+        .parties-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .parties-table td {
+            vertical-align: top;
+            padding: 0 20px 0 0;
+        }
+
+        .parties-table td:last-child {
+            padding-right: 0;
+        }
+
+        .party-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #c9a84c;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .party-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #1f2937;
+        }
+
+        .party-details {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           ITEMS TABLE
+        ══════════════════════════════════════════════════════════════ */
+        .items-section {
+            padding: 0 50px 40px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table thead tr {
+            border-bottom: 2px solid {{ template.primary_color or '#1a1a1a' }};
+        }
+
+        .items-table th {
+            text-align: left;
+            padding: 12px 15px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .items-table td {
+            padding: 15px;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .text-right {
+            text-align: right !important;
+        }
+
+        .font-medium {
+            font-weight: 500;
+        }
+
+        .col-desc { width: 45%; }
+        .col-qty { width: 10%; }
+        .col-price { width: 15%; }
+        .col-tva { width: 10%; }
+        .col-total { width: 20%; }
+
+        /* ══════════════════════════════════════════════════════════════
+           SUMMARY
+        ══════════════════════════════════════════════════════════════ */
+        .summary-section {
+            padding: 0 50px 50px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-table td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        .summary-spacer {
+            width: 60%;
+        }
+
+        .summary-totals {
+            width: 40%;
+        }
+
+        .totals-box {
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+        }
+
+        .total-row {
+            display: table;
+            width: 100%;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+
+        .total-row:last-child {
+            border-bottom: none;
+        }
+
+        .total-row.grand-total {
+            margin-top: 10px;
+            padding: 15px 0;
+            border-top: 1px solid {{ template.primary_color or '#1a1a1a' }};
+            font-size: 18px;
+            font-weight: 700;
+            color: {{ template.primary_color or '#1a1a1a' }};
+        }
+
+        .total-label-cell {
+            display: table-cell;
+            color: #6b7280;
+        }
+
+        .total-value-cell {
+            display: table-cell;
+            text-align: right;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .grand-total .total-label-cell,
+        .grand-total .total-value-cell {
+            font-size: 18px;
+            font-weight: 700;
+            color: {{ template.primary_color or '#1a1a1a' }};
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           ✨ ÉCHÉANCIER DE PAIEMENT (style Elegant)
+        ══════════════════════════════════════════════════════════════ */
+        .schedule-section {
+            padding: 0 50px 50px;
+            break-inside: auto;
+            page-break-inside: auto;
+        }
+
+        .schedule-header {
+            margin-bottom: 10px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #0000008f;
+        }
+
+        .schedule-title-wrapper {
+            display: table;
+            width: 100%;
+        }
+
+        .schedule-title-left {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .schedule-title-right {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+        }
+
+        .schedule-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 10pt;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .schedule-count-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: {{template.primary_color or "#c9a84c"}};
+            color: white;
+            font-size: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 20px;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .schedule-table thead {
+            display: table-header-group;
+        }
+
+        .schedule-table thead tr {
+            border-bottom: 1px solid {{ template.primary_color or '#1a1a1a' }};
+        }
+
+        .schedule-table th {
+            text-align: left;
+            padding: 12px 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .schedule-table th.text-right {
+            text-align: right;
+        }
+
+        .schedule-table th.text-center {
+            text-align: center;
+        }
+
+        .schedule-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .schedule-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-table td {
+            padding: 16px 10px;
+            font-size: 13px;
+            vertical-align: middle;
+            color: #1f2937;
+        }
+
+        .schedule-table td.text-right {
+            text-align: right;
+        }
+
+        .schedule-table td.text-center {
+            text-align: center;
+        }
+
+        .col-seq { width: 8%; }
+        .col-title { width: 37%; }
+        .col-date { width: 20%; }
+        .col-percent { width: 15%; }
+        .col-amount { width: 20%; }
+
+        /* Numéro séquence - style élégant avec cercle doré */
+        .seq-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: {{template.primary_color or "#c9a84c"}};
+            color: white;
+            font-family: 'Playfair Display', serif;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 50%;
+        }
+
+        /* Titre échéance */
+        .schedule-title-cell {
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.4;
+            font-size: 12px;
+        }
+
+        .schedule-desc-cell {
+            display: block;
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        /* Date */
+        .schedule-date-cell {
+            font-size: 13px;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        .schedule-date-empty {
+            font-size: 12px;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        /* Pourcentage */
+        .schedule-percent-cell {
+            font-size: 10px;
+            color: #000000;
+            font-weight: 700;
+            
+        }
+
+        /* Montant */
+        .schedule-amount-cell {
+            font-size: 13px;
+            color: #1f2937;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Ligne de total */
+        .schedule-table tfoot tr td {
+            padding: 16px 10px;
+            border-top: 1px solid {{ template.primary_color or '#1a1a1a' }};
+        }
+
+        .schedule-total-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .schedule-total-percent {
+            font-size: 12px;
+            color: #000000;
+            font-weight: 700;
+            
+        }
+
+        .schedule-total-amount {
+            font-size: 12px;
+            color: {{ template.primary_color or '#1a1a1a' }};
+            font-weight: 700;
+            white-space: nowrap;
+          
+        }
+
+        /* Note finale */
+        .schedule-note {
+            margin-top: 20px;
+            padding: 16px 20px;
+            background: #f9fafb;
+            border-left: 3px solid #c9a84c;
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.7;
+        }
+
+        .schedule-note strong {
+            display: block;
+            color: #1f2937;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           FOOTER
+        ══════════════════════════════════════════════════════════════ */
+        .footer {
+            padding: 40px 50px;
+            background-color: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .footer-table td {
+            vertical-align: top;
+            padding: 0 20px 0 0;
+        }
+
+        .footer-table td:last-child {
+            padding-right: 0;
+        }
+
+        .footer-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6b7280;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .footer-content {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .bank-info {
+            font-family: 'Courier New', Courier, monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            color: #3f3f46;
+            font-size: 11px;
+            word-break: break-all;
+            border: 1px solid #e5e7eb;
+            margin-top: 4px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           PAGE BREAK CONTROL
+        ══════════════════════════════════════════════════════════════ */
+        @media print {
+            .header, .parties, .items-section, .summary-section, .schedule-section {
+                page-break-inside: avoid;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <!-- ══════════════════════════════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="header">
+        <table class="header-table">
+            <tr>
+                <td class="header-left">
+                    <div class="logo-container">
+                        {% if user.logo_url %}
+                            <img src="{{ user.logo_url }}" alt="Logo">
+                        {% else %}
+                            <div class="company-name">
+                                {{ user.company_name or 'Votre Entreprise' }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="company-address">
+                        {% if user.address %}
+                            {{ user.address }}
+                        {% endif %}
+                    </div>
+                </td>
+                <td class="header-right">
+                    <h1 class="document-type">{{ document.type.value or 'DEVIS' }}</h1>
+                    <div class="document-number">N° {{ document.number or 'N/A' }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         META STRIP
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="meta-strip">
+        <table class="meta-table">
+            <tr>
+                <td style="width: 25%;">
+                    <span class="meta-label">Date d'émission</span>
+                    <span class="meta-value">
+                        {{ document.created_at.strftime('%d/%m/%Y') if document.created_at else '-' }}
+                    </span>
+                </td>
+                <td style="width: 25%;">
+                    {% if document.due_date %}
+                        <span class="meta-label">Date d'échéance</span>
+                        <span class="meta-value">
+                            {{ document.due_date.strftime('%d/%m/%Y') }}
+                        </span>
+                    {% endif %}
+                </td>
+                <td style="width: 25%;">
+                    {% if template.show_tax_id and user.tax_id %}
+                        <span class="meta-label">NIF / SIRET</span>
+                        <span class="meta-value">{{ user.tax_id }}</span>
+                    {% endif %}
+                </td>
+                
+            </tr>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         PARTIES
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="parties">
+        <table class="parties-table">
+            <tr>
+                <td style="width: 50%;">
+                    <div class="party-title">ÉMETTEUR</div>
+                    <div class="party-name">{{ user.company_name or user.email or 'Entreprise' }}</div>
+                    <div class="party-details">
+                        {% if user.address %}
+                            {{ user.address | replace('\n', '<br>') | safe }}<br>
+                        {% endif %}
+                        {% if template.show_tax_id and user.tax_id %}
+                            SIRET : {{ user.tax_id }}
+                        {% endif %}
+                    </div>
+                </td>
+                <td style="width: 50%;">
+                    <div class="party-title">DESTINATAIRE</div>
+                    <div class="party-name">{{ client.name or 'Client' }}</div>
+                    <div class="party-details">
+                        {% if client.email %}{{ client.email }}<br>{% endif %}
+                        {% if client.address %}
+                            {{ client.address | replace('\n', '<br>') | safe }}<br>
+                        {% endif %}
+                        {% if client.phone %}
+                            Tél : {{ client.phone }}
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         ITEMS TABLE
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="items-section">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th class="col-desc">DESCRIPTION</th>
+                    <th class="col-qty text-right">QTÉ</th>
+                    <th class="col-price text-right">PRIX UNITAIRE</th>
+                    <th class="col-tva text-right">TVA</th>
+                    <th class="col-total text-right">TOTAL HT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                {% set ht = (item.quantity or 1) * (item.unit_price_cents or 0) %}
+                <tr>
+                    <td class="col-desc font-medium">{{ item.description or 'Article sans description' }}</td>
+                    <td class="col-qty text-right">{{ item.quantity or 1 }}</td>
+                    <td class="col-price text-right">{{ "{:,}".format(item.unit_price_cents or 0) }} {{ currency }}</td>
+                    <td class="col-tva text-right">{{ item.tax_rate or 0 }}%</td>
+                    <td class="col-total text-right font-medium">{{ "{:,}".format(ht) }} {{ currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SUMMARY
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="summary-section">
+        <table class="summary-table">
+            <tr>
+                <td class="summary-spacer"></td>
+                <td class="summary-totals">
+                    <div class="totals-box">
+                        <div class="total-row">
+                            <div class="total-label-cell">Sous-total HT</div>
+                            <div class="total-value-cell">{{ "{:,}".format(totals.subtotal_cents) }} {{ currency }}</div>
+                        </div>
+                        <div class="total-row">
+                            <div class="total-label-cell">TVA</div>
+                            <div class="total-value-cell">{{ "{:,}".format(totals.tax_total_cents) }} {{ currency }}</div>
+                        </div>
+                        <div class="total-row grand-total">
+                            <div class="total-label-cell">TOTAL TTC</div>
+                            <div class="total-value-cell">{{ "{:,}".format(totals.grand_total_cents) }} {{ currency }}</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         ✨ ÉCHÉANCIER DE PAIEMENT
+    ══════════════════════════════════════════════════════════════ -->
+    {% if document.payment_schedule and document.payment_schedule|length > 0 %}
+    {% set total_percent = document.payment_schedule | sum(attribute='percent') %}
+    {% set total_amount = document.payment_schedule | sum(attribute='amount_cents') %}
+    <div class="schedule-section">
+        <!-- Header avec badge -->
+        <div class="schedule-header">
+            <div class="schedule-title-wrapper">
+                <div class="schedule-title-left">
+                    <h2 class="schedule-title">Échéancier de paiement</h2>
+                </div>
+                <div class="schedule-title-right">
+                    <span class="schedule-count-badge">
+                        {{ document.payment_schedule|length }} tranche{{ 's' if document.payment_schedule|length > 1 else '' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tableau -->
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th class="col-seq text-center">N°</th>
+                    <th class="col-title">ÉCHÉANCE</th>
+                    <th class="col-date">DATE PRÉVUE</th>
+                    <th class="col-percent text-center">PART</th>
+                    <th class="col-amount text-right">MONTANT TTC</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for milestone in document.payment_schedule | sort(attribute='sequence') %}
+                <tr>
+                    <td class="text-center">
+                        <span class="seq-circle">{{ milestone.sequence }}</span>
+                    </td>
+                    <td>
+                        <span class="schedule-title-cell">{{ milestone.title }}</span>
+                        {% if milestone.description %}
+                        <span class="schedule-desc-cell">{{ milestone.description }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if milestone.trigger_date %}
+                        <span class="schedule-date-cell">{{ milestone.trigger_date.strftime('%d/%m/%Y') }}</span>
+                        {% else %}
+                        <span class="schedule-date-empty">À définir</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <span class="schedule-percent-cell">{{ milestone.percent }}%</span>
+                    </td>
+                    <td class="text-right">
+                        <span class="schedule-amount-cell">{{ "{:,}".format(milestone.amount_cents) }} {{ currency }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">
+                        <span class="schedule-total-label">Total échéancier</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="schedule-total-percent">{{ total_percent }}%</span>
+                    </td>
+                    <td class="text-right">
+                        <span class="schedule-total-amount">{{ "{:,}".format(total_amount) }} {{ currency }}</span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Note -->
+        <div class="schedule-note">
+            <strong>Note</strong>
+            Chaque échéance fera l'objet d'une facture distincte. Paiement exigible dans les 30 jours suivant l'émission.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════════════════════════
+         FOOTER
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="footer">
+        <table class="footer-table">
+            <tr>
+                <td style="width: 50%;">
+                    <div class="footer-title">NOTE</div>
+                    <div class="footer-content">
+                        {% if template.footer_text %}
+                            {{ template.footer_text }}
+                        {% else %}
+                            Merci pour votre confiance. Nous restons à votre disposition pour toute question concernant ce devis.
+                        {% endif %}
+                    </div>
+                </td>
+                <td style="width: 50%;">
+                    {% if template.show_bank_details and user.payment_info %}
+                        <div class="footer-title">COORDONNÉES BANCAIRES</div>
+                        <div class="bank-info">
+                            {{ user.payment_info | replace('\n', '<br>') | safe }}
+                        </div>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

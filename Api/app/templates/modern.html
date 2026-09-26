@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document.type.value or 'DEVIS' }} - {{ document.number or 'N/A' }}</title>
+    <style>
+        /* ═══════════════════════════════════════════════════════════════
+           RESET & BASE
+        ═══════════════════════════════════════════════════════════════ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #18181b;
+            background: #f4f4f5;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           PAGE CONTAINER
+        ═══════════════════════════════════════════════════════════════ */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 15mm;
+            position: relative;
+        }
+.page::before {
+    content: '';
+    display: block;
+    height: 0;
+    padding-top: 0;
+}
+        @media screen {
+            body {
+                padding: 20px;
+            }
+            .page {
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body {
+                background: white;
+                padding: 0;
+            }
+            .page {
+                box-shadow: none;
+                margin: 0;
+                padding: 15mm;
+            }
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           HEADER
+        ═══════════════════════════════════════════════════════════════ */
+        .header {
+            background: {{ template.primary_color or '#0ea5e9' }};
+            color: white;
+            margin: -15mm -15mm 30px -15mm;
+            padding: 20px 25px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-table td {
+            vertical-align: middle;
+            padding: 0;
+        }
+
+        .header-left {
+            width: 50%;
+        }
+
+        .header-right {
+            width: 50%;
+            text-align: right;
+        }
+
+        .brand-row {
+            display: table;
+            width: 100%;
+        }
+
+        .brand-cell {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .logo-cell {
+            width: 60px;
+            padding-right: 15px;
+        }
+
+        .logo-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px dashed rgba(255, 255, 255, 0.6);
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-circle span {
+            display: table-cell;
+            vertical-align: middle;
+            font-size: 9px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 1px;
+        }
+
+        .logo-img {
+            max-width: 60px;
+            max-height: 50px;
+            filter: brightness(0) invert(1);
+        }
+
+        .company-name {
+            font-size: 16pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .doc-info {
+            display: table;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .doc-info-cell {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .doc-title {
+            font-size: 32pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .doc-meta-table {
+            display: table;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .doc-meta-cell {
+            display: table-cell;
+            padding-left: 20px;
+            border-left: 1px solid rgba(255, 255, 255, 0.3);
+            vertical-align: top;
+        }
+
+        .meta-row {
+            display: table;
+            width: 100%;
+        }
+
+        .meta-cell {
+            display: table-cell;
+            padding-right: 20px;
+            vertical-align: top;
+        }
+
+        .meta-label {
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .meta-value {
+            font-size: 11pt;
+            font-weight: 800;
+            color: white;
+            white-space: nowrap;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           ADDRESSES
+        ═══════════════════════════════════════════════════════════════ */
+        .addresses {
+            margin-bottom: 30px;
+        }
+
+        .address-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .address-table td {
+            vertical-align: top;
+            padding: 0 15px 0 0;
+        }
+
+        .address-table td:last-child {
+            padding-right: 0;
+        }
+
+        .address-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #a1a1aa;
+            font-weight: 700;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #f4f4f5;
+            padding-bottom: 4px;
+        }
+
+        .address-content {
+            font-size: 10pt;
+            color: #3f3f46;
+            line-height: 1.6;
+        }
+
+        .client-name {
+            font-weight: 700;
+            color: #09090b;
+            font-size: 11pt;
+            margin-bottom: 4px;
+        }
+
+        .sender-details {
+            font-size: 9pt;
+            color: #71717a;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           ITEMS TABLE
+        ══════════════════════════════════════════════════════════════ */
+        .items-section {
+            max-height: 150mm;
+            margin-bottom: 30px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table thead tr {
+            border-bottom: 1px solid #18181b;
+        }
+
+        .items-table th {
+            text-align: left;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #71717a;
+            font-weight: 700;
+            padding: 12px 8px;
+        }
+
+        .items-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #f4f4f5;
+            font-size: 10pt;
+            vertical-align: top;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .col-desc { width: 45%; }
+        .col-qty { width: 10%; text-align: right; }
+        .col-price { width: 15%; text-align: right; }
+        .col-tva { width: 10%; text-align: right; }
+        .col-total { width: 20%; text-align: right; font-weight: 600; }
+
+        .item-desc {
+            font-weight: 600;
+            color: #18181b;
+            line-height: 1.5;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           TOTALS & NOTES
+        ═══════════════════════════════════════════════════════════════ */
+        .totals-section {
+            margin-bottom: 30px;
+        }
+
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        .notes-cell {
+            width: 60%;
+            padding-right: 30px;
+        }
+
+        .totals-cell {
+            width: 40%;
+        }
+
+        .notes-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #a1a1aa;
+            font-weight: 700;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #f4f4f5;
+            padding-bottom: 4px;
+        }
+
+        .notes-content {
+            font-size: 9.5pt;
+            color: #52525b;
+            line-height: 1.6;
+        }
+
+        .totals-box {
+            width: 100%;
+        }
+
+        .total-row {
+            display: table;
+            width: 100%;
+            padding: 8px 0;
+            border-bottom: 1px solid #f4f4f5;
+        }
+
+        .total-row:last-child {
+            border-bottom: none;
+        }
+
+        .total-row.grand-total {
+            border-top: 1px solid #18181b;
+            border-bottom: none;
+            padding-top: 12px;
+            margin-top: 8px;
+        }
+
+        .total-label-cell {
+            display: table-cell;
+            font-size: 9.5pt;
+            color: #52525b;
+            font-weight: 500;
+        }
+
+        .total-value-cell {
+            display: table-cell;
+            text-align: right;
+            font-weight: 700;
+            color: #09090b;
+            white-space: nowrap;
+        }
+
+        .grand-total .total-label-cell {
+            font-size: 11pt;
+            font-weight: 800;
+            color: #09090b;
+            text-transform: uppercase;
+        }
+
+        .grand-total .total-value-cell {
+            font-size: 15pt;
+            font-weight: 900;
+            color: {{ template.primary_color or '#0ea5e9' }};
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           ✨ ÉCHÉANCIER DE PAIEMENT (style Modern)
+        ═══════════════════════════════════════════════════════════════ */
+        .schedule-section {
+            margin-bottom: 30px;
+            break-inside: auto;
+            page-break-inside: auto;
+        }
+
+        .schedule-header {
+            display: table;
+            width: 100%;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid {{ template.primary_color or '#0ea5e9' }};
+        }
+
+        .schedule-header-left {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .schedule-header-right {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+        }
+
+        .schedule-title {
+            font-size: 10pt;
+            font-weight: 800;
+      
+         
+            color: #09090b;
+            margin: 0;
+        }
+
+        .schedule-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: {{ template.primary_color or '#0ea5e9' }};
+            color: white;
+            font-size: 7pt;
+            font-weight: 800;
+           
+            letter-spacing: 0.08em;
+            border-radius: 3px;
+        }
+
+        .schedule-table {
+            width: 100%;
+           
+        }
+
+        .schedule-table thead {
+            display: table-header-group;
+        }
+
+        .schedule-table thead tr {
+            border-bottom: 1px solid #18181b;
+        }
+
+        .schedule-table th {
+            text-align: left;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #71717a;
+            font-weight: 700;
+            padding: 10px 8px;
+        }
+
+        .schedule-table th.text-right {
+            text-align: right;
+        }
+
+        .schedule-table th.text-center {
+            text-align: center;
+        }
+
+        .schedule-table tbody tr {
+            border-bottom: 1px solid #f4f4f5;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .schedule-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-table td {
+            padding: 12px 8px;
+            font-size: 10pt;
+            vertical-align: middle;
+            color: #18181b;
+        }
+
+        .schedule-table td.text-right {
+            text-align: right;
+        }
+
+        .schedule-table td.text-center {
+            text-align: center;
+        }
+
+        .col-seq { width: 8%; }
+        .col-title { width: 37%; }
+        .col-date { width: 20%; }
+        .col-percent { width: 15%; }
+        .col-amount { width: 20%; }
+
+        /* Numéro séquence - badge rond coloré */
+        .seq-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: {{ template.primary_color or '#0ea5e9' }};
+            color: white;
+            font-size: 8pt;
+            font-weight: 800;
+            border-radius: 50%;
+        }
+
+        /* Titre échéance */
+        .schedule-title-cell {
+            font-weight: 600;
+            color: #18181b;
+            line-height: 1;
+            font-size:12px;
+        }
+
+        .schedule-desc-cell {
+            display: block;
+            font-size: 6pt;
+            color: #71717a;
+            margin-top: 3px;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        /* Date */
+        .schedule-date-cell {
+            font-size: 10pt;
+            color: #18181b;
+            font-weight: 600;
+        }
+
+        .schedule-date-empty {
+            font-size: 9pt;
+            color: #a1a1aa;
+            font-style: italic;
+        }
+
+        /* Pourcentage */
+        .schedule-percent-cell {
+            font-size: 10pt;
+            color: {{ template.primary_color or '#0ea5e9' }};
+            font-weight: 800;
+        }
+
+        /* Montant */
+        .schedule-amount-cell {
+            font-size: 10pt;
+            color: #18181b;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Ligne de total */
+        .schedule-table tfoot tr td {
+            padding: 12px 8px;
+            border-top: 1px solid #18181b;
+        }
+
+        .schedule-total-label {
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #71717a;
+            font-weight: 700;
+        }
+
+        .schedule-total-percent {
+            font-size: 10pt;
+            color: {{ template.primary_color or '#0ea5e9' }};
+            font-weight: 800;
+        }
+
+        .schedule-total-amount {
+            font-size: 12pt;
+            color: {{ template.primary_color or '#0ea5e9' }};
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        /* Note finale */
+        .schedule-note {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: #fafafa;
+            border-left: 3px solid {{ template.primary_color or '#0ea5e9' }};
+            font-size: 8.5pt;
+            color: #52525b;
+            line-height: 1.6;
+        }
+
+        .schedule-note strong {
+            color: #09090b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 7.5pt;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           SIGNATURE
+        ═══════════════════════════════════════════════════════════════ */
+        .signature-section {
+            margin-bottom: 30px;
+        }
+
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .signature-table td {
+            vertical-align: top;
+            padding: 0 15px 0 0;
+        }
+
+        .signature-table td:last-child {
+            padding-right: 0;
+        }
+
+        .sig-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #a1a1aa;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .sig-box {
+            border: 2px solid #e4e4e7;
+            background: #fafafa;
+            min-height: 80px;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 9pt;
+            color: #a1a1aa;
+            text-align: center;
+            display: table-cell;
+            vertical-align: middle;
+            width: 100%;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           FOOTER
+        ═══════════════════════════════════════════════════════════════ */
+        .footer {
+            margin-top: auto;
+            padding-top: 25px;
+            border-top: 2px solid #e4e4e7;
+        }
+
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .footer-table td {
+            vertical-align: top;
+            padding: 0 15px 0 0;
+            font-size: 8.5pt;
+            color: #71717a;
+            line-height: 1.6;
+        }
+
+        .footer-table td:last-child {
+            padding-right: 0;
+        }
+
+        .footer-col-title {
+            font-weight: 800;
+            color: #27272a;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 8.5pt;
+        }
+
+        .bank-info {
+            font-family: 'Courier New', Courier, monospace;
+            background: #fafafa;
+            padding: 8px;
+            border-radius: 4px;
+            color: #3f3f46;
+            font-size: 8pt;
+            word-break: break-all;
+            border: 1px solid #e4e4e7;
+            margin-top: 4px;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           PAGE BREAK CONTROL
+        ═══════════════════════════════════════════════════════════════ */
+        @media print {
+            .header, .addresses, .items-section, .totals-section, .signature-section {
+                page-break-inside: avoid;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <!-- ══════════════════════════════════════════════════════════════
+         HEADER
+    ═══════════════════════════════════════════════════════════════ -->
+    <div class="header">
+        <table class="header-table">
+            <tr>
+                <td class="header-left">
+                    <table class="brand-row">
+                        <tr>
+                            <td class="logo-cell">
+                                {% if template.logo_url %}
+                                    <img src="{{ template.logo_url }}" alt="Logo" class="logo-img">
+                                {% else %}
+                                    <div class="logo-circle">
+                                        <span>LOGO</span>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="brand-cell">
+                                <div class="company-name">
+                                    {% if template.header_text %}
+                                        {{ template.header_text }}
+                                    {% elif user.company_name %}
+                                        {{ user.company_name }}
+                                    {% elif user.email %}
+                                        {{ user.email.split('@')[0] | upper }}
+                                    {% else %}
+                                        VOTRE ENTREPRISE
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td class="header-right">
+                    <div class="doc-title">{{ document.type.value or 'DEVIS' }}</div>
+                    <table class="doc-meta-table">
+                        <tr>
+                            <td class="doc-meta-cell">
+                                <table class="meta-row">
+                                    <tr>
+                                        <td class="meta-cell">
+                                            <div class="meta-label">RÉFÉRENCE</div>
+                                            <div class="meta-value">#{{ document.number or 'N/A' }}</div>
+                                        </td>
+                                        <td class="meta-cell">
+                                            <div class="meta-label">DATE</div>
+                                            <div class="meta-value">{{ document.created_at.strftime('%d/%m/%Y') if document.created_at else '-' }}</div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         ADDRESSES
+    ═══════════════════════════════════════════════════════════════ -->
+    <div class="addresses">
+        <table class="address-table">
+            <tr>
+                <td style="width: 50%;">
+                    <div class="address-label">ÉMETTEUR</div>
+                    <div class="address-content">
+                        <strong>{{ user.company_name or user.email or 'Entreprise' }}</strong><br>
+                        {% if user.address %}{{ user.address }}<br>{% endif %}
+                        <div class="sender-details">
+                            {% if user.phone %}Tél: {{ user.phone }}<br>{% endif %}
+                            {% if user.email %}{{ user.email }}<br>{% endif %}
+                            {% if user.tax_id %}SIRET: {{ user.tax_id }}{% endif %}
+                        </div>
+                    </div>
+                </td>
+                <td style="width: 50%;">
+                    <div class="address-label">DESTINATAIRE</div>
+                    <div class="address-content">
+                        <div class="client-name">{{ client.name or 'Client' }}</div>
+                        {% if client.address %}{{ client.address }}<br>{% endif %}
+                        {% if client.email %}{{ client.email }}<br>{% endif %}
+                        {% if client.phone %}{{ client.phone }}{% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         ITEMS
+    ═══════════════════════════════════════════════════════════════ -->
+    <div class="items-section">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th class="col-desc">DESCRIPTION</th>
+                    <th class="col-qty">QTÉ</th>
+                    <th class="col-price">PRIX UNIT. HT</th>
+                    <th class="col-tva">TVA</th>
+                    <th class="col-total">TOTAL HT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                {% set ht = (item.quantity or 1) * (item.unit_price_cents or 0) %}
+                <tr>
+                    <td class="col-desc">
+                        <div class="item-desc">{{ item.description or 'Article sans description' }}</div>
+                    </td>
+                    <td class="col-qty">{{ item.quantity or 1 }}</td>
+                    <td class="col-price">{{ "{:,}".format(item.unit_price_cents or 0) }} {{ currency }}</td>
+                    <td class="col-tva">{{ item.tax_rate or 0 }}%</td>
+                    <td class="col-total">{{ "{:,}".format(ht) }} {{ currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         TOTALS & NOTES
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="totals-section">
+        <table class="totals-table">
+            <tr>
+                <td class="notes-cell">
+                    {% if template.footer_text %}
+                        <div class="notes-label">NOTES</div>
+                        <div class="notes-content">{{ template.footer_text }}</div>
+                    {% endif %}
+                </td>
+                <td class="totals-cell">
+                    <div class="totals-box">
+                        <div class="total-row">
+                            <div class="total-label-cell">Total HT</div>
+                            <div class="total-value-cell">{{ "{:,}".format(totals.subtotal_cents) }} {{ currency }}</div>
+                        </div>
+                        <div class="total-row">
+                            <div class="total-label-cell">TVA Total</div>
+                            <div class="total-value-cell">{{ "{:,}".format(totals.tax_total_cents) }} {{ currency }}</div>
+                        </div>
+                        <div class="total-row grand-total">
+                            <div class="total-label-cell">TOTAL TTC</div>
+                            <div class="total-value-cell">{{ "{:,}".format(totals.grand_total_cents) }} {{ currency }}</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         ✨ ÉCHÉANCIER DE PAIEMENT
+    ═══════════════════════════════════════════════════════════════ -->
+    {% if document.payment_schedule and document.payment_schedule|length > 0 %}
+    {% set total_percent = document.payment_schedule | sum(attribute='percent') %}
+    {% set total_amount = document.payment_schedule | sum(attribute='amount_cents') %}
+    <div class="schedule-section">
+        <!-- Header avec badge -->
+        <div class="schedule-header">
+            <div class="schedule-header-left">
+                <h2 class="schedule-title">Échéancier de paiement</h2>
+            </div>
+            <div class="schedule-header-right">
+                <span class="schedule-badge">
+                    {{ document.payment_schedule|length }} tranche{{ 's' if document.payment_schedule|length > 1 else '' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Tableau -->
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th class="col-seq text-center">N°</th>
+                    <th class="col-title">ÉCHÉANCE</th>
+                    <th class="col-date">DATE PRÉVUE</th>
+                    <th class="col-percent text-center">PART</th>
+                    <th class="col-amount text-right">MONTANT TTC</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for milestone in document.payment_schedule | sort(attribute='sequence') %}
+                <tr>
+                    <td class="text-center">
+                        <span class="seq-circle">{{ milestone.sequence }}</span>
+                    </td>
+                    <td>
+                        <span class="schedule-title-cell">{{ milestone.title }}</span>
+                        {% if milestone.description %}
+                        <span class="schedule-desc-cell">{{ milestone.description }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if milestone.trigger_date %}
+                        <span class="schedule-date-cell">{{ milestone.trigger_date.strftime('%d/%m/%Y') }}</span>
+                        {% else %}
+                        <span class="schedule-date-empty">À définir</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <span class="schedule-percent-cell">{{ milestone.percent }}%</span>
+                    </td>
+                    <td class="text-right">
+                        <span class="schedule-amount-cell">{{ "{:,}".format(milestone.amount_cents) }} {{ currency }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">
+                        <span class="schedule-total-label">Total échéancier</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="schedule-total-percent">{{ total_percent }}%</span>
+                    </td>
+                    <td class="text-right">
+                        <span class="schedule-total-amount">{{ "{:,}".format(total_amount) }} {{ currency }}</span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Note -->
+        <div class="schedule-note">
+            <strong>Note</strong>
+            Chaque échéance fera l'objet d'une facture distincte. Paiement exigible dans les 30 jours suivant l'émission.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         SIGNATURE
+    ═══════════════════════════════════════════════════════════════ -->
+   
+  
+</div>
+
+</body>
+</html>

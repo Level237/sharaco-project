@@ -1,0 +1,2 @@
+// Re-export from quotes since it's the same Document model
+export type { Document as Invoice, DocumentItem as InvoiceItem, DocumentCreate as InvoiceCreate, DocumentStatus, DocumentStatusUpdate, DocumentType } from '@/features/quotes/types';

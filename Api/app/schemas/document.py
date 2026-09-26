@@ -1,0 +1,321 @@
+# app/schemas/document.py
+
+from pydantic import BaseModel, field_validator,Field
+from typing import Optional, List
+from uuid import UUID
+from datetime import datetime
+from app.models.document import DocumentType, DocumentStatus
+
+
+class MilestonePreviewInput(BaseModel):
+    """Représentation d'une échéance pour l'aperçu."""
+    sequence: int = Field(ge=1)
+    title: str
+    percent: float = Field(ge=0, le=100)
+    description: Optional[str] = None
+    trigger_date: Optional[str] = None  # Format ISO (string ou null)
+
+    @field_validator('trigger_date', mode='before')
+    @classmethod
+    def normalize_date(cls, v):
+        if not v:
+            return None
+        if isinstance(v, str):
+            return v
+        if isinstance(v, datetime):
+            return v.isoformat()
+        return None
+
+
+class ClientBrief(BaseModel):
+    """Informations minimales du client pour les listes."""
+    id: UUID
+    name: str
+    email: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+class MilestoneRead(BaseModel):
+    """Représentation d'une échéance de paiement."""
+    id: UUID
+    sequence: int
+    title: str
+    percent: float
+    amount_cents: int
+    description: Optional[str] = None
+    trigger_date: Optional[datetime] = None
+    status: str  # PENDING, INVOICED, PAID, CANCELLED
+    invoice_id: Optional[UUID] = None
+    invoiced_at: Optional[datetime] = None
+    paid_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class DocumentItemCreate(BaseModel):
+    description: str
+    quantity: int = 1
+    unit_price_cents: int
+    tax_rate: int = 20
+
+    @field_validator("quantity")
+    @classmethod
+    def quantity_must_be_positive(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError("La quantité doit être positive")
+        return v
+
+    @field_validator("unit_price_cents")
+    @classmethod
+    def price_must_be_positive(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("Le prix unitaire ne peut pas être négatif")
+        return v
+
+    @field_validator("tax_rate")
+    @classmethod
+    def tax_rate_valid(cls, v: int) -> int:
+        if v < 0 or v > 100:
+            raise ValueError("Le taux de TVA doit être entre 0 et 100")
+        return v
+
+class DocumentProjectLink(BaseModel):
+    """Associer un document à un projet."""
+    project_id: Optional[UUID] = Field(None, description="ID du projet (null pour retirer l'association)")
+
+class DocumentItemRead(BaseModel):
+    id: UUID
+    description: str
+    quantity: int
+    unit_price_cents: int
+    tax_rate: int
+
+    model_config = {"from_attributes": True}
+
+class SharedDocumentRead(BaseModel):
+    """Schéma pour les documents partagés publiquement (sans infos sensibles)."""
+    id: UUID
+    type: DocumentType
+    status: DocumentStatus
+    number: Optional[str] = None
+    created_at: datetime
+    due_date: Optional[datetime] = None
+    layout_style: str = "classic"
+    notes: Optional[str] = None
+    items: List[DocumentItemRead] = []
+    payment_schedule: List[MilestoneRead] = []
+    # Totaux
+    subtotal_cents: Optional[int] = None
+    tax_total_cents: Optional[int] = None
+    grand_total_cents: Optional[int] = None
+
+    accepted_at: Optional[datetime] = None
+    refused_at: Optional[datetime] = None
+    refusal_reason: Optional[str] = None
+    signature_name: Optional[str] = None
+    can_validate: bool = False  # Indique si le client peut accepter/refuser le document
+    # Style
+    primary_color: Optional[str] = "#2563EB"
+    secondary_color: Optional[str] = "#1E40AF"
+    accent_color: Optional[str] = "#DBEAFE"
+    background_color: Optional[str] = "#FFFFFF"
+    text_color: Optional[str] = "#1F2937"
+    font_family: Optional[str] = "Inter"
+    show_bank_details: bool = True
+    show_tax_id: bool = True
+    
+    # ✅ Infos entreprise (à afficher au client)
+    company_name: Optional[str] = None
+    company_email: Optional[str] = None
+    company_phone: Optional[str] = None
+    company_address: Optional[str] = None
+    
+    # ✅ Infos client (pour qu'il se reconnaisse)
+    client_name: Optional[str] = None
+    client_email: Optional[str] = None
+    client_address: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+class MilestoneInput(BaseModel):
+    sequence: int = Field(ge=1)
+    title: str = Field(min_length=1, max_length=255)
+    percent: float = Field(ge=0, le=100)
+    description: Optional[str] = None
+    trigger_date: Optional[datetime] = None
+
+
+class DocumentCreate(BaseModel):
+    """Création d'un document."""
+    id: Optional[UUID] = None
+    type: DocumentType = DocumentType.DEVIS
+    client_id: Optional[UUID] = None
+    layout_style: str = "classic"
+    template_id: Optional[UUID] = None
+    due_date: Optional[datetime] = None
+    payment_schedule: Optional[list[MilestoneInput]] = None
+    items: List[DocumentItemCreate]
+    notes: Optional[str] = None
+    project_id: Optional[UUID] = Field(None, description="ID du projet associé (optionnel)")
+    # ✅ Champs de style
+    primary_color: Optional[str] = "#2563EB"
+    secondary_color: Optional[str] = "#1E40AF"
+    accent_color: Optional[str] = "#DBEAFE"
+    background_color: Optional[str] = "#FFFFFF"
+    text_color: Optional[str] = "#1F2937"
+    font_family: Optional[str] = "Inter"
+    show_bank_details: Optional[bool] = True
+    show_tax_id: Optional[bool] = True
+
+    @field_validator("layout_style")
+    @classmethod
+    def validate_layout_style(cls, v: Optional[str]) -> Optional[str]:
+        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio"]
+        if v and v not in valid_layouts:
+            raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
+        return v or "classic"
+
+    @field_validator("items")
+    @classmethod
+    def items_must_not_be_empty(cls, v: list) -> list:
+        if not v:
+            raise ValueError("Un document doit contenir au moins une ligne")
+        return v
+
+
+class DocumentRead(BaseModel):
+    id: UUID
+    type: DocumentType
+    status: DocumentStatus
+    number: Optional[str] = None
+    created_at: datetime
+    due_date: Optional[datetime] = None
+    sent_at: Optional[datetime] = None
+    viewed_at: Optional[datetime] = None
+    user_id: UUID
+    client_id: UUID
+    payment_schedule: List[MilestoneRead] = []
+    template_id: Optional[UUID] = None
+    layout_style: str = "classic"
+    items: List[DocumentItemRead] = []
+    notes: Optional[str] = None
+    project_id: Optional[UUID] = None
+    
+    # ✅ Champs de style
+    primary_color: Optional[str] = "#2563EB"
+    secondary_color: Optional[str] = "#1E40AF"
+    accent_color: Optional[str] = "#DBEAFE"
+    background_color: Optional[str] = "#FFFFFF"
+    text_color: Optional[str] = "#1F2937"
+    font_family: Optional[str] = "Inter"
+    show_bank_details: bool = True
+    show_tax_id: bool = True
+
+    # Totaux calculés
+    subtotal_cents: Optional[int] = None
+    tax_total_cents: Optional[int] = None
+    grand_total_cents: Optional[int] = None
+    client: Optional[ClientBrief] = None
+    model_config = {"from_attributes": True}
+
+
+class DocumentUpdate(BaseModel):
+    """Mise à jour complète d'un document."""
+    client_id: Optional[UUID] = None
+    template_id: Optional[UUID] = None
+    layout_style: Optional[str] = None
+    due_date: Optional[datetime] = None
+    items: Optional[List[DocumentItemCreate]] = None
+    notes: Optional[str] = None
+    
+    # ✅ NOUVEAU : Champs de style/couleurs
+    primary_color: Optional[str] = None
+    secondary_color: Optional[str] = None
+    accent_color: Optional[str] = None
+    background_color: Optional[str] = None
+    text_color: Optional[str] = None
+    font_family: Optional[str] = None
+    show_bank_details: Optional[bool] = None
+    show_tax_id: Optional[bool] = None
+    payment_schedule: Optional[list[MilestoneInput]] = None 
+    @field_validator("layout_style")
+    @classmethod
+    def validate_layout_style(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio"]
+        if v not in valid_layouts:
+            raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
+        return v
+
+
+class DocumentStatusUpdate(BaseModel):
+    status: DocumentStatus
+
+class DocumentEmailRequest(BaseModel):
+    custom_message: Optional[str] = Field("", max_length=1000, description="Message personnalisé")
+    # On récupère l'email du client en base, mais on peut forcer un email ici
+    override_email: Optional[str] = Field(None, description="Forcer l'envoi à un autre email")
+    attach_pdf: bool = False
+
+
+class DocumentPreviewItem(BaseModel):
+    description: str = ""
+    quantity: int = 1
+    unit_price_cents: int = 0
+    tax_rate: int = 20
+
+class MilestonePreviewInput(BaseModel):
+    sequence: int = Field(ge=1)
+    title: str
+    percent: float = Field(ge=0, le=100)
+    description: Optional[str] = None
+    trigger_date: Optional[str] = None  # ISO format
+
+class DocumentPreviewRequest(BaseModel):
+    type: Optional[str] = "DEVIS"
+    client_name: str = "Client Exemple"
+    client_email: str = ""
+    client_address: str = ""
+    client_phone: str = ""
+    items: List[DocumentPreviewItem] = []
+    template_id: Optional[str] = None
+    layout_style: str = "classic"
+    primary_color: str = "#2563EB"
+    secondary_color: str = "#1E40AF"
+    accent_color: str = "#DBEAFE"
+    text_color: str = "#1F2937"
+    background_color: str = "#FFFFFF"
+    font_family: str = "Inter"
+    header_text: Optional[str] = None
+    footer_text: Optional[str] = None
+    show_bank_details: bool = True
+    show_tax_id: bool = True
+    notes: Optional[str] = None
+    reference: Optional[str] = None
+    payment_schedule: Optional[List[MilestonePreviewInput]] = None
+
+
+class DocumentListRead(BaseModel):
+    id: UUID
+    type: DocumentType
+    status: DocumentStatus
+    number: Optional[str] = None
+    created_at: datetime
+    due_date: Optional[datetime] = None
+    sent_at: Optional[datetime] = None
+    viewed_at: Optional[datetime] = None
+    client_id: UUID
+    client: Optional[ClientBrief] = None
+    template_id: Optional[UUID] = None
+    layout_style: str = "classic"
+    grand_total_cents: Optional[int] = None
+    project_id: Optional[UUID] = None
+    model_config = {"from_attributes": True}
+
+class AcceptDocumentRequest(BaseModel):
+    signature_name: str = Field(..., min_length=2, max_length=255, description="Nom du signataire")
+
+class RefuseDocumentRequest(BaseModel):
+    reason: Optional[str] = Field(None, max_length=1000, description="Motif du refus")

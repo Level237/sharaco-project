@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document.type.value or 'DEVIS' }} - {{ document.number or 'N/A' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════════════════════
+           RESET & BASE
+        ═══════════════════════════════════════════════════════════════ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #111111;
+            line-height: 1.6;
+            background-color: #fafafa;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           PAGE CONTAINER
+        ═══════════════════════════════════════════════════════════════ */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 60px;
+            position: relative;
+        }
+
+        @media screen {
+            body {
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+            }
+            .page {
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body {
+                background: white;
+                padding: 0;
+                display: block;
+            }
+            .page {
+                box-shadow: none;
+                padding: 40px;
+                min-height: auto;
+                height: auto !important;
+            }
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           HEADER
+        ══════════════════════════════════════════════════════════════ */
+        .header {
+            margin-bottom: 80px;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-table td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        .header-left {
+            width: 60%;
+        }
+
+        .header-right {
+            width: 40%;
+            text-align: right;
+        }
+
+        .logo-container {
+            margin-bottom: 15px;
+        }
+
+        .logo-container img {
+            max-height: 35px;
+            max-width: 200px;
+            object-fit: contain;
+        }
+
+        .company-name {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            color: #111111;
+            margin-bottom: 4px;
+        }
+
+        .company-details {
+            font-size: 12px;
+            color: #71717a;
+            max-width: 250px;
+            line-height: 1.6;
+        }
+
+        .doc-type {
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: -0.04em;
+            text-transform: lowercase;
+            margin-bottom: 5px;
+            color: #111111;
+        }
+
+        .doc-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #71717a;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           META GRID
+        ══════════════════════════════════════════════════════════════ */
+        .meta-grid {
+            margin-bottom: 60px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e4e4e7;
+        }
+
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .meta-table td {
+            vertical-align: top;
+            padding: 0 10px 0 0;
+        }
+
+        .meta-table td:last-child {
+            padding-right: 0;
+        }
+
+        .meta-label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            font-size: 13px;
+            font-weight: 500;
+            color: #111111;
+        }
+
+        .status-text {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .status-draft {
+            color: #d97706;
+        }
+
+        .status-sent {
+            color: #2563eb;
+        }
+
+        .status-paid {
+            color: #059669;
+        }
+
+        .status-overdue {
+            color: #dc2626;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           PARTIES
+        ══════════════════════════════════════════════════════════════ */
+        .parties {
+            margin-bottom: 60px;
+        }
+
+        .parties-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .parties-table td {
+            vertical-align: top;
+            padding: 0 30px 0 0;
+        }
+
+        .parties-table td:last-child {
+            padding-right: 0;
+        }
+
+        .party-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            margin-bottom: 12px;
+        }
+
+        .party-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #111111;
+        }
+
+        .party-info {
+            font-size: 13px;
+            color: #71717a;
+            line-height: 1.6;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           ITEMS TABLE
+        ══════════════════════════════════════════════════════════════ */
+        .items-section {
+            margin-bottom: 40px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table thead tr {
+            border-bottom: 1px solid #111111;
+        }
+
+        .items-table th {
+            text-align: left;
+            padding: 12px 0;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            font-weight: 500;
+        }
+
+        .items-table td {
+            padding: 20px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #e4e4e7;
+            vertical-align: top;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .text-right {
+            text-align: right !important;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .col-desc { width: 55%; }
+        .col-qty { width: 10%; }
+        .col-price { width: 15%; }
+        .col-total { width: 20%; }
+
+        /* ══════════════════════════════════════════════════════════════
+           SUMMARY
+        ══════════════════════════════════════════════════════════════ */
+        .summary {
+            margin-bottom: 60px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-table td {
+            vertical-align: top;
+            padding: 0;
+        }
+
+        .summary-spacer {
+            width: 70%;
+        }
+
+        .summary-totals {
+            width: 30%;
+        }
+
+        .totals-box {
+            width: 100%;
+            max-width: 250px;
+            margin-left: auto;
+        }
+
+        .total-row {
+            display: table;
+            width: 100%;
+            padding: 10px 0;
+            font-size: 13px;
+        }
+
+        .total-row:last-child {
+            border-bottom: none;
+        }
+
+        .total-row.grand {
+            margin-top: 10px;
+            padding-top: 20px;
+            border-top: 1px solid #111111;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .total-label-cell {
+            display: table-cell;
+            color: #71717a;
+        }
+
+        .total-value-cell {
+            display: table-cell;
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .grand .total-label-cell,
+        .grand .total-value-cell {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111111;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           ✨ ÉCHÉANCIER (style minimaliste)
+        ══════════════════════════════════════════════════════════════ */
+        .schedule-section {
+            margin-bottom: 60px;
+            break-inside: auto;
+            page-break-inside: auto;
+        }
+
+        .schedule-header {
+            display: table;
+            width: 100%;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #111111;
+        }
+
+        .schedule-header-left {
+            display: table-cell;
+            vertical-align: bottom;
+        }
+
+        .schedule-header-right {
+            display: table-cell;
+            vertical-align: bottom;
+            text-align: right;
+        }
+
+        .schedule-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .schedule-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #71717a;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .schedule-table thead tr {
+            border-bottom: 1px solid #111111;
+        }
+
+        .schedule-table thead {
+            display: table-header-group;
+        }
+
+        .schedule-table th {
+            text-align: left;
+            padding: 12px 0;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            font-weight: 500;
+        }
+
+        .schedule-table th.text-right {
+            text-align: right;
+        }
+
+        .schedule-table th.text-center {
+            text-align: center;
+        }
+
+        .schedule-table tbody tr {
+            border-bottom: 1px solid #e4e4e7;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .schedule-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-table td {
+            padding: 16px 0;
+            font-size: 13px;
+            vertical-align: middle;
+            color: #111111;
+        }
+
+        .schedule-table td.text-right {
+            text-align: right;
+        }
+
+        .schedule-table td.text-center {
+            text-align: center;
+        }
+
+        .col-seq { width: 8%; }
+        .col-title { width: 37%; }
+        .col-date { width: 20%; }
+        .col-percent { width: 15%; }
+        .col-amount { width: 20%; }
+
+        /* Numéro séquence - style monospace */
+        .seq-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #71717a;
+            font-weight: 500;
+        }
+
+        /* Titre échéance */
+        .schedule-title-cell {
+            font-weight: 500;
+            color: #111111;
+            line-height: 1.4;
+        }
+
+        .schedule-desc-cell {
+            display: block;
+            font-size: 11px;
+            color: #71717a;
+            margin-top: 3px;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        /* Date */
+        .schedule-date-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #111111;
+            font-weight: 500;
+        }
+
+        .schedule-date-empty {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #a1a1aa;
+            font-style: italic;
+        }
+
+        /* Pourcentage */
+        .schedule-percent-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #111111;
+            font-weight: 500;
+        }
+
+        /* Montant */
+        .schedule-amount-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #111111;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Ligne de total */
+        .schedule-table tfoot tr td {
+            padding: 16px 0 8px 0;
+            border-top: 1px solid #111111;
+        }
+
+        .schedule-total-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #71717a;
+            font-weight: 500;
+        }
+
+        .schedule-total-percent {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #111111;
+            font-weight: 500;
+        }
+
+        .schedule-total-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #111111;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Note finale */
+        .schedule-note {
+            margin-top: 16px;
+            font-size: 11px;
+            color: #71717a;
+            line-height: 1.6;
+            font-style: italic;
+            padding-left: 12px;
+            border-left: 2px solid #e4e4e7;
+        }
+
+        .schedule-note strong {
+            color: #111111;
+            font-style: normal;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           FOOTER
+        ══════════════════════════════════════════════════════════════ */
+        .footer {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid #e4e4e7;
+        }
+
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .footer-table td {
+            vertical-align: top;
+            padding: 0 20px 0 0;
+        }
+
+        .footer-table td:last-child {
+            padding-right: 0;
+        }
+
+        .footer-note {
+            max-width: 350px;
+            font-size: 11px;
+            color: #71717a;
+            line-height: 1.6;
+        }
+
+        .bank-info {
+            text-align: right;
+            font-size: 11px;
+            color: #71717a;
+            line-height: 1.6;
+        }
+
+        .bank-info strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #111111;
+        }
+
+        .bank-details-box {
+            font-family: 'JetBrains Mono', monospace;
+            background: #fafafa;
+            padding: 10px;
+            border-radius: 4px;
+            color: #3f3f46;
+            font-size: 10px;
+            word-break: break-all;
+            border: 1px solid #e4e4e7;
+            margin-top: 6px;
+            text-align: left;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           MULTI-PAGE SUPPORT
+        ══════════════════════════════════════════════════════════════ */
+        .page {
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        .header,
+        .meta-grid,
+        .parties,
+        .summary,
+        .footer {
+            page-break-inside: avoid;
+        }
+
+        .items-table tr {
+            page-break-inside: auto;
+        }
+
+        .items-table tr td {
+            page-break-inside: avoid;
+        }
+
+        @media print {
+            .page {
+                height: auto !important;
+                min-height: auto !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+    <!-- ══════════════════════════════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="header">
+        <table class="header-table">
+            <tr>
+                <td class="header-left">
+                    <div class="logo-container">
+                        {% if user.logo_url %}
+                            <img src="{{ user.logo_url }}" alt="Logo">
+                        {% else %}
+                            <div class="company-name">
+                                {{ user.company_name or 'ENTREPRISE' }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="company-details">
+                        {% if user.address %}
+                            {{ user.address }}
+                        {% endif %}
+                    </div>
+                </td>
+                <td class="header-right">
+                    <h1 class="doc-type">{{ document.type.value or 'devis' }}</h1>
+                    <div class="doc-number">REF_{{ document.number or 'N/A' }}</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         META GRID
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="meta-grid">
+        <table class="meta-table">
+            <tr>
+                <td style="width: 25%;">
+                    <span class="meta-label">Date</span>
+                    <span class="meta-value">
+                        {{ document.created_at.strftime('%d.%m.%Y') if document.created_at else '-' }}
+                    </span>
+                </td>
+                <td style="width: 25%;">
+                    {% if document.due_date %}
+                        <span class="meta-label">Échéance</span>
+                        <span class="meta-value">
+                            {{ document.due_date.strftime('%d.%m.%Y') }}
+                        </span>
+                    {% endif %}
+                </td>
+                <td style="width: 25%;">
+                    {% if template.show_tax_id and user.tax_id %}
+                        <span class="meta-label">Identifiant</span>
+                        <span class="meta-value">{{ user.tax_id }}</span>
+                    {% endif %}
+                </td>
+                <td style="width: 25%;">
+                    <span class="meta-label">Statut</span>
+                    <span class="meta-value status-text status-{{ document.status.value.lower() if document.status else 'draft' }}">
+                        {{ document.status.value if document.status else 'Brouillon' }}
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         PARTIES
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="parties">
+        <table class="parties-table">
+            <tr>
+                <td style="width: 50%;">
+                    <div class="party-label">ÉMETTEUR</div>
+                    <div class="party-name">{{ user.company_name or user.email or 'Entreprise' }}</div>
+                    <div class="party-info">
+                        {% if user.address %}
+                            {{ user.address | replace('\n', '<br>') | safe }}<br>
+                        {% endif %}
+                        {% if template.show_tax_id and user.tax_id %}
+                            SIRET : {{ user.tax_id }}
+                        {% endif %}
+                    </div>
+                </td>
+                <td style="width: 50%;">
+                    <div class="party-label">CLIENT</div>
+                    <div class="party-name">{{ client.name or 'Client' }}</div>
+                    <div class="party-info">
+                        {% if client.email %}{{ client.email }}<br>{% endif %}
+                        {% if client.address %}
+                            {{ client.address | replace('\n', '<br>') | safe }}<br>
+                        {% endif %}
+                        {% if client.phone %}
+                            Tél : {{ client.phone }}
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         ITEMS TABLE
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="items-section">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th class="col-desc">DESCRIPTION</th>
+                    <th class="col-qty text-right">QTÉ</th>
+                    <th class="col-price text-right">PRIX UNIT.</th>
+                    <th class="col-total text-right">TOTAL HT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                {% set ht = (item.quantity or 1) * (item.unit_price_cents or 0) %}
+                <tr>
+                    <td class="col-desc">{{ item.description or 'Article sans description' }}</td>
+                    <td class="col-qty text-right">{{ item.quantity or 1 }}</td>
+                    <td class="col-price text-right mono">{{ "{:,}".format(item.unit_price_cents or 0) }} {{ currency }}</td>
+                    <td class="col-total text-right mono">{{ "{:,}".format(ht) }} {{ currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SUMMARY
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="summary">
+        <table class="summary-table">
+            <tr>
+                <td class="summary-spacer"></td>
+                <td class="summary-totals">
+                    <div class="totals-box">
+                        <div class="total-row">
+                            <div class="total-label-cell">Sous-total HT</div>
+                            <div class="total-value-cell">{{ "{:,}".format(totals.subtotal_cents) }} {{ currency }}</div>
+                        </div>
+                        <div class="total-row">
+                            <div class="total-label-cell">TVA</div>
+                            <div class="total-value-cell">{{ "{:,}".format(totals.tax_total_cents) }} {{ currency }}</div>
+                        </div>
+                        <div class="total-row grand">
+                            <div class="total-label-cell">TOTAL TTC</div>
+                            <div class="total-value-cell">{{ "{:,}".format(totals.grand_total_cents) }} {{ currency }}</div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         ✨ ÉCHÉANCIER DE PAIEMENT
+    ══════════════════════════════════════════════════════════════ -->
+    {% if document.payment_schedule and document.payment_schedule|length > 0 %}
+    {% set total_percent = document.payment_schedule | sum(attribute='percent') %}
+    {% set total_amount = document.payment_schedule | sum(attribute='amount_cents') %}
+    <div class="schedule-section">
+        <!-- Header -->
+        <div class="schedule-header">
+            <div class="schedule-header-left">
+                <h2 class="schedule-title">Échéancier de paiement</h2>
+            </div>
+            <div class="schedule-header-right">
+                <span class="schedule-count">
+                    {{ document.payment_schedule|length }} tranche{{ 's' if document.payment_schedule|length > 1 else '' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Tableau -->
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th class="col-seq text-center">N°</th>
+                    <th class="col-title">ÉCHÉANCE</th>
+                    <th class="col-date">DATE PRÉVUE</th>
+                    <th class="col-percent text-center">PART</th>
+                    <th class="col-amount text-right">MONTANT TTC</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for milestone in document.payment_schedule | sort(attribute='sequence') %}
+                <tr>
+                    <td class="text-center">
+                        <span class="seq-num">{{ "%02d"|format(milestone.sequence) }}</span>
+                    </td>
+                    <td>
+                        <span class="schedule-title-cell">{{ milestone.title }}</span>
+                        {% if milestone.description %}
+                        <span class="schedule-desc-cell">{{ milestone.description }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if milestone.trigger_date %}
+                        <span class="schedule-date-cell">{{ milestone.trigger_date.strftime('%d.%m.%Y') }}</span>
+                        {% else %}
+                        <span class="schedule-date-empty">À définir</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <span class="schedule-percent-cell">{{ milestone.percent }}%</span>
+                    </td>
+                    <td class="text-right">
+                        <span class="schedule-amount-cell">{{ "{:,}".format(milestone.amount_cents) }} {{ currency }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">
+                        <span class="schedule-total-label">Total échéancier</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="schedule-total-percent">{{ total_percent }}%</span>
+                    </td>
+                    <td class="text-right">
+                        <span class="schedule-total-amount">{{ "{:,}".format(total_amount) }} {{ currency }}</span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Note -->
+        <div class="schedule-note">
+            <strong>Note :</strong> Chaque échéance fera l'objet d'une facture distincte. Paiement exigible dans les 30 jours suivant l'émission.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════════════════════════════
+         FOOTER
+    ══════════════════════════════════════════════════════════════ -->
+    <div class="footer">
+        <table class="footer-table">
+            <tr>
+                <td style="width: 50%;">
+                    <div class="footer-note">
+                        {% if template.footer_text %}
+                            {{ template.footer_text }}
+                        {% else %}
+                            Merci pour votre confiance. Ce document est une pièce comptable officielle.
+                        {% endif %}
+                    </div>
+                </td>
+                <td style="width: 50%;">
+                    {% if template.show_bank_details and user.payment_info %}
+                        <div class="bank-info">
+                            <strong>Coordonnées bancaires</strong>
+                            <div class="bank-details-box">
+                                {{ user.payment_info | replace('\n', '<br>') | safe }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

@@ -24,8 +24,10 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
     OVERDUE: { label: "En retard", color: "text-rose-500", bg: "bg-rose-500/10", icon: AlertTriangle },
 }
 
+type FilterType = "all" | "paid" | "overdue" | "pending";
+
 export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
-    const [filter, setFilter] = useState<"all" | "paid" | "overdue" | "pending">("all");
+    const [filter, setFilter] = useState<FilterType>("all");
 
     const filteredInvoices = quote.invoices.filter(inv => {
         if (filter === "all") return true;
@@ -39,12 +41,17 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
     const paidCount = quote.invoices.filter(i => i.status === "PAID").length;
     const overdueCount = quote.invoices.filter(i => i.status === "OVERDUE" || (i.days_late && i.days_late > 0)).length;
 
-    const filterButtons = [
+    const filterButtons: Array<{
+        key: FilterType;
+        label: string;
+        count: number;
+        color?: string;
+    }> = [
         { key: "all", label: "Toutes", count: quote.invoices.length },
         { key: "paid", label: "Payées", count: paidCount },
         { key: "overdue", label: "En retard", count: overdueCount, color: "text-rose-500" },
         { key: "pending", label: "En attente", count: quote.invoices.length - paidCount - overdueCount },
-    ] as const;
+    ];
 
     return (
         <motion.div

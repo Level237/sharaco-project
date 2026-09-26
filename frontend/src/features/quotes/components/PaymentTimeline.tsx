@@ -15,26 +15,26 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-interface Milestone {
-    id: string;
-    sequence: number;
-    title: string;
-    percent: number;
-    amount_cents: number;
-    description?: string;
-    trigger_date?: string;
-    status: "PENDING" | "INVOICED" | "PAID" | "CANCELLED";
-    invoice_id?: string;
-    invoiced_at?: string;
-    paid_at?: string;
+export interface Milestone {
+    id?: string;
+    sequence?: number;
+    title?: string;
+    percent?: number;
+    amount_cents?: number;
+    description?: string | null;
+    trigger_date?: string | null;
+    status?: "PENDING" | "INVOICED" | "PAID" | "CANCELLED" | string;
+    invoice_id?: string | null;
+    invoiced_at?: string | null;
+    paid_at?: string | null;
 }
 
 interface PaymentTimelineProps {
     quoteId: string;
-    quoteNumber: string;
+    quoteNumber?: string;
     milestones: Milestone[];
-    quoteStatus: string;
-    onUpdate: () => void;
+    quoteStatus?: string;
+    onUpdate?: () => void;
 }
 
 const formatDate = (dateString: string) => {
@@ -56,17 +56,17 @@ export function PaymentTimeline({
     const { toast } = useToast();
     const router = useRouter();
 
-    const sortedMilestones = [...milestones].sort((a, b) => a.sequence - b.sequence);
+    const sortedMilestones = [...milestones].sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
 
     const paidMilestones = milestones.filter(m => m.status === "PAID");
-    const totalPaidAmount = paidMilestones.reduce((sum, m) => sum + m.amount_cents, 0);
-    const totalAmount = milestones.reduce((sum, m) => sum + m.amount_cents, 0);
+    const totalPaidAmount = paidMilestones.reduce((sum, m) => sum + (m.amount_cents || 0), 0);
+    const totalAmount = milestones.reduce((sum, m) => sum + (m.amount_cents || 0), 0);
     const progressPercent = totalAmount > 0 ? (totalPaidAmount / totalAmount) * 100 : 0;
 
     const getNextFacturableMilestone = (): Milestone | null => {
         for (const milestone of sortedMilestones) {
             if (milestone.status === "PENDING") {
-                const prevIndex = milestone.sequence - 2;
+                const prevIndex = (milestone.sequence || 1) - 2;
                 if (prevIndex >= 0) {
                     const prev = sortedMilestones[prevIndex];
                     if (prev.status !== "PAID") return null;
@@ -91,7 +91,7 @@ export function PaymentTimeline({
                 title: "✅ Facture créée avec succès",
                 description: `${result.invoice_number} — ${result.milestone_title} (${result.milestone_percent}%)`,
             });
-            onUpdate();
+            onUpdate?.();
 
             setTimeout(() => {
                 router.push(`/dashboard/invoices/${result.invoice_id}`);
@@ -229,7 +229,7 @@ export function PaymentTimeline({
                                         isNext ? "border-sky-200 dark:border-sky-700/50 shadow-[0_0_0_4px_rgba(14,165,233,0.1)]" :
                                         "border-slate-100 dark:border-slate-800"
                                     )}>
-                                        {getStatusIcon(milestone.status)}
+                                        {getStatusIcon(milestone.status || "PENDING")}
                                     </div>
 
                                     {/* ═══════════ CARTE MILESTONE ═══════════ */}
@@ -263,7 +263,7 @@ export function PaymentTimeline({
 
                                                 <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-1 shrink-0">
                                                     <div className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 tabular-nums whitespace-nowrap">
-                                                        {formatCurrency(milestone.amount_cents)}
+                                                        {formatCurrency(milestone.amount_cents || 0)}
                                                     </div>
                                                     <div className="text-[10px] sm:text-xs text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                                                         {milestone.percent}%
@@ -275,7 +275,7 @@ export function PaymentTimeline({
                                         {/* ═══════════ FOOTER DE LA CARTE ═══════════ */}
                                         <div className="bg-slate-50/50 dark:bg-slate-900/20 border-t border-slate-100 dark:border-slate-800/60 px-3 sm:px-4 py-2.5 sm:py-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-2 sm:gap-3">
                                             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-                                                {getStatusBadge(milestone.status)}
+                                                {getStatusBadge(milestone.status || "PENDING")}
 
                                                 <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
                                                     <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />

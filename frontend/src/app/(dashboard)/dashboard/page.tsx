@@ -3,7 +3,7 @@
 
 import { ActivityFeed } from "@/features/activity/components/ActivityFeed";
 import { DocumentsStats } from "@/features/quotes/components/DocumentsStats";
-import { useEffect, useState, useRef } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { authApi } from '@/features/auth/api/authApi';
@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { OnboardingTour } from "@/features/dashboard/components/OnboardingTour";
 import { OverdueAlertBanner } from "@/features/dashboard/components/OverdueAlertBanner";
 
-export default function DashboardPage() {
+function DashboardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isChecking, setIsChecking] = useState(true);
@@ -105,5 +105,17 @@ export default function DashboardPage() {
                 </div>
             </div>
         </>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-black">
+                <div className="text-zinc-500">Chargement du tableau de bord...</div>
+            </div>
+        }>
+            <DashboardContent />
+        </Suspense>
     );
 }

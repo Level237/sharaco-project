@@ -7,14 +7,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 export const quotesApi = {
     getAll: async (params?: {
         type?: string;
-        project_id?: string;  // ✅ NOUVEAU
+        project_id?: string;
     }): Promise<Document[]> => {
         const query = new URLSearchParams();
-        if (params?.type) query.set('type', params.type);
+        query.set('type', params?.type || 'DEVIS');
         if (params?.project_id) query.set('project_id', params.project_id);
 
-        const queryString = query.toString();
-        return api.get<Document[]>(`/api/v1/documents?type=DEVIS${queryString ? `?${queryString}` : ''}`);
+        return api.get<Document[]>(`/api/v1/documents?${query.toString()}`);
     },
 
     generateNextInvoice: async (quoteId: string): Promise<{

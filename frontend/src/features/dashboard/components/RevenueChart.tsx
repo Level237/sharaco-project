@@ -1,5 +1,6 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { TrendingUp } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,9 +11,9 @@ interface RevenueChartProps {
     data: MonthlyRevenue[]
 }
 
-const formatMonth = (monthString: string) => {
+const formatMonth = (monthString?: string | number | null) => {
     if (!monthString) return "";
-    const date = new Date(monthString + "-01");
+    const date = new Date(String(monthString) + "-01");
     // Format to short french month, e.g., "Jan", "Fév"
     return new Intl.DateTimeFormat('fr-FR', { month: 'short' }).format(date);
 }

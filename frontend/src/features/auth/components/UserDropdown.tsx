@@ -30,10 +30,9 @@ export default function UserDropdown() {
             }}
             animate={{
               opacity: 1,
-              transform: "translateY(10px) translateY(-10px)",
-              transition: "transform 300ms, opacity 30ms",
-
+              y: 0,
             }}
+            transition={{ duration: 0.3 }}
             className="dropdown-menu bg-[#b1b1b17c] shadow-none  border-[#ffffff]  border-[0.1rem] dark:bg-[#25282a] dark:border-[#6b6a6a36] absolute right-0 dropdown-menu-end navbar-dropdown-menu navbar-dropdown-menu-borderless navbar-dropdown-account show" aria-labelledby="accountNavbarDropdown" style={{ width: "16rem", }}>
             <div className="dropdown-item-text">
               <div className="d-flex align-items-center">

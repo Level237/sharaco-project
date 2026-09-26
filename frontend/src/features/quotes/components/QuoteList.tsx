@@ -55,7 +55,9 @@ const statusConfig: Record<DocumentStatus, { label: string, icon: any, color: st
     OVERDUE: { label: "En retard", icon: Ban, color: "text-rose-500" },
 }
 
-const containerVariants = {
+import type { Variants } from "framer-motion"
+
+const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
         opacity: 1,
@@ -63,7 +65,7 @@ const containerVariants = {
     }
 }
 
-const cardVariants = {
+const cardVariants: Variants = {
     hidden: { opacity: 0, scale: 0.95 },
     show: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 300, damping: 25 } }
 }

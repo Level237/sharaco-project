@@ -15,12 +15,14 @@ interface ProjectQuoteGridProps {
     onRefresh?: () => void;
 }
 
-const containerVariants = {
+import type { Variants } from "framer-motion";
+
+const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.08 } }
 }
 
-const cardVariants = {
+const cardVariants: Variants = {
     hidden: { opacity: 0, y: 15, scale: 0.98 },
     show: { 
         opacity: 1, 

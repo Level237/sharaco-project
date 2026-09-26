@@ -11,6 +11,7 @@ from app.services.clientService import ClientService
 from app.services.pdfRenderer import pdf_renderer
 from app.services.templateService import TemplateService
 from app.schemas.reminder import ReminderConfigCreate, ReminderConfigRead, ReminderConfigUpdate, ReminderLogRead
+from app.models.document import DocumentStatus
 
 router = APIRouter(tags=["reminders"])
 

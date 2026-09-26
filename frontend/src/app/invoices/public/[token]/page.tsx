@@ -13,7 +13,8 @@ export default function PublicInvoicePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/invoices/public/${token}`)
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        fetch(`${apiUrl}/api/v1/documents/invoices/public/${token}`)
             .then((r) => r.json())
             .then(setData)
             .finally(() => setLoading(false));

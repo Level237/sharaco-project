@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 interface EditorHeaderProps {
     draft: QuoteDraft;
-    documentId: string | null;
+    documentId?: string | null;
     documentNumber: string | null;
     zoom: number;
     onZoomIn: () => void;
@@ -39,7 +39,7 @@ interface EditorHeaderProps {
     isDownloading: boolean;
     isSaving?: boolean;
     lastSavedAt?: Date | null;
-    saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
+    saveStatus?: 'idle' | 'saving' | 'saved' | 'updating' | 'updated' | 'error';
     hasUnsavedChanges?: boolean;
     isEditMode?: boolean;
 }
@@ -231,14 +231,14 @@ export function EditorHeader({
                                     Non sauvegardé
                                 </span>
                             </>
-                        ) : saveStatus === 'saving' ? (
+                        ) : (saveStatus === 'saving' || saveStatus === 'updating') ? (
                             <>
                                 <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 text-sky-400 animate-spin shrink-0" />
                                 <span className="hidden sm:inline text-[10px] font-bold text-sky-400 uppercase tracking-wider">
                                     Enregistrement...
                                 </span>
                             </>
-                        ) : lastSavedAt ? (
+                        ) : (saveStatus === 'saved' || saveStatus === 'updated' || lastSavedAt) ? (
                             <>
                                 <CheckCircle2 className="w-3 h-3 md:w-3.5 md:h-3.5 text-emerald-400 shrink-0" />
                                 <span className="hidden sm:inline text-[10px] font-medium text-emerald-400">

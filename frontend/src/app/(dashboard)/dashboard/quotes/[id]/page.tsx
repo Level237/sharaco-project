@@ -338,8 +338,8 @@ export default function QuoteDetailPage() {
                         <div className="mt-1 sm:mt-2">
                             <PaymentTimeline
                                 quoteId={quoteId}
-                                quoteNumber={quote.number}
-                                milestones={quote.payment_schedule}
+                                quoteNumber={quote.number || ""}
+                                milestones={quote.payment_schedule || []}
                                 quoteStatus={quote.status}
                                 onUpdate={loadQuote}
                             />

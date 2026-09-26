@@ -164,7 +164,7 @@ useEffect(() => {
 
         setIsSubmitting(true);
         try {
-            const response = await api.post(`/api/v1/documents/client/${token}/accept`, {
+            const response = await api.post<{ already_accepted?: boolean }>(`/api/v1/documents/client/${token}/accept`, {
                 signature_name: signatureName,
             });
 
@@ -203,7 +203,7 @@ useEffect(() => {
         if (document?.type === "FACTURE") return;
         setIsSubmitting(true);
         try {
-            const response = await api.post(`/api/v1/documents/client/${token}/refuse`, {
+            const response = await api.post<{ already_refused?: boolean }>(`/api/v1/documents/client/${token}/refuse`, {
                 reason: refusalReason || null,
             });
 

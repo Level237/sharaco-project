@@ -175,7 +175,7 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
                                 </Button>
                             </div>
                         ) : (
-                            <div
+                            <motion.div
                                 initial="hidden"
                                 animate="show"
                                 variants={{
@@ -195,12 +195,12 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
                                         index={index}
                                     />
                                 ))}
-                            </div>
+                            </motion.div>
                         )}
                     </div>
 
                     {/* Footer Tip */}
-                    <div
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 1 }}
@@ -211,7 +211,7 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
                             Design Engine v2.0
                         </p>
                         <div className="h-px w-8 sm:w-12 bg-slate-200 dark:bg-white/10" />
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </div>

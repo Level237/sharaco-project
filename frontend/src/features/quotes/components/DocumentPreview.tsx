@@ -7,7 +7,7 @@ import { quotesApi } from "@/features/quotes/api/quotesApi"
 
 interface DocumentPreviewProps {
     documentId: string
-    layoutStyle: string
+    layoutStyle?: string
 }
 
 export function DocumentPreview({ documentId, layoutStyle }: DocumentPreviewProps) {

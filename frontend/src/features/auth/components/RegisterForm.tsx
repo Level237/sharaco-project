@@ -310,10 +310,9 @@ export function RegisterForm() {
                                                     disabled={isPending}
                                                     className="flex w-full "
                                                     inputClassName="!w-full !flex-1 !bg-zinc-900/50 !border-zinc-800 !border-l-0 !text-white !h-12 !rounded-r-xl !placeholder:text-zinc-600 focus:!ring-[#2563EB] focus:!border-[#2563EB] focus:!border-l focus:!border-l-[#2563EB]"
-                                                    countrySelectClassName="!bg-zinc-900/50 !border-zinc-800 !text-white !h-12 !rounded-l-xl"
-
-                                                    countrySelectButtonClassName="!bg-zinc-900/50 !border-zinc-800 !h-12 !rounded-l-xl hover:!bg-zinc-800"
-                                                    dialCodeClassName="!text-zinc-400"
+                                                    countrySelectorStyleProps={{
+                                                        buttonClassName: "!bg-zinc-900/50 !border-zinc-800 !h-12 !rounded-l-xl hover:!bg-zinc-800",
+                                                    }}
                                                     placeholder="Entrez votre numéro de téléphone"
                                                     // Valeur renvoyée au format E.164 (ex: "+33612345678")
                                                     inputProps={{

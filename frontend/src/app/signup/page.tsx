@@ -1,5 +1,4 @@
-"use client"
-
+import { Suspense } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import Logo from "@/components/ui/logo"
@@ -13,7 +12,9 @@ export default function RegisterPage() {
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col items-center justify-center px-4 -mt-20">
-                <RegisterForm />
+                <Suspense fallback={<div className="text-zinc-500">Chargement...</div>}>
+                    <RegisterForm />
+                </Suspense>
             </main>
 
             {/* Footer */}

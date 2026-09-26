@@ -1,5 +1,6 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { PieChart as PieChartIcon } from "lucide-react"
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"

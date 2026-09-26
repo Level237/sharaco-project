@@ -84,5 +84,6 @@ export function useReminderHistory(documentId?: string) {
     return useQuery({
         queryKey: ['reminders', 'history', documentId],
         queryFn: () => remindersApi.getHistory(documentId),
+        enabled: !!documentId,
     });
 }

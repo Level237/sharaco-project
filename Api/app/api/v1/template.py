@@ -22,9 +22,7 @@ router = APIRouter(tags=["templates"])
 # ============================================================
 
 @router.get("/layouts")
-async def get_available_layouts(
-    current_user: User = Depends(get_current_user),
-):
+async def get_available_layouts():
     """Liste les layouts HTML disponibles sur le serveur."""
     return [
         {

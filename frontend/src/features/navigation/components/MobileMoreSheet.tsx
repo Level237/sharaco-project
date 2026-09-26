@@ -29,14 +29,8 @@ const BOTTOM_TAB_HREFS = [
 // ⚠️ Section Compte — ajuste les href selon tes pages réelles
 const ACCOUNT_ITEMS = [
     {
-        title: "Comptes",
-        desc: "Coordonnées bancaires & facturation",
-        icon: Wallet,
-        href: "/dashboard/billing-settings",
-    },
-    {
-        title: "Gestion de comptes",
-        desc: "Profil, entreprise & sécurité",
+        title: "Paramètres & Facturation",
+        desc: "Profil, coordonnées bancaires & sécurité",
         icon: Settings2,
         href: "/dashboard/settings",
     },

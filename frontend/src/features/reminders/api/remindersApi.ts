@@ -11,15 +11,15 @@ export const remindersApi = {
     },
 
     sendDocument: async (documentId: string): Promise<void> => {
-        return api.post<void>(`/api/v1/reminders/send/${documentId}`);
+        return api.post<void>(`/api/v1/reminders/documents/${documentId}/send`);
     },
 
     sendReminder: async (documentId: string, level: number): Promise<void> => {
-        return api.post<void>(`/api/v1/reminders/remind/${documentId}/${level}`);
+        return api.post<void>(`/api/v1/reminders/documents/${documentId}/remind/${level}`);
     },
 
     getHistory: async (documentId?: string): Promise<ReminderLog[]> => {
-        const query = documentId ? `?document_id=${documentId}` : '';
-        return api.get<ReminderLog[]>(`/api/v1/reminders/history${query}`);
+        if (!documentId) return [];
+        return api.get<ReminderLog[]>(`/api/v1/reminders/documents/${documentId}/history`);
     },
 };

@@ -34,6 +34,8 @@ interface PaymentTimelineProps {
     quoteNumber?: string;
     milestones: Milestone[];
     quoteStatus?: string;
+    quoteTotalCents?: number;
+    currency?: string;
     onUpdate?: () => void;
 }
 
@@ -50,6 +52,8 @@ export function PaymentTimeline({
     quoteNumber,
     milestones,
     quoteStatus,
+    quoteTotalCents,
+    currency,
     onUpdate,
 }: PaymentTimelineProps) {
     const [isGenerating, setIsGenerating] = useState(false);
@@ -58,10 +62,29 @@ export function PaymentTimeline({
 
     const sortedMilestones = [...milestones].sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
 
+    // Base total : priorité au montant total passé en prop, sinon somme des amount_cents
+    const sumStoredAmounts = milestones.reduce((sum, m) => sum + (m.amount_cents || 0), 0);
+    const resolvedBaseTotal = (quoteTotalCents && quoteTotalCents > 0)
+        ? quoteTotalCents
+        : sumStoredAmounts;
+
+    // Résolution cohérente du montant pour chaque échéance (supporte amount_cents direct ou calcul pourcentage du total)
+    const getMilestoneAmount = (m: Milestone): number => {
+        if (m.amount_cents && m.amount_cents > 0) {
+            return m.amount_cents;
+        }
+        if (resolvedBaseTotal > 0 && m.percent && m.percent > 0) {
+            return Math.round((resolvedBaseTotal * m.percent) / 100);
+        }
+        return 0;
+    };
+
     const paidMilestones = milestones.filter(m => m.status === "PAID");
-    const totalPaidAmount = paidMilestones.reduce((sum, m) => sum + (m.amount_cents || 0), 0);
-    const totalAmount = milestones.reduce((sum, m) => sum + (m.amount_cents || 0), 0);
-    const progressPercent = totalAmount > 0 ? (totalPaidAmount / totalAmount) * 100 : 0;
+    const totalPaidAmount = paidMilestones.reduce((sum, m) => sum + getMilestoneAmount(m), 0);
+    const totalAmount = resolvedBaseTotal > 0
+        ? resolvedBaseTotal
+        : milestones.reduce((sum, m) => sum + getMilestoneAmount(m), 0);
+    const progressPercent = totalAmount > 0 ? Math.min(100, Math.round((totalPaidAmount / totalAmount) * 100)) : 0;
 
     const getNextFacturableMilestone = (): Milestone | null => {
         for (const milestone of sortedMilestones) {
@@ -97,9 +120,13 @@ export function PaymentTimeline({
                 router.push(`/dashboard/invoices/${result.invoice_id}`);
             }, 800);
         } catch (err: any) {
+            const rawMsg = err.message || "";
+            const lower = rawMsg.toLowerCase();
+            const isMilestoneUnpaid = lower.includes("antérieure") || lower.includes("antérieur") || lower.includes("traitée") || lower.includes("doit être payée") || lower.includes("milestone") || lower.includes("échéance");
+
             toast({
-                title: "Erreur de génération",
-                description: err.message || "Impossible de générer la facture.",
+                title: isMilestoneUnpaid ? "Facture antérieure non traitée" : "Erreur de génération",
+                description: rawMsg || (isMilestoneUnpaid ? "La facture antérieure n'a pas encore été traitée. Elle doit être payée avant de facturer la suivante." : "Impossible de générer la facture."),
                 variant: "destructive",
             });
         } finally {
@@ -110,7 +137,7 @@ export function PaymentTimeline({
     const getStatusIcon = (status: string) => {
         switch (status) {
             case "PAID": return <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500" />;
-            case "INVOICED": return <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-500" />;
+            case "INVOICED": return <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#2563EB]" />;
             case "PENDING": return <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />;
             default: return <Circle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-300" />;
         }
@@ -119,7 +146,7 @@ export function PaymentTimeline({
     const getStatusBadge = (status: string) => {
         const config = {
             PAID: { label: "Payée", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-400", border: "border-emerald-200/60 dark:border-emerald-500/30" },
-            INVOICED: { label: "Facturée", bg: "bg-sky-50 dark:bg-sky-500/10", text: "text-sky-700 dark:text-sky-400", border: "border-sky-200/60 dark:border-sky-500/30" },
+            INVOICED: { label: "Facturée", bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-[#2563EB] dark:text-blue-400", border: "border-blue-200/60 dark:border-blue-500/30" },
             PENDING: { label: "En attente", bg: "bg-slate-100 dark:bg-slate-800/50", text: "text-slate-600 dark:text-slate-400", border: "border-slate-200/60 dark:border-slate-700/50" },
             CANCELLED: { label: "Annulée", bg: "bg-rose-50 dark:bg-rose-500/10", text: "text-rose-700 dark:text-rose-400", border: "border-rose-200/60 dark:border-rose-500/30" },
         }[status] || { label: status, bg: "bg-slate-100", text: "text-slate-600", border: "border-slate-200" };
@@ -137,13 +164,13 @@ export function PaymentTimeline({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6 md:mb-8">
                 <div>
                     <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                        <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-500 shrink-0" />
+                        <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#2563EB] shrink-0" />
                         <span>Échéancier de facturation</span>
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-500 mt-1 sm:mt-1.5">
                         {milestones.length} tranche{milestones.length > 1 ? "s" : ""} • Total:{" "}
-                        <span className="font-medium text-slate-700 dark:text-slate-300 tabular-nums">
-                            {formatCurrency(totalAmount)}
+                        <span className="font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
+                            {formatCurrency(totalAmount, currency)}
                         </span>
                     </p>
                 </div>
@@ -163,7 +190,7 @@ export function PaymentTimeline({
                             onClick={handleGenerateNext}
                             disabled={isGenerating}
                             size="sm"
-                            className="h-8 sm:h-9 bg-sky-600 hover:bg-sky-700 text-white font-medium shadow-sm transition-all rounded-lg px-3 sm:px-4 text-xs sm:text-sm"
+                            className="h-8 sm:h-9 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-medium shadow-sm transition-all rounded-lg px-3 sm:px-4 text-xs sm:text-sm"
                         >
                             {isGenerating ? (
                                 <>
@@ -188,9 +215,9 @@ export function PaymentTimeline({
                     <span className="text-slate-600 dark:text-slate-400">Montant encaissé</span>
                     <div className="flex items-baseline gap-1.5 sm:gap-2">
                         <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm sm:text-base tabular-nums">
-                            {formatCurrency(totalPaidAmount)}
+                            {formatCurrency(totalPaidAmount, currency)}
                         </span>
-                        <span className="text-slate-400 text-[10px] sm:text-xs font-normal">/ {formatCurrency(totalAmount)}</span>
+                        <span className="text-slate-400 text-[10px] sm:text-xs font-normal">/ {formatCurrency(totalAmount, currency)}</span>
                     </div>
                 </div>
                 <div className="h-1.5 sm:h-2 bg-slate-100 dark:bg-slate-800/80 rounded-full overflow-hidden shadow-inner">
@@ -212,10 +239,11 @@ export function PaymentTimeline({
                     <AnimatePresence>
                         {sortedMilestones.map((milestone, idx) => {
                             const isNext = nextMilestone?.id === milestone.id;
+                            const milestoneAmount = getMilestoneAmount(milestone);
 
                             return (
                                 <motion.div
-                                    key={milestone.id}
+                                    key={milestone.id || `ms-${idx}`}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.08, ease: "easeOut" }}
@@ -225,8 +253,8 @@ export function PaymentTimeline({
                                     <div className={cn(
                                         "relative z-10 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-[3px] transition-all shrink-0 bg-white dark:bg-[#0A0A0A]",
                                         milestone.status === "PAID" ? "border-emerald-100 dark:border-emerald-500/20" :
-                                        milestone.status === "INVOICED" ? "border-sky-100 dark:border-sky-500/20" :
-                                        isNext ? "border-sky-200 dark:border-sky-700/50 shadow-[0_0_0_4px_rgba(14,165,233,0.1)]" :
+                                        milestone.status === "INVOICED" ? "border-blue-100 dark:border-blue-500/20" :
+                                        isNext ? "border-[#2563EB]/40 dark:border-[#2563EB]/50 shadow-[0_0_0_4px_rgba(37,99,235,0.12)]" :
                                         "border-slate-100 dark:border-slate-800"
                                     )}>
                                         {getStatusIcon(milestone.status || "PENDING")}
@@ -235,7 +263,7 @@ export function PaymentTimeline({
                                     {/* ═══════════ CARTE MILESTONE ═══════════ */}
                                     <div className={cn(
                                         "flex-1 bg-white dark:bg-slate-950 border rounded-lg sm:rounded-xl overflow-hidden transition-all duration-200 min-w-0",
-                                        isNext ? "border-sky-200/80 dark:border-sky-800 shadow-sm ring-1 ring-sky-100 dark:ring-sky-900/30" : "border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700"
+                                        isNext ? "border-[#2563EB]/40 dark:border-[#2563EB]/50 shadow-sm ring-1 ring-[#2563EB]/20 dark:ring-[#2563EB]/30" : "border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700"
                                     )}>
                                         <div className="p-3 sm:p-4 md:p-5">
                                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
@@ -245,7 +273,7 @@ export function PaymentTimeline({
                                                             Étape {milestone.sequence}
                                                         </span>
                                                         {isNext && (
-                                                            <span className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                                                            <span className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-medium bg-blue-50 dark:bg-blue-500/10 text-[#2563EB] dark:text-blue-400">
                                                                 <AlertTriangle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                                                 À facturer
                                                             </span>
@@ -263,7 +291,7 @@ export function PaymentTimeline({
 
                                                 <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-1 shrink-0">
                                                     <div className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 tabular-nums whitespace-nowrap">
-                                                        {formatCurrency(milestone.amount_cents || 0)}
+                                                        {formatCurrency(milestoneAmount, currency)}
                                                     </div>
                                                     <div className="text-[10px] sm:text-xs text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md whitespace-nowrap">
                                                         {milestone.percent}%
@@ -298,7 +326,7 @@ export function PaymentTimeline({
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => router.push(`/dashboard/invoices/${milestone.invoice_id}`)}
-                                                    className="h-7 sm:h-8 text-[10px] sm:text-xs font-medium text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:text-sky-400 dark:hover:text-sky-300 dark:hover:bg-sky-500/10 px-2 sm:px-3 transition-colors self-end sm:self-auto"
+                                                    className="h-7 sm:h-8 text-[10px] sm:text-xs font-medium text-[#2563EB] hover:text-[#1d4ed8] hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-500/10 px-2 sm:px-3 transition-colors self-end sm:self-auto"
                                                 >
                                                     Voir la facture
                                                     <ExternalLink className="ml-1 sm:ml-1.5 h-3 w-3 sm:h-3.5 sm:w-3.5" />

@@ -47,6 +47,24 @@ class EmailService:
             
         except Exception as e:
             logger.error(f"❌ Erreur Resend: {e}", exc_info=True)
+            err_str = str(e).lower()
+            if any(term in err_str for term in [
+                "nameresolutionerror", 
+                "failed to resolve", 
+                "temporary failure in name resolution", 
+                "max retries exceeded", 
+                "httpsconnectionpool",
+                "connectionerror",
+                "gaierror",
+                "timeout",
+                "timed out"
+            ]):
+                return {
+                    "success": False, 
+                    "error": "Problème de connexion : impossible de joindre le serveur d'envoi. Veuillez vérifier votre connexion internet.", 
+                    "provider": "resend",
+                    "is_connection_error": True
+                }
             return {"success": False, "error": str(e), "provider": "resend"}
     
     @staticmethod
@@ -83,6 +101,22 @@ class EmailService:
             
         except Exception as e:
             logger.error(f"❌ Erreur SMTP: {e}", exc_info=True)
+            err_str = str(e).lower()
+            if any(term in err_str for term in [
+                "nameresolutionerror", 
+                "failed to resolve", 
+                "temporary failure in name resolution", 
+                "connectionrefusederror", 
+                "gaierror", 
+                "timeout", 
+                "timed out"
+            ]):
+                return {
+                    "success": False, 
+                    "error": "Problème de connexion : impossible de joindre le serveur SMTP. Veuillez vérifier votre connexion internet.", 
+                    "provider": "smtp",
+                    "is_connection_error": True
+                }
             return {"success": False, "error": str(e), "provider": "smtp"}
     
     @staticmethod

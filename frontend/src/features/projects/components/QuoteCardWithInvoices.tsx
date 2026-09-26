@@ -104,7 +104,7 @@ export function QuoteCardWithInvoices({ quote, variants, onExpand }: QuoteCardWi
                         <Button
                             onClick={onExpand}
                             size="icon"
-                            className="h-10 w-10 rounded-full bg-sky-500 text-white hover:bg-sky-400 shadow-lg hover:scale-110 transition-transform"
+                            className="h-10 w-10 rounded-full bg-[#2563EB] text-white hover:bg-[#1d4ed8] shadow-lg hover:scale-110 transition-transform"
                             title="Voir les factures"
                         >
                             <Folder className="h-4 w-4" />

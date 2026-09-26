@@ -408,12 +408,45 @@ async def send_document_email(
             )
     except Exception as e:
         logger.error(f"❌ Erreur envoi email: {e}", exc_info=True)
+        err_str = str(e).lower()
+        if any(term in err_str for term in [
+            "nameresolutionerror", 
+            "failed to resolve", 
+            "temporary failure in name resolution", 
+            "max retries exceeded", 
+            "httpsconnectionpool",
+            "connectionerror",
+            "gaierror",
+            "timeout",
+            "timed out"
+        ]):
+            raise HTTPException(
+                status_code=503,
+                detail="Problème de connexion : impossible de joindre le serveur d'envoi. Veuillez vérifier votre connexion internet."
+            )
         raise HTTPException(status_code=500, detail=f"Erreur d'envoi: {str(e)}")
 
     if not result.get("success"):
+        err_msg = result.get("error", "Erreur inconnue")
+        err_str = str(err_msg).lower()
+        if result.get("is_connection_error") or any(term in err_str for term in [
+            "nameresolutionerror", 
+            "failed to resolve", 
+            "temporary failure in name resolution", 
+            "max retries exceeded", 
+            "httpsconnectionpool",
+            "connectionerror",
+            "gaierror",
+            "timeout",
+            "problème de connexion"
+        ]):
+            raise HTTPException(
+                status_code=503,
+                detail="Problème de connexion : impossible de joindre le serveur d'envoi. Veuillez vérifier votre connexion internet."
+            )
         raise HTTPException(
             status_code=500,
-            detail=f"Erreur d'envoi: {result.get('error', 'Erreur inconnue')}"
+            detail=f"Erreur d'envoi: {err_msg}"
         )
 
     if document.status == DocumentStatus.DRAFT:
@@ -779,7 +812,7 @@ async def get_shared_document_public(
                 "sequence": ms.sequence,
                 "title": ms.title,
                 "percent": ms.percent,
-                "amount_cents": ms.amount_cents,
+                "amount_cents": ms.amount_cents if (ms.amount_cents is not None and ms.amount_cents > 0) else int(round((totals.get("grand_total_cents") or 0) * (ms.percent or 0) / 100)),
                 "description": ms.description,
                 "trigger_date": ms.trigger_date.isoformat() if ms.trigger_date else None,
                 "status": ms.status if isinstance(ms.status, str) else ms.status.value,
@@ -862,7 +895,7 @@ async def get_document_for_client(
                 "sequence": ms.sequence,
                 "title": ms.title,
                 "percent": ms.percent,
-                "amount_cents": ms.amount_cents,
+                "amount_cents": ms.amount_cents if (ms.amount_cents is not None and ms.amount_cents > 0) else int(round((totals.get("grand_total_cents") or 0) * (ms.percent or 0) / 100)),
                 "description": ms.description,
                 "trigger_date": ms.trigger_date.isoformat() if ms.trigger_date else None,
                 "status": ms.status if isinstance(ms.status, str) else ms.status.value,
@@ -1090,7 +1123,10 @@ async def generate_next_invoice(
         raise HTTPException(status_code=400, detail="Seuls les devis supportent cette action")
 
     if quote.status != DocumentStatus.ACCEPTED:
-        raise HTTPException(status_code=400, detail="Le devis doit être accepté")
+        raise HTTPException(
+            status_code=400, 
+            detail="Le devis doit d'abord être accepté/validé avant de pouvoir émettre ses factures."
+        )
 
     stmt = (
         select(PaymentSchedule)
@@ -1101,7 +1137,7 @@ async def generate_next_invoice(
     milestones = list(result.scalars().all())
 
     if not milestones:
-        raise HTTPException(status_code=400, detail="Ce devis n'a pas d'échéancier")
+        raise HTTPException(status_code=400, detail="Ce devis n'a pas d'échéancier défini")
 
     next_milestone = None
 
@@ -1113,7 +1149,7 @@ async def generate_next_invoice(
                 if prev_milestone.status != MilestoneStatus.PAID:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"La milestone '{prev_milestone.title}' doit être payée avant de facturer la suivante"
+                        detail=f"La facture antérieure ('{prev_milestone.title}') n'a pas encore été traitée. Elle doit être payée avant de facturer la suivante."
                     )
             next_milestone = milestone
             break
@@ -1299,6 +1335,18 @@ async def get_document(
         )
 
     totals = DocumentService.calculate_totals(document.items)
+    grand_total = totals.get("grand_total_cents") or 0
+    if grand_total > 0 and document.payment_schedule:
+        has_fixes = False
+        for ms in document.payment_schedule:
+            if not ms.amount_cents or ms.amount_cents <= 0:
+                ms.amount_cents = int(round(grand_total * (ms.percent or 0) / 100))
+                db.add(ms)
+                has_fixes = True
+        if has_fixes:
+            await db.commit()
+            await db.refresh(document, ['payment_schedule'])
+
     return _enrich_document(document, totals)
 
 
@@ -1331,16 +1379,6 @@ async def update_document(
         if not project_result.scalar_one_or_none():
             raise HTTPException(status_code=404, detail="Projet introuvable ou n'appartient pas à cet utilisateur")
 
-    if document_data.payment_schedule is not None:
-        try:
-            await PaymentScheduleService.set_schedule(
-                db,
-                document,
-                [m.model_dump() for m in document_data.payment_schedule],
-            )
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-
     try:
         updated = await DocumentService.update_document(
             db=db,
@@ -1363,6 +1401,27 @@ async def update_document(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    if document_data.payment_schedule is not None:
+        try:
+            await PaymentScheduleService.set_schedule(
+                db,
+                updated,
+                [m.model_dump() for m in document_data.payment_schedule],
+            )
+            await db.refresh(updated, ['payment_schedule'])
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+    elif updated.payment_schedule:
+        totals = DocumentService.calculate_totals(updated.items)
+        gt = totals.get("grand_total_cents") or 0
+        if gt > 0:
+            for ms in updated.payment_schedule:
+                if ms.status == MilestoneStatus.PENDING:
+                    ms.amount_cents = int(round(gt * (ms.percent or 0) / 100))
+                    db.add(ms)
+            await db.commit()
+            await db.refresh(updated, ['payment_schedule'])
 
     totals = DocumentService.calculate_totals(updated.items)
     return _enrich_document(updated, totals)
@@ -1875,7 +1934,11 @@ def _enrich_document(doc, totals: dict) -> dict:
                 "sequence": ms.sequence,
                 "title": ms.title,
                 "percent": ms.percent,
-                "amount_cents": ms.amount_cents,
+                "amount_cents": (
+                    ms.amount_cents
+                    if (ms.amount_cents is not None and ms.amount_cents > 0)
+                    else int(round((totals.get("grand_total_cents") or 0) * (ms.percent or 0) / 100))
+                ),
                 "description": ms.description,
                 "trigger_date": ms.trigger_date.isoformat() if ms.trigger_date else None,
                 "status": ms.status if isinstance(ms.status, str) else ms.status.value,

@@ -33,7 +33,12 @@ interface QuoteDetail {
         title?: string;
         percent?: number;
         amount_cents?: number;
+        description?: string | null;
+        trigger_date?: string | null;
         status?: string;
+        invoice_id?: string | null;
+        invoiced_at?: string | null;
+        paid_at?: string | null;
     }>;
 }
 
@@ -155,9 +160,13 @@ export default function QuoteDetailPage() {
                 router.push(`/dashboard/invoices/${result.invoice_id}`);
             }, 600);
         } catch (err: any) {
+            const rawMsg = err.message || "";
+            const lower = rawMsg.toLowerCase();
+            const isMilestoneUnpaid = lower.includes("antérieure") || lower.includes("antérieur") || lower.includes("traitée") || lower.includes("doit être payée") || lower.includes("milestone") || lower.includes("échéance");
+
             toast({
-                title: "Erreur",
-                description: err.message || "Impossible de générer la facture",
+                title: isMilestoneUnpaid ? "Facture antérieure non traitée" : "Erreur",
+                description: rawMsg || (isMilestoneUnpaid ? "La facture antérieure n'a pas encore été traitée. Elle doit être payée avant de facturer la suivante." : "Impossible de générer la facture"),
                 variant: "destructive",
             });
         } finally {
@@ -362,6 +371,7 @@ export default function QuoteDetailPage() {
                                 quoteNumber={quote.number || ""}
                                 milestones={quote.payment_schedule || []}
                                 quoteStatus={quote.status}
+                                quoteTotalCents={quote.grand_total_cents ?? quote.total_cents ?? 0}
                                 onUpdate={loadQuote}
                             />
                         </div>

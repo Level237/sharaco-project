@@ -83,7 +83,7 @@ export function FolderCard({
                                 ? "bg-rose-500 text-white"
                                 : allPaid
                                     ? "bg-emerald-500 text-white"
-                                    : "bg-sky-500 text-white"
+                                    : "bg-[#2563EB] text-white"
                         )}>
                             {invoiceCount}
                         </div>
@@ -104,7 +104,7 @@ export function FolderCard({
                             </span>
                         )}
                         {!hasOverdue && !allPaid && (
-                            <span className="text-[10px] font-medium text-slate-500">
+                            <span className="text-[10px] font-medium text-slate-400">
                                 {paidCount}/{invoiceCount} payée{invoiceCount > 1 ? 's' : ''}
                             </span>
                         )}
@@ -116,7 +116,7 @@ export function FolderCard({
                 TEXTE SOUS LE DOSSIER
             ═══════════════════════════════════════════════════ */}
             <div className="mt-3 px-1">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-sky-500 transition-colors">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-[#2563EB] transition-colors">
                     {title}
                 </h4>
                 <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1.5">

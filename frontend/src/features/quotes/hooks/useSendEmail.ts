@@ -39,7 +39,22 @@ export function useSendEmail() {
             });
         },
         onError: (error: any) => {
-            const errorMessage = error.response?.data?.detail || "Impossible d'envoyer l'email.";
+            let errorMessage = error.detail || error.response?.data?.detail || error.message || "Impossible d'envoyer l'email.";
+
+            const lower = String(errorMessage).toLowerCase();
+            if (
+                lower.includes("nameresolutionerror") ||
+                lower.includes("failed to resolve") ||
+                lower.includes("temporary failure in name resolution") ||
+                lower.includes("httpsconnectionpool") ||
+                lower.includes("max retries exceeded") ||
+                lower.includes("connectionerror") ||
+                lower.includes("gaierror") ||
+                lower.includes("failed to fetch") ||
+                lower.includes("networkerror")
+            ) {
+                errorMessage = "Problème de connexion : impossible de joindre le serveur d'envoi. Veuillez vérifier votre connexion internet.";
+            }
 
             toast({
                 title: "Erreur d'envoi",

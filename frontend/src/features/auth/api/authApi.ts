@@ -22,4 +22,8 @@ export const authApi = {
     getMe: async (): Promise<User> => {
         return api.get<User>('/api/v1/auth/me');
     },
+
+    exchangeOAuthCode: async (code: string): Promise<AuthResponse> => {
+        return api.post<AuthResponse>('/api/v1/auth/oauth/exchange', { code });
+    },
 };

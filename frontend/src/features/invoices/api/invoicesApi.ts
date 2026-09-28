@@ -53,10 +53,7 @@ export const invoicesApi = {
     },
 
     getPdfUrl: (id: string): string => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('sharaco_token') : null;
-        return token
-            ? `${API_URL}/api/v1/documents/${id}/pdf?token=${encodeURIComponent(token)}`
-            : `${API_URL}/api/v1/documents/${id}/pdf`;
+        return `${API_URL}/api/v1/documents/${id}/pdf`;
     },
 
     downloadPdf: async (id: string, filename?: string): Promise<void> => {

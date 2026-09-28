@@ -74,12 +74,34 @@ class AuthService:
         token = create_access_token(subject=str(user.id))
         return {"access_token": token, "token_type": "bearer"}
 
-    async def verifyIfEmailExist(db: AsyncSession, email: str):
-        user = await UserService.get_by_email(db, email)
-        
-        
-        if not user:
-            
-            return False
-        return True
+    _exchange_codes: dict = {}
+
+    @classmethod
+    def create_oauth_exchange_code(cls, access_token: str) -> str:
+        """Génère un code d'échange OAuth à usage unique éphémère (60 secondes) pour éviter d'exposer le JWT dans l'URL."""
+        import secrets
+        import time
+        now = time.time()
+        # Purge des codes expirés
+        cls._exchange_codes = {k: v for k, v in cls._exchange_codes.items() if v["expires_at"] > now}
+        code = secrets.token_urlsafe(32)
+        cls._exchange_codes[code] = {
+            "access_token": access_token,
+            "expires_at": now + 60,
+        }
+        return code
+
+    @classmethod
+    def consume_oauth_exchange_code(cls, code: str) -> str:
+        """Consomme un code d'échange (usage unique). Lève HTTPException 400 si invalide ou expiré."""
+        import time
+        now = time.time()
+        cls._exchange_codes = {k: v for k, v in cls._exchange_codes.items() if v["expires_at"] > now}
+        data = cls._exchange_codes.pop(code, None)
+        if not data or data["expires_at"] < now:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Code d'échange OAuth invalide ou expiré"
+            )
+        return data["access_token"]
         

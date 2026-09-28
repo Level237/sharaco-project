@@ -24,26 +24,38 @@ function DashboardContent() {
 
     useEffect(() => {
         const run = async () => {
-            const urlToken = searchParams.get('token');
+            const urlCode = searchParams.get('code');
+            const urlToken = searchParams.get('token'); // Fallback de compatibilité
 
-            if (urlToken && !hasProcessedOAuth.current) {
+            if ((urlCode || urlToken) && !hasProcessedOAuth.current) {
                 hasProcessedOAuth.current = true;
-                setToken(urlToken);
 
                 try {
-                    const user = await authApi.getMe();
-                    setUser(user);
+                    let activeToken = urlToken;
+                    if (urlCode) {
+                        const res = await authApi.exchangeOAuthCode(urlCode);
+                        activeToken = res.access_token;
+                    }
 
-                    // Toast de bienvenue après inscription
-                    if (!hasShownWelcome.current) {
-                        hasShownWelcome.current = true;
-                        toast.success('Compte créé avec succès !', {
-                            description: 'Bienvenue sur Sharaco. Suivez le guide pour commencer.',
-                            duration: 5000,
-                        });
+                    if (activeToken) {
+                        setToken(activeToken);
+                        const user = await authApi.getMe();
+                        setUser(user);
+
+                        // Toast de bienvenue après connexion
+                        if (!hasShownWelcome.current) {
+                            hasShownWelcome.current = true;
+                            toast.success('Connexion réussie !', {
+                                description: 'Bienvenue sur votre espace de gestion Sharaco.',
+                                duration: 4000,
+                            });
+                        }
                     }
                 } catch (err) {
-                    console.error("Erreur récupération profil:", err);
+                    console.error("Erreur finalisation connexion:", err);
+                    toast.error("Erreur de connexion", {
+                        description: "Le lien d'autorisation a expiré ou est invalide.",
+                    });
                 }
 
                 router.replace('/dashboard');
@@ -51,7 +63,7 @@ function DashboardContent() {
                 return;
             }
 
-            if (!urlToken) {
+            if (!urlCode && !urlToken) {
                 const storedToken = typeof window !== 'undefined' ? localStorage.getItem('sharaco_token') : null;
 
                 if (!storedToken && !token && !isAuthenticated) {

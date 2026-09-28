@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status,Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,10 +41,15 @@ class CompleteGoogleRegistrationRequest(BaseModel):
     company_name: str | None = None
     phone: str | None = None
 
+class OAuthExchangeRequest(BaseModel):
+    code: str
+
 logger = logging.getLogger(__name__)
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
 async def register(
+    request: Request,
     data: RegisterRequest,
     db: AsyncSession = Depends(get_db),
 ):
@@ -79,7 +84,9 @@ async def register(
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit("10/minute")
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
@@ -156,17 +163,44 @@ async def google_login(request: Request):
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
+@router.post("/oauth/exchange", response_model=Token)
+async def exchange_oauth_code(
+    payload: OAuthExchangeRequest,
+    response: Response,
+):
+    """Échange un code d'autorisation temporaire à usage unique (60s) contre le JWT d'accès réel sans exposer le JWT dans l'URL."""
+    access_token = AuthService.consume_oauth_exchange_code(payload.code)
+    
+    response.set_cookie(
+        key="sharaco_token",
+        value=access_token,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+        samesite="lax",
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
 @router.get("/google/callback")
 async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
-    """Reçoit le callback de Google et redirige vers le frontend."""
+    """Reçoit le callback de Google et redirige vers le frontend de manière sécurisée."""
     try:
         result = await AuthService.handle_google_callback(request, db)
         
         if result["action"] == "login":
-            print(f"✅ dddz {settings.FRONTEND_URL}/dashboard?token={result['access_token']}")
-            return RedirectResponse(
-                url=f"{settings.FRONTEND_URL}/dashboard?token={result['access_token']}"
+            # ✅ Sécurité OAuth (VULN-002) : Code à usage unique éphémère au lieu du master JWT dans l'URL
+            code = AuthService.create_oauth_exchange_code(result["access_token"])
+            response = RedirectResponse(
+                url=f"{settings.FRONTEND_URL}/dashboard?code={code}"
             )
+            response.set_cookie(
+                key="sharaco_token",
+                value=result["access_token"],
+                max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                path="/",
+                samesite="lax",
+            )
+            return response
         else:
             temp_token = result.get("temp_token")
             email = result.get("email")
@@ -227,8 +261,8 @@ async def change_password(
     if not verify_password(data.current_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Mot de passe actuel incorrect")
 
-    if len(data.new_password) < 6:
-        raise HTTPException(status_code=400, detail="Le nouveau mot de passe doit faire au moins 6 caractères")
+    if len(data.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Le nouveau mot de passe doit contenir au moins 8 caractères")
 
     current_user.hashed_password = get_password_hash(data.new_password)
     db.add(current_user)

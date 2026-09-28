@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
@@ -15,7 +15,7 @@ class UserCreate(BaseModel):
 
 class PasswordUpdate(BaseModel):
     current_password: str
-    new_password: str
+    new_password: str = Field(..., min_length=8, description="Nouveau mot de passe (min 8 caractères)")
 
 class UserRead(BaseModel):
     id: UUID

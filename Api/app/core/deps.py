@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import Depends, HTTPException, status, Query
+from fastapi import Depends, HTTPException, status, Cookie
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,13 +13,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=F
 
 async def get_current_user(
     header_token: Optional[str] = Depends(oauth2_scheme),
-    auth_token_query: Optional[str] = Query(None, alias="token"),
+    cookie_token: Optional[str] = Cookie(None, alias="sharaco_token"),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     """Décode le JWT et retourne l'utilisateur courant.
     À utiliser comme dependency dans toutes les routes protégées.
-    Supporte soit l'en-tête Authorization: Bearer <token>, soit le paramètre d'URL ?token=<token>."""
-    auth_token = header_token or auth_token_query
+    Supporte soit l'en-tête Authorization: Bearer <token>, soit le cookie sécurisé sharaco_token.
+    L'authentification par paramètre de requête (?token=...) est interdite pour prévenir les fuites de secrets (CWE-598)."""
+    auth_token = header_token or cookie_token
     if not auth_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

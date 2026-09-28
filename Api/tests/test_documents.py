@@ -89,22 +89,22 @@ class TestDocumentCalculations(unittest.TestCase):
         mock_db = AsyncMock()
 
         async def run_tests():
-            # 1. Ni header ni query -> 401 Not authenticated
+            # 1. Ni header ni cookie -> 401 Not authenticated
             with self.assertRaises(HTTPException) as cm:
-                await get_current_user(header_token=None, auth_token_query=None, db=mock_db)
+                await get_current_user(header_token=None, cookie_token=None, db=mock_db)
             self.assertEqual(cm.exception.status_code, 401)
             self.assertEqual(cm.exception.detail, "Not authenticated")
 
-            # 2. Token via header
+            # 2. Token via header Authorization
             with patch("app.services.userService.UserService.get_by_id", new_callable=AsyncMock) as mock_get_user:
                 mock_get_user.return_value = mock_user
-                user = await get_current_user(header_token=valid_jwt, auth_token_query=None, db=mock_db)
+                user = await get_current_user(header_token=valid_jwt, cookie_token=None, db=mock_db)
                 self.assertEqual(user.id, user_id)
 
-            # 3. Token via query parameter
+            # 3. Token via cookie sécurisé sharaco_token
             with patch("app.services.userService.UserService.get_by_id", new_callable=AsyncMock) as mock_get_user:
                 mock_get_user.return_value = mock_user
-                user = await get_current_user(header_token=None, auth_token_query=valid_jwt, db=mock_db)
+                user = await get_current_user(header_token=None, cookie_token=valid_jwt, db=mock_db)
                 self.assertEqual(user.id, user_id)
 
         asyncio.run(run_tests())

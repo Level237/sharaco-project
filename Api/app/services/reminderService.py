@@ -217,14 +217,22 @@ class ReminderService:
         """Envoie un document par email au client et change le statut en SENT."""
         template = await self._get_template(db, document, user)
 
-        # ✅ await ajouté : render_pdf est async
-        pdf_buffer = await pdf_renderer.render_pdf(
-            db=db, document=document, template=template, user=user, client=client
-        )
-        pdf_bytes = pdf_buffer.read()
+        # ✅ Sécurisation des accès : génération des tokens cryptographiques
+        if not document.client_token:
+            document.client_token = Document.generate_share_token()
+            document.client_token_email = client.email
+            db.add(document)
+        if not document.share_token:
+            document.share_token = Document.generate_share_token()
+            document.share_enabled = True
+            document.share_expires_at = to_naive_utc(
+                datetime.now(timezone.utc) + timedelta(days=30)
+            )
+            db.add(document)
+        await db.flush()
 
         base_url = settings.FRONTEND_URL or "http://localhost:3000"
-        document_link = f"{base_url}/view/{document.id}"
+        document_link = f"{base_url}/client/{document.client_token}"
 
         totals = self._calculate_totals_simple(document)
         html_content = self._render_email(
@@ -311,8 +319,22 @@ class ReminderService:
         await db.flush()
 
         try:
+            # ✅ Sécurisation des accès : génération des tokens cryptographiques
+            if not document.client_token:
+                document.client_token = Document.generate_share_token()
+                document.client_token_email = client.email
+                db.add(document)
+            if not document.share_token:
+                document.share_token = Document.generate_share_token()
+                document.share_enabled = True
+                document.share_expires_at = to_naive_utc(
+                    datetime.now(timezone.utc) + timedelta(days=30)
+                )
+                db.add(document)
+            await db.flush()
+
             base_url = settings.FRONTEND_URL or "http://localhost:3000"
-            document_link = f"{base_url}/view/{document.id}"
+            document_link = f"{base_url}/client/{document.client_token}"
             totals = self._calculate_totals_simple(document)
 
             subject_template = getattr(config, f"reminder_{reminder_level}_subject", "")

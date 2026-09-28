@@ -176,20 +176,34 @@ async def get_reminder_history(
 
 
 # ============================================================
-# TRACKING D'OUVERTURE (pixel + page publique)
+# TRACKING D'OUVERTURE (pixel + page publique sécurisée par token)
 # ============================================================
 
-@router.get("/track/{document_id}.png")
+@router.get("/track/{token}.png")
 async def track_pixel(
-    document_id: UUID,
+    token: str,
     db: AsyncSession = Depends(get_db),
     request: Request = None,
 ):
-    """Pixel de tracking 1x1 — enregistre l'ouverture du document."""
+    """Pixel de tracking 1x1 — enregistre l'ouverture du document via son token sécurisé."""
+    from sqlmodel import select, or_
+    from app.models.document import Document
+
     ip_address = request.client.host if request else None
     user_agent = request.headers.get("user-agent") if request else None
 
-    await reminder_service.track_view(db, document_id, ip_address, user_agent)
+    # Récupérer le document uniquement via son token cryptographique (share_token ou client_token)
+    statement = select(Document).where(
+        or_(
+            Document.share_token == token,
+            Document.client_token == token
+        )
+    )
+    result = await db.execute(statement)
+    document = result.scalar_one_or_none()
+
+    if document:
+        await reminder_service.track_view(db, document.id, ip_address, user_agent)
 
     # Retourner un pixel transparent 1x1 PNG
     pixel = bytes.fromhex(
@@ -200,29 +214,63 @@ async def track_pixel(
     return Response(content=pixel, media_type="image/png")
 
 
-@router.get("/public/{document_id}", response_class=HTMLResponse)
+@router.get("/public/{token}", response_class=HTMLResponse)
 async def public_document_view(
-    document_id: UUID,
+    token: str,
     db: AsyncSession = Depends(get_db),
     request: Request = None,
 ):
-    """Vue publique du document pour le client (lien dans l'email)."""
-    from app.services.documentService import DocumentService as DS
-    from sqlmodel import select
+    """Vue publique sécurisée du document pour le client (accès strict par token cryptographique)."""
+    from sqlmodel import select, or_
+    from sqlalchemy.orm import selectinload
+    from datetime import datetime, timezone
     from app.models.document import Document
+    from app.utils.datetime import to_naive_utc
 
-    # Récupérer le document sans vérification d'appartenance
-    statement = select(Document).where(Document.id == document_id)
+    # Récupérer le document uniquement via son token cryptographique
+    statement = (
+        select(Document)
+        .options(
+            selectinload(Document.items),
+            selectinload(Document.owner),
+            selectinload(Document.client)
+        )
+        .where(
+            or_(
+                Document.share_token == token,
+                Document.client_token == token
+            )
+        )
+    )
     result = await db.execute(statement)
     document = result.scalar_one_or_none()
 
     if not document:
-        raise HTTPException(status_code=404, detail="Document introuvable")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document introuvable ou lien non valide"
+        )
+
+    # Si accédé via le lien de partage public standard, vérifier qu'il est activé
+    if document.share_token == token and not document.share_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Le partage public de ce document est désactivé"
+        )
+
+    # Vérification d'expiration du lien
+    if document.share_expires_at:
+        now = to_naive_utc(datetime.now(timezone.utc))
+        if now > document.share_expires_at:
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail="Ce lien de document a expiré"
+            )
 
     # Tracker la vue
     ip_address = request.client.host if request else None
     user_agent = request.headers.get("user-agent") if request else None
-    await reminder_service.track_view(db, document_id, ip_address, user_agent)
+    await reminder_service.track_view(db, document.id, ip_address, user_agent)
 
     # Récupérer le user et le client
     from app.services.userService import UserService
@@ -230,16 +278,19 @@ async def public_document_view(
     client = await ClientService.get_by_id(db, document.client_id, document.user_id)
 
     if not user or not client:
-        raise HTTPException(status_code=404, detail="Données introuvables")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Données du document introuvables"
+        )
 
     # Récupérer le template
     template = await _get_doc_template(db, document, user)
 
     # Rendre le HTML
-    html = pdf_renderer.render_html(document, template, user, client)
+    html = await pdf_renderer.render_html(document, template, user, client, db=db)
 
-    # Injecter le pixel de tracking dans le HTML
-    tracking_pixel = f'<img src="/api/v1/reminders/track/{document_id}.png" width="1" height="1" style="display:none;">'
+    # Injecter le pixel de tracking sécurisé (avec token au lieu de l'UUID)
+    tracking_pixel = f'<img src="/api/v1/reminders/track/{token}.png" width="1" height="1" style="display:none;">'
     html = html.replace("</body>", f"{tracking_pixel}</body>")
 
     return HTMLResponse(content=html)

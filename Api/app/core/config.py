@@ -49,6 +49,9 @@ class Settings(BaseSettings):
 
     RESEND_FROM_EMAIL: str = Field(default="Sharaco <no-reply@sharaco.fecascrab.com>", env="RESEND_FROM_EMAIL")
 
+    # === Cron / Automation ===
+    CRON_SECRET: str = Field(default="", env="CRON_SECRET")
+
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

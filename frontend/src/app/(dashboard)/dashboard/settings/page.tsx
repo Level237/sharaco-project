@@ -9,14 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import {
-    Loader2, User, Building2, Lock, ArrowLeft, Globe, Eye,
+    Loader2, User, Building2, Lock, ArrowLeft, Eye,
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -76,14 +69,6 @@ export default function SettingsPage() {
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => setForm({ ...form, [key]: e.target.value });
 
-    const handleCountryChange = (country: string) => {
-        setForm({
-            ...form,
-            country,
-            currency: COUNTRY_CURRENCY[country] || "XOF",
-        });
-    };
-
     const handleSaveProfile = (e: React.FormEvent) => {
         e.preventDefault();
         updateProfile.mutate(form);
@@ -114,13 +99,13 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="min-h-[100dvh] bg-[#FAFAFA] dark:bg-[#0A0A0A] text-slate-900 dark:text-slate-100">
+        <div className="min-h-[100dvh] bg-[#0a0a0a] text-white">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
                 {/* ═══════════ HEADER ═══════════ */}
                 <div className="flex items-center gap-3 mb-6 sm:mb-8">
                     <Link
                         href="/dashboard"
-                        className="p-2 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </Link>
@@ -128,7 +113,7 @@ export default function SettingsPage() {
                         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
                             Mon profil
                         </h1>
-                        <p className="text-xs sm:text-sm text-slate-500">
+                        <p className="text-xs sm:text-sm text-slate-400">
                             Ces informations apparaissent sur vos devis et factures.
                         </p>
                     </div>
@@ -138,11 +123,11 @@ export default function SettingsPage() {
                     {/* ═══════════ CARTE 1 : INFOS PERSONNELLES ═══════════ */}
                     <form
                         onSubmit={handleSaveProfile}
-                        className="bg-white dark:bg-[#0b0b0b] rounded-2xl border border-slate-100 dark:border-slate-800 p-5 sm:p-6 space-y-5 shadow-sm hover:shadow-md transition"
+                        className="bg-[#111113] rounded-lg border border-white/5 p-5 sm:p-6 space-y-5 transition"
                     >
                         <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-sky-500" />
-                            <h2 className="text-sm font-bold text-slate-500">
+                            <User className="h-4 w-4 text-blue-500" />
+                            <h2 className="text-sm font-bold text-slate-400">
                                 Informations personnelles
                             </h2>
                         </div>
@@ -170,7 +155,7 @@ export default function SettingsPage() {
                         <Button
                             type="submit"
                             disabled={updateProfile.isPending}
-                            className="w-full sm:w-auto h-11 rounded-xl bg-sky-600 hover:bg-sky-700 text-white"
+                            className="w-full sm:w-auto h-11 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
                         >
                             {updateProfile.isPending && (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -182,11 +167,11 @@ export default function SettingsPage() {
                     {/* ═══════════ CARTE 2 : ENTREPRISE + DEVISE ═══════════ */}
                     <form
                         onSubmit={handleSaveProfile}
-                        className="bg-white dark:bg-[#0b0b0b] rounded-2xl border border-slate-100 dark:border-slate-800 p-5 sm:p-6 space-y-5 shadow-sm hover:shadow-md transition"
+                        className="bg-[#111113] rounded-lg border border-white/5 p-5 sm:p-6 space-y-5 transition"
                     >
                         <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-sky-500" />
-                            <h2 className="text-sm font-bold text-slate-500">Entreprise</h2>
+                            <Building2 className="h-4 w-4 text-blue-500" />
+                            <h2 className="text-sm font-bold text-slate-400">Entreprise</h2>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -217,43 +202,23 @@ export default function SettingsPage() {
                                     "Entrez votre adresse complète ici.\nExemple:\n123 Rue de la Paix\n75000 Paris\nFrance"
                                 }
                                 rows={2}
-                                className="rounded-xl border border-slate-800 resize-none"
+                                className="rounded-md border border-white/10 resize-none"
                             />
                         </div>
 
-                        {/* ═══════════ PAYS + DEVISE ═══════════ */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold flex items-center gap-1.5">
-                                    <Globe className="h-3 w-3" /> Pays
-                                </Label>
-                                <Select value={form.country} onValueChange={handleCountryChange}>
-                                    <SelectTrigger className="h-11 rounded-xl">
-                                        <SelectValue placeholder="Choisir votre pays" />
-                                    </SelectTrigger>
-                                    <SelectContent className="max-h-[300px] bg-slate-900">
-                                        {Object.keys(COUNTRY_CURRENCY).map((code) => (
-                                            <SelectItem key={code} value={code}>
-                                                {code} — {CURRENCY_LABELS[COUNTRY_CURRENCY[code]]}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                                {/* ═══════════ DEVISE ═══════════ */}
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold">Devise (Détectée automatiquement)</Label>
+                            <div className="h-11 rounded-md border border-blue-500/20 bg-blue-500/10 flex items-center px-3 text-sm font-semibold text-blue-400">
+                                {CURRENCY_LABELS[form.currency] || form.currency}
                             </div>
-
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold">Devise</Label>
-                                <div className="h-11 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center px-3 text-sm font-semibold text-sky-600 dark:text-sky-400">
-                                    {CURRENCY_LABELS[form.currency] || form.currency}
-                                </div>
-                                <p className="text-[11px] text-slate-500 flex items-center gap-1">
-                                    <Eye className="h-3 w-3" />
-                                    Aperçu :{" "}
-                                    <span className="font-bold">
-                                        {formatCurrency(1500000, form.currency)}
-                                    </span>
-                                </p>
-                            </div>
+                            <p className="text-[11px] text-slate-400 flex items-center gap-1">
+                                <Eye className="h-3 w-3" />
+                                Aperçu :{" "}
+                                <span className="font-bold">
+                                    {formatCurrency(1500000, form.currency)}
+                                </span>
+                            </p>
                         </div>
 
                         <div className="space-y-1.5">
@@ -265,9 +230,9 @@ export default function SettingsPage() {
                                 onChange={set("payment_info")}
                                 placeholder={"IBAN: FR76 1234 5678 9012 3456 7890 123\nBIC: ABCDFR21"}
                                 rows={3}
-                                className="rounded-xl border border-slate-800 resize-none"
+                                className="rounded-md border border-white/10 resize-none"
                             />
-                            <p className="text-[11px] text-slate-500">
+                            <p className="text-[11px] text-slate-400">
                                 Affichées en bas de vos factures et devis.
                             </p>
                         </div>
@@ -275,7 +240,7 @@ export default function SettingsPage() {
                         <Button
                             type="submit"
                             disabled={updateProfile.isPending}
-                            className="w-full sm:w-auto h-11 rounded-xl bg-sky-600 hover:bg-sky-700 text-white"
+                            className="w-full sm:w-auto h-11 rounded-md bg-blue-600 hover:bg-blue-700 text-white"
                         >
                             {updateProfile.isPending && (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -287,11 +252,11 @@ export default function SettingsPage() {
                     {/* ═══════════ CARTE 3 : MOT DE PASSE ═══════════ */}
                     <form
                         onSubmit={handleSavePassword}
-                        className="bg-white dark:bg-[#0b0b0b] rounded-2xl border border-slate-100 dark:border-slate-800 p-5 sm:p-6 space-y-5 shadow-sm hover:shadow-md transition"
+                        className="bg-[#111113] rounded-lg border border-white/5 p-5 sm:p-6 space-y-5 transition"
                     >
                         <div className="flex items-center gap-2">
-                            <Lock className="h-4 w-4 text-sky-500" />
-                            <h2 className="text-sm font-bold text-slate-500">Mot de passe</h2>
+                            <Lock className="h-4 w-4 text-blue-500" />
+                            <h2 className="text-sm font-bold text-slate-400">Mot de passe</h2>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -327,8 +292,7 @@ export default function SettingsPage() {
                         <Button
                             type="submit"
                             disabled={changePassword.isPending}
-                            variant="outline"
-                            className="w-full sm:w-auto h-11 rounded-xl"
+                            className="w-full sm:w-auto h-11 rounded-md bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border border-blue-500/20"
                         >
                             {changePassword.isPending && (
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

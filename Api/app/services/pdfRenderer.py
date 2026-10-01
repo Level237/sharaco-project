@@ -6,6 +6,9 @@ import asyncio
 from pathlib import Path
 from collections import OrderedDict
 from io import BytesIO
+import ipaddress
+import socket
+from urllib.parse import urlparse
 from jinja2 import Environment, FileSystemLoader
 from PIL import Image
 from playwright.async_api import async_playwright
@@ -684,11 +687,92 @@ class PDFRenderer:
             logger.error(f"Erreur génération preview template PNG: {e}", exc_info=True)
             raise
 
+    # ═══════════════════════════════════════════════════════════
+    # ANTI-SSRF : Interception & filtrage réseau Playwright (INFO-001)
+    # ═══════════════════════════════════════════════════════════
+
+    @staticmethod
+    def is_safe_subresource_url(url_str: str) -> bool:
+        """Vérifie si une URL de sous-ressource (logo, police, image) est autorisée (anti-SSRF)."""
+        try:
+            parsed = urlparse(url_str)
+            scheme = parsed.scheme.lower()
+            if scheme in ("data", "about"):
+                return True
+            if scheme not in ("http", "https"):
+                return False
+
+            hostname = parsed.hostname
+            if not hostname:
+                return False
+
+            hostname_lower = hostname.lower().strip("[]")
+            if (
+                hostname_lower in ("localhost", "127.0.0.1", "0.0.0.0", "::1")
+                or hostname_lower.endswith((".localhost", ".local", ".internal"))
+            ):
+                return False
+
+            # Vérification IP directe
+            try:
+                ip = ipaddress.ip_address(hostname_lower)
+                if (
+                    ip.is_loopback
+                    or ip.is_private
+                    or ip.is_link_local
+                    or ip.is_reserved
+                    or ip.is_multicast
+                    or ip.is_unspecified
+                ):
+                    return False
+                return True
+            except ValueError:
+                pass
+
+            # Résolution DNS pour bloquer les rebonds / DNS rebinding
+            try:
+                addr_info = socket.getaddrinfo(hostname, None)
+                if not addr_info:
+                    return False
+                for item in addr_info:
+                    ip = ipaddress.ip_address(item[4][0])
+                    if (
+                        ip.is_loopback
+                        or ip.is_private
+                        or ip.is_link_local
+                        or ip.is_reserved
+                        or ip.is_multicast
+                        or ip.is_unspecified
+                    ):
+                        return False
+                return True
+            except (socket.gaierror, socket.herror):
+                return False
+        except Exception as e:
+            logger.warning(f"Filtre anti-SSRF Playwright a bloqué l'URL {url_str}: {e}")
+            return False
+
+    async def _anti_ssrf_route_handler(self, route):
+        """Intercepte et filtre toutes les requêtes réseau émises par Chromium pour prévenir le SSRF."""
+        url = route.request.url
+        if self.is_safe_subresource_url(url):
+            await route.continue_()
+        else:
+            logger.warning(f"🛑 [Anti-SSRF] Requête Playwright bloquée vers ressource non autorisée: {url}")
+            await route.abort("blockedbyclient")
+
+    async def _create_secure_context(self, browser, **kwargs):
+        """Initialise un BrowserContext Playwright renforcé avec interception anti-SSRF."""
+        context = await browser.new_context(**kwargs)
+        await context.route("**/*", self._anti_ssrf_route_handler)
+        return context
+
     async def render_png_from_html(self, html_string: str) -> bytes:
         """Génère un PNG depuis une chaîne HTML en réutilisant le navigateur Chromium."""
         async with self._render_semaphore:
             browser = await self._ensure_browser()
-            context = await browser.new_context(
+            context = await self._create_secure_context(
+                browser,
                 viewport={"width": 794, "height": 1123},
                 device_scale_factor=1,
             )
@@ -720,7 +804,7 @@ class PDFRenderer:
         """Génère un PDF depuis une chaîne HTML via Chromium persistant."""
         async with self._render_semaphore:
             browser = await self._ensure_browser()
-            context = await browser.new_context()
+            context = await self._create_secure_context(browser)
             page = await context.new_page()
             try:
                 await page.set_content(html_string, wait_until="load")
@@ -773,7 +857,7 @@ class PDFRenderer:
 
             async with self._render_semaphore:
                 browser = await self._ensure_browser()
-                context = await browser.new_context()
+                context = await self._create_secure_context(browser)
                 page = await context.new_page()
                 try:
                     await page.set_content(html_string, wait_until="load")

@@ -52,6 +52,14 @@ class Settings(BaseSettings):
     # === Cron / Automation ===
     CRON_SECRET: str = Field(default="", env="CRON_SECRET")
 
+    # === Session / Cryptographie (INFO-002) ===
+    SESSION_SECRET_KEY: str = Field(default="", env="SESSION_SECRET_KEY")
+
+    @property
+    def EFFECTIVE_SESSION_SECRET_KEY(self) -> str:
+        """Retourne SESSION_SECRET_KEY si configuré, sinon repli sur SECRET_KEY."""
+        return self.SESSION_SECRET_KEY if self.SESSION_SECRET_KEY else self.SECRET_KEY
+
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"

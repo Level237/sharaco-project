@@ -85,7 +85,7 @@ app = FastAPI(
 # ═══════════════════════════════════════════════════════════════
 app.add_middleware(
     SessionMiddleware,
-    secret_key=settings.SECRET_KEY,
+    secret_key=settings.EFFECTIVE_SESSION_SECRET_KEY,
     https_only=False,
     max_age=3600,
     same_site="lax",

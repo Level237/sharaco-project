@@ -41,7 +41,7 @@ export function TabDesign({ draft, onChange }: TabDesignProps) {
                     Logo de l'entreprise
                 </label>
 
-                <label className="relative flex flex-col items-center justify-center w-full h-40 bg-slate-900 border-2 border-dashed border-slate-700 hover:border-slate-500 rounded-2xl cursor-pointer transition-all overflow-hidden group">
+                <label className="relative flex flex-col items-center justify-center w-full h-40 bg-slate-900 border-2 border-dashed border-slate-700 hover:border-slate-500 rounded-lg cursor-pointer transition-all overflow-hidden group">
                     <input
                         type="file"
                         className="hidden"
@@ -97,8 +97,8 @@ export function TabDesign({ draft, onChange }: TabDesignProps) {
                     </div>
 
                     {/* Custom Color Input */}
-                    <div className="flex items-center gap-4 p-4 bg-slate-900/50 rounded-2xl border border-slate-800 focus-within:border-slate-500 transition-colors w-fit group">
-                        <div className="relative w-10 h-10 rounded-xl overflow-hidden shrink-0 shadow-inner border border-white/10 group-hover:scale-105 transition-transform">
+                    <div className="flex items-center gap-4 p-4 bg-slate-900/50 rounded-lg border border-slate-800 focus-within:border-slate-500 transition-colors w-fit group">
+                        <div className="relative w-10 h-10 rounded-md overflow-hidden shrink-0 shadow-inner border border-white/10 group-hover:scale-105 transition-transform">
                             <input
                                 type="color"
                                 value={draft.brandColor || "#000000"}

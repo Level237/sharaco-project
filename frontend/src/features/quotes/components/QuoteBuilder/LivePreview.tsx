@@ -169,8 +169,8 @@ export function LivePreview({ draft, layoutStyle = "classic", templateId }: Live
         <div ref={containerRef} className="relative w-full">
             {/* ═══════════ LOADING BADGE ═══════════ */}
             {isLoading && (
-                <div className="absolute top-2 right-2 z-10 px-2.5 sm:px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 backdrop-blur-sm">
-                    <span className="text-[9px] sm:text-[10px] font-bold text-sky-500 uppercase tracking-widest animate-pulse flex items-center gap-1.5">
+                <div className="absolute top-2 right-2 z-10 px-2.5 sm:px-3 py-1 rounded-full bg-blue-600/10 border border-blue-500/20 backdrop-blur-sm">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-blue-500 uppercase tracking-widest animate-pulse flex items-center gap-1.5">
                         <Loader2 className="h-2.5 w-2.5 animate-spin" />
                         <span className="hidden sm:inline">Mise à jour...</span>
                     </span>
@@ -230,8 +230,8 @@ export function LivePreview({ draft, layoutStyle = "classic", templateId }: Live
                     )}>
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
                         <div className="flex flex-col items-center gap-3 sm:gap-4 relative z-10 px-6">
-                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
-                                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-sky-500" />
+                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-md sm:rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
+                                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
                             </div>
                             <div className="text-center">
                                 <span className="text-slate-400 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] block">

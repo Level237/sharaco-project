@@ -71,8 +71,8 @@ export function TabClient({ draft, onChange }: TabClientProps) {
         <div className="space-y-10 pb-32">
             {/* Header Description */}
             <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white tracking-tight">Client Information</h3>
-                <p className="text-sm text-zinc-500">Search for an existing contact or enter new billing details manually.</p>
+                <h3 className="text-lg font-bold text-white tracking-tight">Informations Client</h3>
+                <p className="text-sm text-zinc-500">Recherchez un contact existant ou créez un nouveau client.</p>
             </div>
 
             <div className="space-y-8">
@@ -83,10 +83,10 @@ export function TabClient({ draft, onChange }: TabClientProps) {
                             onValueChange={handleClientSelect}
                             value={clients?.find(c => c.name === draft.clientName && c.email === draft.clientEmail && c.phone === draft.clientPhone)?.id || ""}
                         >
-                            <SelectTrigger className="h-12 bg-white/[0.02] border-white/5 text-zinc-200 focus:ring-1 focus:ring-white/10 rounded-2xl transition-all shadow-inner">
+                            <SelectTrigger className="h-12 bg-white/[0.02] border-white/5 text-zinc-200 focus:ring-1 focus:ring-white/10 rounded-lg transition-all shadow-inner">
                                 <div className="flex items-center gap-3">
                                     <Search className="h-4 w-4 text-zinc-600" />
-                                    <SelectValue placeholder="Select client from CRM..." />
+                                    <SelectValue placeholder="Sélectionner un client du CRM..." />
                                 </div>
                             </SelectTrigger>
                             <SelectContent className="bg-zinc-900 border-white/10 text-zinc-200">
@@ -96,7 +96,7 @@ export function TabClient({ draft, onChange }: TabClientProps) {
                                     </div>
                                 ) : clients?.length === 0 ? (
                                     <div className="p-4 text-center text-sm text-zinc-500">
-                                        No clients found
+                                        Aucun client trouvé
                                     </div>
                                 ) : (
                                     clients?.map((client) => (
@@ -111,15 +111,15 @@ export function TabClient({ draft, onChange }: TabClientProps) {
 
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="outline" className="h-12 w-12 rounded-2xl border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 text-zinc-400 p-0">
+                            <Button variant="outline" className="h-12 w-12 rounded-lg border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 text-zinc-400 p-0">
                                 <Plus className="h-5 w-5" />
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-white/10 text-zinc-200">
                             <DialogHeader>
-                                <DialogTitle>Add New Client</DialogTitle>
+                                <DialogTitle>Nouveau client</DialogTitle>
                                 <DialogDescription className="text-zinc-500">
-                                    Enter the details for the new client.
+                                    Saisissez les informations du nouveau client.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
@@ -130,7 +130,7 @@ export function TabClient({ draft, onChange }: TabClientProps) {
                                         value={newClient.name}
                                         onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
                                         className="bg-zinc-800 border-white/5 text-zinc-200"
-                                        placeholder="Client or Business Name"
+                                        placeholder="Nom du client ou entreprise"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -141,7 +141,7 @@ export function TabClient({ draft, onChange }: TabClientProps) {
                                         value={newClient.email}
                                         onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
                                         className="bg-zinc-800 border-white/5 text-zinc-200"
-                                        placeholder="billing@client.com"
+                                        placeholder="facturation@client.com"
                                     />
                                 </div>
 
@@ -158,7 +158,7 @@ export function TabClient({ draft, onChange }: TabClientProps) {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="address" className="text-zinc-400">Address</Label>
+                                    <Label htmlFor="address" className="text-zinc-400">Adresse</Label>
                                     <Textarea
                                         id="address"
                                         value={newClient.address}
@@ -175,7 +175,7 @@ export function TabClient({ draft, onChange }: TabClientProps) {
                                     className="bg-blue-600 hover:bg-blue-700 text-white"
                                 >
                                     {createClient.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Create Client
+                                    Créer le client
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -192,13 +192,13 @@ export function TabClient({ draft, onChange }: TabClientProps) {
                 <div className="space-y-6">
                     <div className="space-y-3">
                         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                            <User className="h-3 w-3" /> Client Name / Business
+                            <User className="h-3 w-3" /> Nom du client / Entreprise
                         </label>
                         <Input
                             value={draft.clientName}
                             onChange={(e) => onChange("clientName", e.target.value)}
                             placeholder="e.g. Acme Corp or Jane Cooper"
-                            className="h-11 bg-white/[0.02] border-white/5 text-zinc-200 focus:border-white/10 rounded-xl font-medium"
+                            className="h-11 bg-white/[0.02] border-white/5 text-zinc-200 focus:border-white/10 rounded-md font-medium"
                         />
                     </div>
 
@@ -210,8 +210,8 @@ export function TabClient({ draft, onChange }: TabClientProps) {
                             type="email"
                             value={draft.clientEmail}
                             onChange={(e) => onChange("clientEmail", e.target.value)}
-                            placeholder="billing@client.com"
-                            className="h-11 bg-white/[0.02] border-white/5 text-zinc-200 focus:border-white/10 rounded-xl font-medium"
+                            placeholder="facturation@client.com"
+                            className="h-11 bg-white/[0.02] border-white/5 text-zinc-200 focus:border-white/10 rounded-md font-medium"
                         />
                     </div>
 
@@ -223,20 +223,20 @@ export function TabClient({ draft, onChange }: TabClientProps) {
                             type="string"
                             value={draft.clientPhone}
                             onChange={(e) => onChange("clientPhone", e.target.value)}
-                            placeholder="billing@client.com"
-                            className="h-11 bg-white/[0.02] border-white/5 text-zinc-200 focus:border-white/10 rounded-xl font-medium"
+                            placeholder="facturation@client.com"
+                            className="h-11 bg-white/[0.02] border-white/5 text-zinc-200 focus:border-white/10 rounded-md font-medium"
                         />
                     </div>
 
                     <div className="space-y-3">
                         <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                            <MapPin className="h-3 w-3" /> Billing Address
+                            <MapPin className="h-3 w-3" /> Adresse de facturation
                         </label>
                         <Textarea
                             value={draft.clientAddress}
                             onChange={(e) => onChange("clientAddress", e.target.value)}
                             placeholder="Street, City, Postcode, Country..."
-                            className="bg-white/[0.02] border-white/5 text-zinc-200 focus:border-white/10 rounded-2xl min-h-[120px] resize-none p-4 leading-relaxed placeholder:text-zinc-700"
+                            className="bg-white/[0.02] border-white/5 text-zinc-200 focus:border-white/10 rounded-lg min-h-[120px] resize-none p-4 leading-relaxed placeholder:text-zinc-700"
                         />
                     </div>
                 </div>

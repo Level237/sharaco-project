@@ -24,7 +24,7 @@ export default function InvoicesPage() {
     const hasInvoices = invoices && invoices.length > 0;
 
     return (
-        <div className="flex-1 space-y-6 lg:space-y-12 max-sm:p-2 p-4 md:p-8 pt-6 min-h-screen">
+        <div className="flex-1 min-w-0 w-full space-y-4 sm:space-y-6 lg:space-y-8 xl:space-y-12 p-3 sm:p-4 md:p-8 pt-4 sm:pt-6 min-h-screen">
             {isLoading ? (
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {[...Array(8)].map((_, i) => (

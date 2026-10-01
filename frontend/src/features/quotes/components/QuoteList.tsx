@@ -146,13 +146,13 @@ export function QuoteList({ quotes, onDeleteSuccess, projectId, searchQuery = ""
                 className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6"
             >
                 {/* ═══════════ NOUVEAU DEVIS CARD ═══════════ */}
-                <motion.div variants={cardVariants} className="h-full">
+                <motion.div variants={cardVariants} className="h-full min-w-0">
                     <Link href={`/dashboard/quotes/create${projectId ? `?project_id=${projectId}` : ''}`} className="group flex flex-col h-full w-full">
-                        <div className="w-full aspect-[4/5] rounded-lg bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 flex flex-col items-center justify-center group-hover:bg-slate-100 dark:group-hover:bg-white/[0.05] group-hover:border-blue-500/30 group-hover:shadow-xl group-hover:shadow-blue-500/10 group-hover:-translate-y-1 transition-all duration-300">
+                        <div className="w-full aspect-[4/5] rounded-lg bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center group-hover:bg-white/[0.05] group-hover:border-blue-500/30 group-hover:shadow-xl group-hover:shadow-blue-500/10 group-hover:-translate-y-1 transition-all duration-300">
                             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-[#2563EB] flex items-center justify-center text-white mb-2 sm:mb-3 shadow-[0_4px_15px_rgba(37,99,235,0.3)] group-hover:scale-105 transition-transform">
                                 <Plus className="w-5 h-5" />
                             </div>
-                            <span className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 px-2 text-center">
+                            <span className="text-xs sm:text-sm font-bold text-slate-300 px-2 text-center">
                                 Nouveau devis
                             </span>
                         </div>
@@ -180,35 +180,35 @@ export function QuoteList({ quotes, onDeleteSuccess, projectId, searchQuery = ""
                                 exit="hidden"
                                 layout
                                 className={cn(
-                                    "group flex flex-col",
+                                    "group flex flex-col min-w-0",
                                     isBeingDeleted && "opacity-50 pointer-events-none"
                                 )}
                             >
-                                <div className="relative w-full aspect-[4/5] rounded-lg bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 overflow-hidden group-hover:-translate-y-1 p-1 sm:p-1.5 flex items-center justify-center transition-transform duration-300">
-                                    {/* Preview Container - Feuille de document nette */}
-                                    <div className="w-full h-full rounded-[4px] overflow-hidden shadow-sm bg-white dark:bg-slate-950/50 relative">
+                                <div className="relative w-full aspect-[4/5] rounded-lg bg-white/[0.02] border border-white/5 overflow-hidden group-hover:-translate-y-1 p-1 sm:p-1.5 flex items-center justify-center transition-transform duration-300">
+                                    {/* Preview Container - Clickable Link */}
+                                    <Link href={`/dashboard/quotes/${quote.id}`} className="w-full h-full rounded-[4px] overflow-hidden shadow-sm bg-slate-950/50 relative block group/preview">
                                         <DocumentPreview
                                             documentId={quote.id}
                                             layoutStyle={quote.layout_style}
                                         />
-                                    </div>
+                                        {/* Subtle overlay on hover */}
+                                        <div className="absolute inset-0 bg-black/0 group-hover/preview:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                            <div className="opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300 h-10 w-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white scale-90 group-hover/preview:scale-100">
+                                                <Eye className="h-5 w-5" />
+                                            </div>
+                                        </div>
+                                    </Link>
 
-                                    {/* ═══════════ HOVER ACTIONS OVERLAY ═══════════ */}
-                                    <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 sm:gap-3">
-                                        <Link href={`/dashboard/quotes/${quote.id}`}>
-                                            <Button size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:scale-105 transition-transform">
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
-                                        </Link>
-
+                                    {/* Menu Actions (always visible on mobile) */}
+                                    <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:scale-105 transition-transform">
-                                                    {isBeingDeleted ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
+                                                <Button size="icon" variant="ghost" className="h-10 w-10 rounded-md bg-black/40 hover:bg-black/60 text-slate-300 backdrop-blur-md border border-white/10 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                                                    {isBeingDeleted ? <Loader2 className="h-5 w-5 animate-spin" /> : <MoreVertical className="h-5 w-5" />}
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="rounded-xl p-2 w-56 bg-white dark:bg-[#111113] border border-slate-200/60 dark:border-white/10 shadow-2xl shadow-blue-500/5">
-                                                <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            <DropdownMenuContent align="end" className="rounded-lg p-2 w-56 bg-[#111113] border border-white/10 shadow-2xl shadow-blue-500/5">
+                                                <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                                                     Actions
                                                 </div>
 
@@ -221,14 +221,14 @@ export function QuoteList({ quotes, onDeleteSuccess, projectId, searchQuery = ""
                                                         Dissocier du projet
                                                     </DropdownMenuItem>
                                                 )}
-                                                <DropdownMenuItem className="cursor-pointer rounded-xl p-2 focus:bg-slate-100 dark:focus:bg-white/5" onSelect={(e) => e.preventDefault()}>
+                                                <DropdownMenuItem className="cursor-pointer rounded-lg p-2 focus:bg-white/5" onSelect={(e) => e.preventDefault()}>
                                                     <div className="flex flex-col w-full gap-2">
-                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Associer à un projet</span>
+                                                        <span className="text-sm font-medium text-slate-300">Associer à un projet</span>
                                                         <Select onValueChange={(value) => handleLinkToProject(quote.id, value)}>
-                                                            <SelectTrigger className="h-9 rounded-lg bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/10">
+                                                            <SelectTrigger className="h-9 rounded-lg bg-black/20 border-white/10">
                                                                 <SelectValue placeholder="Choisir un projet" />
                                                             </SelectTrigger>
-                                                            <SelectContent className="rounded-xl bg-white dark:bg-[#111113] border-slate-200 dark:border-white/10 shadow-xl">
+                                                            <SelectContent className="rounded-lg bg-[#111113] border-white/10 shadow-xl">
                                                                 <SelectItem value="none" className="rounded-lg cursor-pointer">Aucun projet</SelectItem>
                                                                 {projects.map((project) => (
                                                                     <SelectItem key={project.id} value={project.id} className="rounded-lg cursor-pointer">
@@ -242,12 +242,12 @@ export function QuoteList({ quotes, onDeleteSuccess, projectId, searchQuery = ""
 
                                                 <div className="h-px bg-slate-200/60 dark:bg-white/10 my-1.5 mx-1" />
 
-                                                <DropdownMenuItem onClick={() => handleDownloadPdf(quote.id, quote.number)} className="cursor-pointer rounded-xl py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-white/5 transition-colors">
+                                                <DropdownMenuItem onClick={() => handleDownloadPdf(quote.id, quote.number)} className="cursor-pointer rounded-lg py-2.5 px-3 font-medium text-slate-300 focus:bg-white/5 transition-colors">
                                                     <FileText className="mr-2.5 h-4 w-4 text-blue-500" />
                                                     Télécharger PDF
                                                 </DropdownMenuItem>
                                                 {quote.status === "DRAFT" && (
-                                                    <DropdownMenuItem onClick={() => handleDelete(quote)} className="cursor-pointer rounded-xl py-2.5 px-3 text-rose-600 dark:text-rose-500 focus:text-rose-700 dark:focus:text-rose-400 focus:bg-rose-50 dark:focus:bg-rose-500/10 font-medium transition-colors">
+                                                    <DropdownMenuItem onClick={() => handleDelete(quote)} className="cursor-pointer rounded-lg py-2.5 px-3 text-rose-500 focus:text-rose-400 focus:bg-rose-500/10 font-medium transition-colors">
                                                         <Trash2 className="mr-2.5 h-4 w-4" />
                                                         Supprimer devis
                                                     </DropdownMenuItem>
@@ -258,26 +258,40 @@ export function QuoteList({ quotes, onDeleteSuccess, projectId, searchQuery = ""
                                 </div>
 
                                 {/* ═══════════ TEXT DETAILS ═══════════ */}
-                                <div className="mt-2 sm:mt-3 px-0.5 sm:px-1">
-                                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                                <div className="mt-2 sm:mt-3 px-0.5 sm:px-1 w-full min-w-0">
+                                    <h4 className="text-xs sm:text-sm font-bold text-white truncate">
                                         {quote.client?.name || "Client Inconnu"}
                                     </h4>
-                                    <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1 sm:mt-1.5 truncate">
-                                        <div className={cn(
-                                            "p-0.5 rounded-md bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10",
-                                            config.color
-                                        )}>
-                                            <StatusIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-x-1.5 gap-y-1 text-[10px] sm:text-[11px] text-slate-400 font-medium mt-1 sm:mt-1.5 min-w-0">
+                                        <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto min-w-0 gap-2">
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <div className={cn(
+                                                    "p-0.5 rounded-md bg-white/5 border border-white/10",
+                                                    config.color
+                                                )}>
+                                                    <StatusIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                </div>
+                                                <span className="truncate">{config.label}</span>
+                                            </div>
+                                            
+                                            {/* Date visible on right side of first row on mobile */}
+                                            <span className="truncate shrink-0 sm:hidden">
+                                                {new Date(quote.created_at).toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' })}
+                                            </span>
                                         </div>
-                                        <span className="truncate">{config.label}</span>
-                                        <span className="text-slate-300 dark:text-slate-600 shrink-0">•</span>
-                                        <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
-                                            {formatCurrency(quote.grand_total_cents || 0)}
-                                        </span>
-                                        <span className="text-slate-300 dark:text-slate-600 shrink-0">•</span>
-                                        <span className="truncate">
-                                            {new Date(quote.created_at).toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' })}
-                                        </span>
+                                        
+                                        <span className="text-slate-600 shrink-0 hidden sm:inline">•</span>
+                                        
+                                        <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto min-w-0 gap-2">
+                                            <span className="font-bold text-slate-300 shrink-0">
+                                                {formatCurrency(quote.grand_total_cents || 0)}
+                                            </span>
+                                            
+                                            <span className="text-slate-600 shrink-0 hidden sm:inline">•</span>
+                                            <span className="truncate shrink-0 hidden sm:inline">
+                                                {new Date(quote.created_at).toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' })}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -288,8 +302,8 @@ export function QuoteList({ quotes, onDeleteSuccess, projectId, searchQuery = ""
                 {/* ═══════════ EMPTY STATE ═══════════ */}
                 {filteredQuotes.length === 0 && (
                     <div className="col-span-full py-12 sm:py-20 flex flex-col items-center justify-center text-center">
-                        <Search className="h-8 w-8 sm:h-10 sm:w-10 text-slate-300 dark:text-slate-600 mb-3 sm:mb-4" />
-                        <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Aucun devis trouvé</h4>
+                        <Search className="h-8 w-8 sm:h-10 sm:w-10 text-slate-600 mb-3 sm:mb-4" />
+                        <h4 className="text-base sm:text-lg font-bold text-white">Aucun devis trouvé</h4>
                         <p className="text-sm text-slate-500 mt-1 px-4">Essayez de modifier votre recherche.</p>
                     </div>
                 )}

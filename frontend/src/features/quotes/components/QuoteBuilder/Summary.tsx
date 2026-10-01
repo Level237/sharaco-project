@@ -23,7 +23,7 @@ export function Summary({ items }: SummaryProps) {
             className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl rounded-3xl p-6 border border-white/40 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] sticky top-6"
         >
             <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 bg-sky-100 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 rounded-xl">
+                <div className="p-2.5 bg-blue-100 dark:bg-blue-600/20 text-blue-600 dark:text-blue-500 rounded-md">
                     <CreditCard className="h-5 w-5" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">Résumé financier</h3>
@@ -41,17 +41,17 @@ export function Summary({ items }: SummaryProps) {
 
                 <div className="flex items-end justify-between pt-2">
                     <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Total TTC</span>
-                    <span className="text-4xl font-black bg-gradient-to-br from-sky-500 to-indigo-600 bg-clip-text text-transparent">
+                    <span className="text-4xl font-black bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                         {formatCurrency(grandTotal)}
                     </span>
                 </div>
             </div>
 
             <div className="space-y-3">
-                <Button className="w-full h-12 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-600 hover:to-indigo-600 text-white shadow-lg shadow-sky-500/25 border-0 transition-transform active:scale-[0.98] font-semibold text-base flex items-center justify-center">
+                <Button className="w-full h-12 rounded-md bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 text-white shadow-lg shadow-blue-500/25 border-0 transition-transform active:scale-[0.98] font-semibold text-base flex items-center justify-center">
                     <Send className="mr-2 h-4 w-4" /> Envoyer le devis
                 </Button>
-                <Button variant="outline" className="w-full h-12 rounded-xl bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 transition-colors font-medium">
+                <Button variant="outline" className="w-full h-12 rounded-md bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 transition-colors font-medium">
                     <Save className="mr-2 h-4 w-4" /> Enregistrer comme brouillon
                 </Button>
             </div>

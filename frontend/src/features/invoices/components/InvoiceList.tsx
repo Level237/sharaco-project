@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
     Plus,
@@ -49,7 +50,7 @@ const statusConfig: Record<string, { label: string, icon: any, color: string }> 
     PAID: { label: "Payé", icon: CheckCircle2, color: "text-emerald-500" },
     // Fallback for types that might still use the old status internally
     DRAFT: { label: "Brouillon", icon: FileText, color: "text-slate-500" },
-    SENT: { label: "Envoyé", icon: Clock, color: "text-sky-500" },
+    SENT: { label: "Envoyé", icon: Clock, color: "text-blue-500" },
     VIEWED: { label: "Consulté", icon: Eye, color: "text-amber-500" },
     ACCEPTED: { label: "Payé", icon: CheckCircle2, color: "text-emerald-500" },
     REFUSED: { label: "Annulé", icon: AlertCircle, color: "text-rose-500" }
@@ -150,13 +151,13 @@ export function InvoiceList({ invoices, onDeleteSuccess, projectId, searchQuery 
                 className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-6 gap-4 md:gap-6"
             >
                 {/* Nouvelle Facture Card */}
-                <motion.div variants={cardVariants} className="h-full">
+                <motion.div variants={cardVariants} className="h-full min-w-0">
                     <Link href={`/dashboard/invoices/create${projectId ? `?project_id=${projectId}` : ''}`} className="group flex flex-col h-full w-full">
-                        <div className="w-full aspect-[4/5] rounded-2xl bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 flex flex-col items-center justify-center group-hover:bg-slate-100 dark:group-hover:bg-white/[0.05] group-hover:border-violet-500/30 group-hover:shadow-xl group-hover:shadow-violet-500/10 group-hover:-translate-y-1">
+                        <div className="w-full aspect-[4/5] rounded-lg bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center group-hover:bg-white/[0.05] group-hover:border-violet-500/30 group-hover:shadow-xl group-hover:shadow-violet-500/10 group-hover:-translate-y-1">
                             <div className="w-12 h-12 rounded-full bg-[#2563EB] flex items-center justify-center text-white mb-3 shadow-[0_4px_15px_rgba(124,58,237,0.3)] group-hover:scale-110">
                                 <Plus className="w-6 h-6" />
                             </div>
-                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Nouvelle facture</span>
+                            <span className="text-sm font-bold text-slate-300">Nouvelle facture</span>
                         </div>
                         {/* Spacer to match text height of other cards */}
                         <div className="mt-3 opacity-0">
@@ -183,82 +184,52 @@ export function InvoiceList({ invoices, onDeleteSuccess, projectId, searchQuery 
                                 layout
                                 className={`group flex flex-col ${isBeingDeleted ? 'opacity-50 pointer-events-none' : ''}`}
                             >
-                                <div className={`relative w-full aspect-[4/5] rounded-2xl bg-slate-100/50 dark:bg-white/[0.02] border overflow-hidden group-hover:-translate-y-1 p-2 flex items-center justify-center transition-all ${
+                                <div className={`relative w-full aspect-[4/5] rounded-lg bg-white/[0.02] border overflow-hidden group-hover:-translate-y-1 p-2 flex items-center justify-center transition-all ${
                                     invoice.status === "OVERDUE" 
                                         ? "border-rose-500/50 shadow-[0_0_20px_-5px_rgba(225,29,72,0.15)] dark:border-rose-500/30" 
-                                        : "border-slate-200/50 dark:border-white/5"
+                                        : "border-white/5"
                                 }`}>
 
                                     {/* Overdue Badge */}
                                     {invoice.status === "OVERDUE" && (
-                                        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-rose-500 text-white border border-rose-600/50 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-lg shadow-rose-500/20">
+                                        <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 z-20 flex items-center gap-1.5 bg-rose-500 text-white border border-rose-600/50 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full shadow-lg shadow-rose-500/20">
                                             <AlertCircle className="w-3 h-3" />
                                             En retard
                                         </div>
                                     )}
 
-                                    {/* Preview Container */}
-                                    <div className="w-full h-full rounded-xl overflow-hidden shadow-sm bg-white dark:bg-slate-950/50 relative">
+                                    {/* Preview Container - Clickable Link */}
+                                    <Link href={`/dashboard/invoices/${invoice.id}`} className="w-full h-full rounded-[4px] overflow-hidden shadow-sm bg-slate-950/50 relative block group/preview">
                                         <DocumentPreview
                                             documentId={invoice.id}
                                             layoutStyle={invoice.layout_style}
                                         />
-                                    </div>
+                                        {/* Subtle overlay on hover */}
+                                        <div className="absolute inset-0 bg-black/0 group-hover/preview:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                                            <div className="opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300 h-10 w-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white scale-90 group-hover/preview:scale-100">
+                                                <Eye className="h-5 w-5" />
+                                            </div>
+                                        </div>
+                                    </Link>
 
-                                    {/* Hover Actions Overlay */}
-                                    <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 duration-300 flex items-center justify-center gap-3">
-                                        <Link href={`/dashboard/invoices/${invoice.id}`}>
-                                            <Button size="icon" className="h-10 w-10 rounded-full bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:scale-110">
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
-                                        </Link>
-
+                                    {/* Menu Actions (always visible on mobile) */}
+                                    <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button size="icon" className="h-10 w-10 rounded-full bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:scale-110">
-                                                    {isBeingDeleted ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
+                                                <Button size="icon" variant="ghost" className="h-10 w-10 rounded-md bg-black/40 hover:bg-black/60 text-slate-300 backdrop-blur-md border border-white/10 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                                                    {isBeingDeleted ? <Loader2 className="h-5 w-5 animate-spin" /> : <MoreVertical className="h-5 w-5" />}
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="rounded-2xl p-2 w-56 bg-white dark:bg-[#111113] border border-slate-200/60 dark:border-white/10 shadow-2xl shadow-violet-500/5">
-                                                <div className="px-2 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                            <DropdownMenuContent align="end" className="rounded-lg p-2 w-56 bg-[#111113] border border-white/10 shadow-2xl shadow-blue-500/5">
+                                                <div className="px-2 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                                                     Actions
                                                 </div>
 
-                                                {invoice.project_id && (
-                                                    <DropdownMenuItem
-                                                        onClick={() => handleUnlinkFromProject(invoice.id)}
-                                                        className="text-amber-600 focus:text-amber-600 cursor-pointer"
-                                                    >
-                                                        <Unlink className="mr-2 h-4 w-4" />
-                                                        Dissocier du projet
-                                                    </DropdownMenuItem>
-                                                )}
-                                                <DropdownMenuItem className="cursor-pointer rounded-xl p-2 focus:bg-slate-100 dark:focus:bg-white/5" onSelect={(e) => e.preventDefault()}>
-                                                    <div className="flex flex-col w-full gap-2">
-                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Associer à un projet</span>
-                                                        <Select onValueChange={(value) => handleLinkToProject(invoice.id, value)}>
-                                                            <SelectTrigger className="h-9 rounded-lg bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/10">
-                                                                <SelectValue placeholder="Choisir un projet" />
-                                                            </SelectTrigger>
-                                                            <SelectContent className="rounded-xl bg-white dark:bg-[#111113] border-slate-200 dark:border-white/10 shadow-xl">
-                                                                <SelectItem value="none" className="rounded-lg cursor-pointer">Aucun projet</SelectItem>
-                                                                {projects.map((project) => (
-                                                                    <SelectItem key={project.id} value={project.id} className="rounded-lg cursor-pointer">
-                                                                        {project.name}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                </DropdownMenuItem>
-
-                                                <div className="h-px bg-slate-200/60 dark:bg-white/10 my-1.5 mx-1" />
-
-                                                <DropdownMenuItem onClick={() => handleDownloadPdf(invoice.id, invoice.number)} className="cursor-pointer rounded-xl py-2.5 px-3 font-medium text-slate-700 dark:text-slate-300 focus:bg-slate-100 dark:focus:bg-white/5 transition-colors">
-                                                    <FileText className="mr-2.5 h-4 w-4 text-sky-500" />
+                                                <DropdownMenuItem onClick={() => handleDownloadPdf(invoice.id, invoice.number)} className="cursor-pointer rounded-lg py-2.5 px-3 font-medium text-slate-300 focus:bg-white/5 transition-colors">
+                                                    <FileText className="mr-2.5 h-4 w-4 text-blue-500" />
                                                     Télécharger PDF
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDelete(invoice)} className="cursor-pointer rounded-xl py-2.5 px-3 text-rose-600 dark:text-rose-500 focus:text-rose-700 dark:focus:text-rose-400 focus:bg-rose-50 dark:focus:bg-rose-500/10 font-medium transition-colors">
+                                                <DropdownMenuItem onClick={() => handleDelete(invoice)} className="cursor-pointer rounded-lg py-2.5 px-3 text-rose-500 focus:text-rose-400 focus:bg-rose-500/10 font-medium transition-colors">
                                                     <Trash2 className="mr-2.5 h-4 w-4" />
                                                     Supprimer facture
                                                 </DropdownMenuItem>
@@ -268,19 +239,39 @@ export function InvoiceList({ invoices, onDeleteSuccess, projectId, searchQuery 
                                 </div>
 
                                 {/* Text Details */}
-                                <div className="mt-3 px-1">
-                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                <div className="mt-2 sm:mt-3 px-0.5 sm:px-1 w-full min-w-0">
+                                    <h4 className="text-xs sm:text-sm font-bold text-white truncate">
                                         {invoice.client?.name || "Client Inconnu"}
                                     </h4>
-                                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 truncate">
-                                        <div className={`p-0.5 rounded-md bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 ${config.color}`}>
-                                            <StatusIcon className="w-3 h-3" />
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-x-1.5 gap-y-1 text-[10px] sm:text-[11px] text-slate-400 font-medium mt-1 sm:mt-1.5 min-w-0">
+                                        <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto min-w-0 gap-2">
+                                            <div className="flex items-center gap-1 shrink-0 min-w-0">
+                                                <div className={cn(
+                                                    "p-0.5 rounded-md border border-white/10 shrink-0",
+                                                    config.color
+                                                )}>
+                                                    <StatusIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                                </div>
+                                                <span className="truncate">{config.label}</span>
+                                            </div>
+                                            
+                                            <span className="truncate shrink-0 sm:hidden">
+                                                {new Date(invoice.created_at).toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' })}
+                                            </span>
                                         </div>
-                                        <span>{config.label}</span>
-                                        <span className="text-slate-300 dark:text-slate-600">•</span>
-                                        <span className="font-bold text-slate-700 dark:text-slate-300">{formatCurrency(invoice.grand_total_cents || 0)}</span>
-                                        <span className="text-slate-300 dark:text-slate-600">•</span>
-                                        <span>{new Date(invoice.created_at).toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' })}</span>
+                                        
+                                        <span className="text-slate-600 shrink-0 hidden sm:inline">•</span>
+                                        
+                                        <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto">
+                                            <span className="font-bold text-slate-300 shrink-0">
+                                                {formatCurrency(invoice.grand_total_cents || 0)}
+                                            </span>
+                                            
+                                            <span className="text-slate-600 shrink-0 hidden sm:inline">•</span>
+                                            <span className="truncate shrink-0 hidden sm:inline">
+                                                {new Date(invoice.created_at).toLocaleDateString("fr-FR", { day: 'numeric', month: 'short' })}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -290,8 +281,8 @@ export function InvoiceList({ invoices, onDeleteSuccess, projectId, searchQuery 
 
                 {filteredInvoices.length === 0 && (
                     <div className="col-span-full py-20 flex flex-col items-center justify-center text-center">
-                        <Search className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-4" />
-                        <h4 className="text-lg font-bold text-slate-900 dark:text-white">Aucune facture trouvée</h4>
+                        <Search className="h-10 w-10 text-slate-600 mb-4" />
+                        <h4 className="text-lg font-bold text-white">Aucune facture trouvée</h4>
                         <p className="text-sm text-slate-500 mt-1">Essayez de modifier votre recherche.</p>
                     </div>
                 )}

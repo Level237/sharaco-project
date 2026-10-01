@@ -132,17 +132,19 @@ export function QuoteCardWithInvoices({ quote, variants, onExpand }: QuoteCardWi
             </div>
 
             {/* Text Details */}
-            <div className="mt-3 px-1">
+            <div className="mt-3 px-1 w-full min-w-0">
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                     {quote.number || "Devis sans numéro"}
                 </h4>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 truncate">
-                    <div className={cn("p-0.5 rounded-md bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10", config.color)}>
-                        <StatusIcon className="w-3 h-3" />
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 min-w-0">
+                    <div className="flex items-center gap-1 shrink-0">
+                        <div className={cn("p-0.5 rounded-md bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10", config.color)}>
+                            <StatusIcon className="w-3 h-3" />
+                        </div>
+                        <span className="truncate">{config.label}</span>
                     </div>
-                    <span>{config.label}</span>
-                    <span className="text-slate-300 dark:text-slate-600">•</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-300">
+                    <span className="text-slate-300 dark:text-slate-600 shrink-0 hidden sm:inline">•</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
                         {formatCurrency(quote.amount_cents)}
                     </span>
                 </div>

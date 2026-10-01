@@ -9,7 +9,7 @@ import { PaymentTimeline } from "@/features/quotes/components/PaymentTimeline";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/features/quotes/lib/formatCurrency";
 import { useDeleteDocument } from "@/features/quotes/hooks/useDeleteDocument";
-import { Mail, Edit, Download, Trash2, ArrowLeft, Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { Mail, Edit, Download, Trash2, ArrowLeft, Loader2, FileText, CheckCircle2, Phone } from "lucide-react";
 import Link from "next/link";
 import { SendEmailModal } from "@/features/quotes/components/sendEmailModal";
 import { useToast } from "@/hooks/use-toast";
@@ -19,9 +19,10 @@ interface QuoteDetail {
     id?: string;
     number?: string;
     status?: string;
-    client?: { name?: string };
+    client?: { name?: string; email?: string; phone?: string; address?: string };
     client_name?: string;
     client_email?: string;
+    client_phone?: string;
     layout_style?: string;
     subtotal_cents?: number;
     tax_total_cents?: number;
@@ -239,6 +240,30 @@ export default function QuoteDetailPage() {
                 {/* ═══════════ ACTIONS COLUMN ═══════════ */}
                 <div className="w-full xl:w-[400px] 2xl:w-[580px] flex flex-col shrink-0 xl:pt-2 gap-4 sm:gap-6">
 
+                    {/* ═══════════ CLIENT CARD ═══════════ */}
+                    <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/60 p-4 sm:p-5 shadow-[0_1px_0_rgba(15,23,42,0.03),0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-[0.14em] uppercase">
+                                Informations Client
+                            </h3>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                            <div className="font-medium text-slate-900 dark:text-slate-100">
+                                {quote.client?.name || quote.client_name || "Nom non renseigné"}
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                <Mail className="h-3.5 w-3.5 shrink-0" />
+                                <span className="truncate">{quote.client?.email || quote.client_email || "Email non renseigné"}</span>
+                            </div>
+                            {(quote.client?.phone || quote.client_phone) && (
+                                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                    <Phone className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="truncate">{quote.client?.phone || quote.client_phone}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                     {/* ═══════════ MONTANTS CARD ═══════════ */}
                     <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/60 p-4 sm:p-5 shadow-[0_1px_0_rgba(15,23,42,0.03),0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -357,7 +382,7 @@ export default function QuoteDetailPage() {
                         onOpenChange={setIsEmailModalOpen}
                         documentId={quoteId}
                         documentNumber={quote.number || ""}
-                        clientEmail={quote.client_email || ""}
+                        clientEmail={quote.client?.email || quote.client_email || ""}
                         clientName={quote.client?.name || quote.client_name || "Client"}
                         onSent={handleEmailSent}
                         documentLabel="devis"

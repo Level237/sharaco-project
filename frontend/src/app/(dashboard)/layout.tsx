@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 ✅ Marges FIXES selon le breakpoint, pas selon isSidebarOpen
                 ✅ Pas de transition (le sidebar est fixed, ne doit rien animer)
             ═══════════════════════════════════════════════════════════ */}
-            <div className="flex-1 ml-0 md:ml-[88px]">
+            <div className="flex-1 min-w-0 ml-0 md:ml-[88px]">
                 <main className="relative flex-1 p-4 md:p-8 lg:p-10 w-full pb-28 md:pb-8">
                     {children}
                     <Toaster />

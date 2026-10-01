@@ -93,11 +93,11 @@ export function EditorPanel({
                     isMobile ? "px-3 py-2" : "px-6 py-4"
                 )}>
                     <TabsList className={cn(
-                        "w-full bg-zinc-900/50 border border-white/5 rounded-xl flex",
+                        "w-full bg-zinc-900/50 border border-white/5 rounded-md flex",
                         isMobile ? "h-10 p-0.5" : "h-11 p-1"
                     )}>
                         {[
-                            { value: "items", icon: ReceiptText, label: "Items" },
+                            { value: "items", icon: ReceiptText, label: "Lignes" },
                             { value: "client", icon: User, label: "Client" },
                           
                             { value: "payment", icon: CreditCard, label: "Paiement" },

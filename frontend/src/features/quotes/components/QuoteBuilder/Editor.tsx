@@ -1,7 +1,7 @@
 // features/quotes/components/Editor.tsx
 "use client"
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { QuoteDraft, QuoteLineItem } from "../../types/QuoteBuilder";
 import { EditorPanel } from "./EditorPanel";
@@ -18,7 +18,7 @@ import { useDocumentUpdate } from "../../hooks/useDocumentUpdate";
 import { useBeforeUnload } from "../../hooks/useBeforeUnload";
 import { DownloadLoader } from "../DownloadLoader";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings2, X, ChevronUp } from "lucide-react";
+import { Settings2, X, ChevronUp, Minus, Plus, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +31,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
     const router = useRouter();
     const { downloadPdf, isDownloading } = useDownloadPdf();
     const { toast } = useToast();
+    const mainContainerRef = useRef<HTMLElement>(null);
 
     const [isLoading, setIsLoading] = useState(!!documentId);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -334,13 +335,75 @@ export function Editor({ templateId, documentId }: EditorProps) {
     const [zoom, setZoom] = useState(() =>
     typeof window !== "undefined" && window.innerWidth < 1024 ? 1 : 0.85
 );
+
+    useEffect(() => {
+        const container = mainContainerRef.current;
+        if (!container) return;
+
+        let initialDistance: number | null = null;
+        let initialZoom: number = 1;
+
+        const handleWheel = (e: WheelEvent) => {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                setZoom(prev => {
+                    const newZoom = prev - e.deltaY * 0.005;
+                    return Math.min(Math.max(newZoom, 0.3), 1.5);
+                });
+            }
+        };
+
+        const handleTouchStart = (e: TouchEvent) => {
+            if (e.touches.length === 2) {
+                const dist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                initialDistance = dist;
+                setZoom(prev => {
+                    initialZoom = prev;
+                    return prev;
+                });
+            }
+        };
+
+        const handleTouchMove = (e: TouchEvent) => {
+            if (e.touches.length === 2 && initialDistance !== null) {
+                e.preventDefault();
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const scale = currentDistance / initialDistance;
+                setZoom(Math.min(Math.max(initialZoom * scale, 0.3), 1.5));
+            }
+        };
+
+        const handleTouchEnd = () => {
+            initialDistance = null;
+        };
+
+        container.addEventListener('wheel', handleWheel, { passive: false });
+        container.addEventListener('touchstart', handleTouchStart, { passive: false });
+        container.addEventListener('touchmove', handleTouchMove, { passive: false });
+        container.addEventListener('touchend', handleTouchEnd);
+        container.addEventListener('touchcancel', handleTouchEnd);
+        
+        return () => {
+            container.removeEventListener('wheel', handleWheel);
+            container.removeEventListener('touchstart', handleTouchStart);
+            container.removeEventListener('touchmove', handleTouchMove);
+            container.removeEventListener('touchend', handleTouchEnd);
+            container.removeEventListener('touchcancel', handleTouchEnd);
+        };
+    }, []);
     const [showActions, setShowActions] = useState(false);
 
     if (isLoading) {
         return (
             <div className="flex h-[100dvh] w-screen items-center justify-center bg-zinc-950">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="h-12 w-12 rounded-full border-4 border-sky-500 border-t-transparent animate-spin" />
+                    <div className="h-12 w-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
                     <p className="text-zinc-400 font-medium">Chargement...</p>
                 </div>
             </div>
@@ -353,7 +416,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
                 <div className="text-center">
                     <h2 className="text-xl font-bold text-white mb-4">Erreur</h2>
                     <p className="text-zinc-400 mb-6">{loadError}</p>
-                    <button onClick={() => router.push('/dashboard/quotes')} className="px-6 py-3 bg-sky-500 text-white rounded-xl">
+                    <button onClick={() => router.push('/dashboard/quotes')} className="px-6 py-3 bg-blue-600 text-white rounded-md">
                         Retour
                     </button>
                 </div>
@@ -404,9 +467,12 @@ export function Editor({ templateId, documentId }: EditorProps) {
             </aside>
 
             {/* ═══════════ MAIN (preview) ═══════════ */}
-            <main className="flex-1 relative overflow-hidden bg-[#fafafa] dark:bg-zinc-900/50 pt-[72px]">
+            <main 
+                ref={mainContainerRef}
+                className="flex-1 relative overflow-hidden bg-[#fafafa] dark:bg-zinc-900/50 pt-[72px]"
+            >
                 <div className="absolute inset-0 overflow-auto custom-scrollbar pt-12 lg:pt-24 pb-32">
-                    <div className="flex justify-center transition-transform duration-300 origin-top" style={{ transform: `scale(${zoom})` }}>
+                    <div className="flex justify-center transition-transform duration-75 origin-top" style={{ transform: `scale(${zoom})` }}>
                         <div className="w-full max-w-[1000px] px-2 sm:px-8 lg:px-12">
                             <LivePreview
                                 templateId={draft.templateId || null}
@@ -415,6 +481,44 @@ export function Editor({ templateId, documentId }: EditorProps) {
                             />
                         </div>
                     </div>
+                </div>
+
+                {/* Floating Zoom Controls (UI/UX Best Practice) */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 lg:bottom-10 lg:right-10 lg:left-auto lg:translate-x-0 z-40 flex items-center gap-1 px-2 py-1.5 rounded-full bg-zinc-950/80 backdrop-blur-md border border-white/10 shadow-2xl">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-all"
+                        onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.3))}
+                    >
+                        <Minus className="h-4 w-4" />
+                    </Button>
+
+                    <div className="flex items-center justify-center w-14">
+                        <span className="text-[11px] font-black text-zinc-100">
+                            {Math.round(zoom * 100)}%
+                        </span>
+                    </div>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-all"
+                        onClick={() => setZoom(prev => Math.min(prev + 0.1, 1.5))}
+                    >
+                        <Plus className="h-4 w-4" />
+                    </Button>
+
+                    <div className="w-px h-4 bg-white/10 mx-1" />
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-all"
+                        onClick={() => setZoom(typeof window !== "undefined" && window.innerWidth < 1024 ? 0.6 : 0.85)}
+                    >
+                        <Maximize className="h-4 w-4" />
+                    </Button>
                 </div>
             </main>
 

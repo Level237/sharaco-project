@@ -8,6 +8,7 @@ import {
     FileEdit
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "../lib/formatCurrency";
 
@@ -20,6 +21,7 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
     const { data: stats, isLoading } = useDocumentsStats();
     const scrollRef = useRef<HTMLDivElement>(null);
     const [activeIndex, setActiveIndex] = useState(0);
+    const router = useRouter();
 
     // ═══════════════════════════════════════════════════════════════
     // SCROLL HANDLING (mobile uniquement)
@@ -64,7 +66,7 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
                     {[...Array(4)].map((_, i) => (
                         <div
                             key={i}
-                            className="w-[78vw] sm:w-[320px] md:w-auto shrink-0 snap-center bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-xl border border-slate-200/50 dark:border-white/5 rounded-2xl p-6 md:p-8 flex flex-col justify-between h-44"
+                            className="w-[78vw] sm:w-[320px] md:w-auto shrink-0 snap-center bg-white dark:bg-[#0F0F11] border border-slate-200/50 dark:border-white/5 rounded-2xl p-6 md:p-8 flex flex-col justify-between h-44"
                         >
                             <div className="flex justify-between items-center">
                                 <div className="h-3 w-24 bg-slate-200 dark:bg-white/10 rounded-full" />
@@ -181,37 +183,45 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
                         const colors = colorMap[card.color];
                         const Icon = card.icon;
                         const isActive = currentFilter === card.key;
-                        const isClickable = !!onFilterByStatus;
+                        const isClickable = true;
 
                         return (
                             <button
                                 key={card.key}
                                 
                                 onClick={() => {
-                                    if (isClickable) onFilterByStatus(isActive ? null : card.key);
+                                    if (onFilterByStatus) {
+                                        onFilterByStatus(isActive ? null : card.key);
+                                    } else {
+                                        // Redirection depuis le tableau de bord
+                                        if (card.key === "REVENUE") {
+                                            router.push(`/dashboard/invoices?filter=paid`);
+                                        } else if (card.key === "RECEIVABLES") {
+                                            router.push(`/dashboard/invoices?filter=pending`);
+                                        } else if (card.key === "DRAFTS") {
+                                            router.push(`/dashboard/quotes?filter=draft`);
+                                        } else {
+                                            router.push(`/dashboard/invoices`);
+                                        }
+                                    }
                                 }}
-                                disabled={!isClickable}
+                                disabled={false}
                                 className={cn(
                                     // ✅ Mobile : largeur fixe + snap pour le carousel
                                     "w-[78vw] sm:w-[320px] shrink-0 snap-center",
                                     // ✅ Desktop : largeur auto dans la grille
                                     "md:w-auto md:shrink md:snap-none",
                                     "relative group overflow-hidden text-left rounded-2xl",
-                                    "bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border",
-                                    isClickable ? "cursor-pointer" : "cursor-default",
-                                    isActive
-                                        ? "border-transparent shadow-lg scale-[1.02] ring-1 ring-offset-2 ring-offset-white dark:ring-offset-[#0a0a0a]"
-                                        : "border-slate-200/50 dark:border-white/5 shadow-sm",
-                                    !isActive && isClickable && "hover:border-slate-300 dark:hover:border-white/10 hover:scale-[1.02]",
-                                    isActive && colors.ring
+                                    "bg-white dark:bg-[#0F0F11] border border-slate-200/50 dark:border-white/5",
+                                    isClickable ? "cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-white/5" : "cursor-default",
+                                    isActive && "ring-1 ring-inset ring-blue-500/50 dark:ring-blue-500/30",
                                 )}
                             >
                                 {/* Background subtle glow */}
                                 <div className={cn(
                                     "absolute inset-0 opacity-0 transition-opacity duration-500 bg-gradient-to-br",
                                     colors?.glow,
-                                    isClickable && "group-hover:opacity-100",
-                                    card.glow && "opacity-100"
+                                    card.glow && "opacity-10"
                                 )} />
 
                                 {isActive && (
@@ -233,10 +243,8 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
                                             </span>
                                         </div>
                                         <div className={cn(
-                                            "h-10 w-10 rounded-xl flex items-center justify-center transition-transform duration-500",
+                                            "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
                                             colors?.icon,
-                                            isClickable && "group-hover:scale-110",
-                                            isActive && "scale-110"
                                         )}>
                                             <Icon className="h-5 w-5" />
                                         </div>
@@ -246,9 +254,8 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
                                     <div>
                                         <div className="flex items-baseline gap-1.5">
                                             <span className={cn(
-                                                "text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter transition-colors duration-500",
-                                                isActive ? colors.text : "text-slate-900 dark:text-white",
-                                                isClickable && !isActive && `group-hover:${colors.text}`
+                                                "text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter transition-colors",
+                                                "text-slate-900 dark:text-white"
                                             )}>
                                                 {card.value}
                                             </span>

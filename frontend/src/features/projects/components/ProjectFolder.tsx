@@ -67,7 +67,7 @@ export function ProjectFolder({ project, onDelete }: ProjectFolderProps) {
                                 "group-hover:shadow-lg group-hover:-translate-y-0.5 sm:group-hover:-translate-y-1",
                                 "border border-black/5 dark:border-white/5",
                                 // ✅ Responsive aspect ratio
-                                "aspect-[5/4] sm:aspect-[4/3]"
+                                "aspect-[5/4] md:aspect-[4/3]"
                             )}>
                                 {getStatusIcon()}
                             </div>

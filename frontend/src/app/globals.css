@@ -71,7 +71,7 @@ body {
   .dark .mesh-gradient {
     background-color: #020617;
     background-image:
-      radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.1) 0px, transparent 50%),
       radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
   }
 
@@ -103,12 +103,12 @@ body {
 }
 
 .driver-popover {
-  background: rgba(10, 10, 10, 0.75) !important;
+  background: rgba(17, 17, 19, 0.9) !important;
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 20px !important;
-  box-shadow: 0 0 40px rgba(14, 165, 233, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 40px rgba(37, 99, 235, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
   max-width: 320px !important;
   color: #fff !important;
   padding: 24px !important;
@@ -119,9 +119,9 @@ body {
   font-weight: 800 !important;
   font-size: 1.125rem !important;
   margin-bottom: 0.75rem !important;
-  background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
+  
+  
+  
 }
 
 .driver-popover-description {
@@ -143,7 +143,7 @@ body {
 .driver-popover-prev-btn,
 .driver-popover-next-btn,
 .driver-popover-done-btn {
-  border-radius: 12px !important;
+  border-radius: 6px !important;
   padding: 8px 16px !important;
   font-size: 0.875rem !important;
   font-weight: 600 !important;
@@ -164,7 +164,7 @@ body {
 
 .driver-popover-next-btn,
 .driver-popover-done-btn {
-  background: linear-gradient(135deg, #0ea5e9, #2563eb) !important;
+  background: #2563EB !important;
   color: #fff !important;
   box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3) !important;
 }
@@ -202,5 +202,5 @@ body {
 /* Stage highlight */
 .driver-active-element {
   box-shadow: 0 0 0 2px #2563EB, 0 0 0 9999px rgba(0, 0, 0, 0.6) !important;
-  border-radius: 16px !important;
+  border-radius: 8px !important;
 }

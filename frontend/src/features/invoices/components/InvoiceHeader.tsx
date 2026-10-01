@@ -78,7 +78,7 @@ export function InvoiceHeader({ searchQuery, onSearchChange, statusFilter, onSta
                                 }}
                                 className={`group flex items-center max-sm:text-xs gap-2.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 shrink-0 snap-center whitespace-nowrap ${
                                     isActive 
-                                    ? `bg-[#0a0a0a] shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] ${status.color} ring-1 ring-black/5 dark:ring-white/10 scale-105` 
+                                    ? `bg-[#0a0a0a] shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] ${status.color} ring-1 ring-black/5 dark:ring-white/10` 
                                     : 'text-slate-400 hover:bg-[#111113]/60 dark:hover:bg-[#111113]/5 hover:text-slate-800 dark:hover:text-slate-200'
                                 }`}
                             >

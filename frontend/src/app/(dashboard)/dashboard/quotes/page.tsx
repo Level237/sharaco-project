@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button"
 import { RefreshCcw, FileText, Plus } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 
-export default function QuotesPage() {
+function QuotesPageContent() {
     const queryClient = useQueryClient()
     const { data: quotes, isLoading, error, refetch } = useQuotes()
     const handleDeleteSuccess = () => {
@@ -19,7 +20,22 @@ export default function QuotesPage() {
     }
 
     const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState<string>("ALL");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    
+    const urlFilter = searchParams.get("filter")?.toUpperCase();
+    const validStatuses = ["ALL", "ACCEPTED", "REFUSED", "SENT", "VIEWED", "DRAFT"];
+    const statusFilter = urlFilter && validStatuses.includes(urlFilter) ? urlFilter : "ALL";
+
+    const setStatusFilter = (status: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (status === "ALL") {
+            params.delete("filter");
+        } else {
+            params.set("filter", status.toLowerCase());
+        }
+        router.push(`/dashboard/quotes?${params.toString()}`, { scroll: false });
+    };
 
     const hasQuotes = quotes && quotes.length > 0;
 
@@ -86,4 +102,7 @@ export default function QuotesPage() {
             )}
         </div>
     )
+}
+export default function QuotesPage() {
+    return <Suspense fallback={<div/>}><QuotesPageContent /></Suspense>;
 }

@@ -119,13 +119,14 @@ function DashboardContent() {
                     </Link>
                 </div>
 
-                {/* ═══════════ BANNIÈRE ALERTES IMPAYÉS ═══════════ */}
-                <OverdueAlertBanner />
-
-                {/* ═══════════ CARROUSEL KPI / STATS ═══════════ */}
+{/* ═══════════ CARROUSEL KPI / STATS ═══════════ */}
                 <div data-tour="dashboard-stats">
                     <DocumentsStats />
                 </div>
+
+                {/* ═══════════ BANNIÈRE ALERTES IMPAYÉS ═══════════ */}
+                <OverdueAlertBanner />
+
 
                 {/* ═══════════ ACTIVITÉ RÉCENTE ═══════════ */}
                 <div className="pt-2 md:pt-4" data-tour="dashboard-activity">

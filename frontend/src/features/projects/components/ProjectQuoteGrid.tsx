@@ -59,7 +59,7 @@ export function ProjectQuoteGrid({ tree, projectId, onRefresh }: ProjectQuoteGri
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
+                className="grid grid-cols-2 min-[500px]:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3 sm:gap-4 md:gap-6"
             >
                 {/* ═══════════ Nouveau Devis Card ═══════════ */}
                 <motion.div variants={cardVariants} className="h-full">
@@ -67,7 +67,7 @@ export function ProjectQuoteGrid({ tree, projectId, onRefresh }: ProjectQuoteGri
                         href={`/dashboard/quotes/create?project_id=${projectId}`}
                         className="group flex flex-col h-full w-full outline-none"
                     >
-                        <div className="w-full aspect-[4/5] rounded-2xl bg-white/40 dark:bg-transparent border border-dashed border-slate-300 dark:border-white/20 flex flex-col items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:bg-white dark:group-hover:bg-white/5 group-hover:border-solid group-hover:border-slate-400 dark:group-hover:border-white/30 group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] group-hover:-translate-y-1">
+                        <div className="w-full aspect-[4/5] rounded-lg bg-white/40 dark:bg-transparent border border-dashed border-slate-300 dark:border-white/20 flex flex-col items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:bg-white dark:group-hover:bg-white/5 group-hover:border-solid group-hover:border-slate-400 dark:group-hover:border-white/30 ">
                             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-300 mb-3 transition-transform duration-500 group-hover:scale-110 group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-slate-900">
                                 <Plus  className="w-4 h-4" />
                             </div>
@@ -124,7 +124,7 @@ export function ProjectQuoteGrid({ tree, projectId, onRefresh }: ProjectQuoteGri
                         <div className="h-px bg-slate-200 dark:bg-white/10 flex-1" />
                     </div>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                    <div className="grid grid-cols-2 min-[500px]:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3 sm:gap-4 md:gap-6">
                         <FolderCard
                             title="Factures isolées"
                             subtitle="Sans devis parent"

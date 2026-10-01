@@ -83,7 +83,7 @@ export default function ProjectsPage() {
                         )}
 
                         {!isLoading && projects.length > 0 && (
-                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 flex-1 content-start">
+                            <div className="grid grid-cols-2 min-[500px]:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4 sm:gap-6 flex-1 content-start">
                                 {projects.map((project) => (
                                     <ProjectFolder
                                         key={project.id}

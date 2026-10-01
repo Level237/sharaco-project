@@ -90,7 +90,7 @@ export function QuoteHeader({ searchQuery, onSearchChange, statusFilter, onStatu
                                     className={cn(
                                         "group flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 shrink-0 snap-center whitespace-nowrap",
                                         isActive
-                                            ? `bg-[#0a0a0a] shadow-[0_8px_30px_rgba(0,0,0,0.4)] ${status.color} ring-1 ring-white/10 scale-105`
+                                            ? `bg-[#0a0a0a] shadow-[0_8px_30px_rgba(0,0,0,0.4)] ${status.color} ring-1 ring-white/10`
                                             : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
                                     )}
                                 >

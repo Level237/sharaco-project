@@ -71,7 +71,7 @@ export function FolderCard({
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            className="transition-transform group-hover:scale-110"
+                            className="transition-transform "
                         >
                             <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
                         </svg>
@@ -116,7 +116,7 @@ export function FolderCard({
                 TEXTE SOUS LE DOSSIER
             ═══════════════════════════════════════════════════ */}
             <div className="mt-3 px-1 w-full min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-[#2563EB] transition-colors">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate transition-colors">
                     {title}
                 </h4>
                 <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 min-w-0">

@@ -230,7 +230,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
         >
             {/* Bannière contextuelle si le devis n'est pas encore accepté */}
             {quote.status !== "ACCEPTED" && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-200 shadow-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-200 ">
                     <div className="flex items-center gap-3">
                         <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
                         <div className="text-xs">
@@ -239,7 +239,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                         </div>
                     </div>
                     <Link href={`/dashboard/quotes/${quote.id}`}>
-                        <Button size="sm" className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs h-8 px-3.5 rounded-xl shrink-0 gap-1.5 shadow-md">
+                        <Button size="sm" className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs h-8 px-3.5 rounded-xl shrink-0 gap-1.5 ">
                             <span>Valider le devis</span>
                             <ArrowUpRight className="w-3.5 h-3.5" />
                         </Button>
@@ -253,16 +253,16 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <button
                         onClick={onBack}
-                        className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:scale-[1.02] active:scale-[0.98] w-fit shadow-sm"
+                        className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-colors w-fit"
                     >
-                        <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5 text-[#2563EB]" />
+                        <ChevronLeft className="h-4 w-4 text-slate-500 group-hover:text-white transition-colors" />
                         <span>Retour aux devis du projet</span>
                     </button>
 
                     <div className="h-5 w-px bg-white/10 hidden sm:block" />
 
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-[#2563EB]/10 border border-[#2563EB]/20 flex items-center justify-center text-[#2563EB] shadow-inner">
+                        <div className="h-10 w-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
                             <Receipt className="w-5 h-5" />
                         </div>
                         <div>
@@ -270,7 +270,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                                     Facturation du devis
                                 </span>
-                                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#2563EB]/20 text-[#2563EB] border border-[#2563EB]/30">
+                                <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-white/5 text-slate-300 border border-white/10">
                                     {quote.number || "Sans numéro"}
                                 </span>
                             </div>
@@ -286,7 +286,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                         <Button
                             onClick={handleGenerateNextInvoice}
                             disabled={isGeneratingNext}
-                            className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold text-xs h-9 px-3.5 rounded-xl gap-2 shadow-lg shadow-[#2563EB]/25 hover:shadow-[#2563EB]/40 hover:-translate-y-0.5 active:translate-y-0 transition-all"
+                            className="bg-white text-black hover:bg-slate-200 font-bold text-xs h-9 px-3.5 rounded-lg gap-2 transition-colors"
                         >
                             {isGeneratingNext ? (
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -301,9 +301,9 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs font-bold h-9 px-3 rounded-xl border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-200 gap-1.5"
+                            className="text-xs font-medium h-9 px-3 rounded-lg border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 gap-1.5"
                         >
-                            <Eye className="w-3.5 h-3.5 text-[#2563EB]" />
+                            <Eye className="w-3.5 h-3.5 text-slate-400" />
                             <span>Voir le devis</span>
                         </Button>
                     </Link>
@@ -314,7 +314,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                             size="icon"
                             onClick={handleRefresh}
                             disabled={isRefreshing}
-                            className="h-9 w-9 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 border border-white/5"
+                            className="h-9 w-9 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 border border-white/5"
                             title="Actualiser les données"
                         >
                             <RefreshCw className={cn("w-3.5 h-3.5", isRefreshing && "animate-spin")} />
@@ -324,57 +324,20 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
             </div>
 
             {/* ═══════════════════════════════════════════════════════════
-                2. VIGNETTE DU DEVIS D'ORIGINE (APERÇU DOCUMENT)
-            ═══════════════════════════════════════════════════════════ */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl bg-[#14171d]/90 backdrop-blur-xl border border-white/10 shadow-lg gap-4">
-                <div className="flex items-center gap-4">
-                    {/* Miniature du devis */}
-                    <div className="w-16 h-22 sm:w-20 sm:h-26 rounded-xl overflow-hidden bg-slate-900 border border-white/10 shrink-0 relative shadow-md ring-1 ring-white/10">
-                        <DocumentPreview documentId={quote.id} layoutStyle="modern" />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-white/5 px-2 py-0.5 rounded-md border border-white/10">
-                                Devis source
-                            </span>
-                            <span className="text-xs font-bold text-[#2563EB]">
-                                #{quote.number || "Sans numéro"}
-                            </span>
-                        </div>
-                        <div className="text-lg sm:text-xl font-black text-white tracking-tight mt-1">
-                            {formatCurrency(totalQuoteAmount)}
-                        </div>
-                        <div className="text-xs text-slate-400 mt-0.5">
-                            Établi le {new Date(quote.created_at).toLocaleDateString('fr-FR')} • {quote.invoices.length} facture{quote.invoices.length > 1 ? "s" : ""} liée{quote.invoices.length > 1 ? "s" : ""}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2 self-start sm:self-center">
-                    <Link href={`/dashboard/quotes/${quote.id}`}>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs font-bold h-9 px-3 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white gap-1.5"
-                        >
-                            <Eye className="w-3.5 h-3.5 text-[#2563EB]" />
-                            <span>Détail du devis source</span>
-                            <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
-                        </Button>
-                    </Link>
-                </div>
-            </div>
-
-            {/* ═══════════════════════════════════════════════════════════
                 3. FINANCIAL KPI CARDS & PROGRESSION BAR
             ═══════════════════════════════════════════════════════════ */}
             <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <div className={cn(
+                    "flex gap-3.5 overflow-x-auto pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6",
+                    "snap-x snap-mandatory",
+                    "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                    "md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-3.5 md:pb-0 md:-mx-0 md:px-0 md:overflow-visible"
+                )}>
                     {/* Carte 1: Total Devisé */}
-                    <div className="relative p-5 rounded-2xl bg-[#1a1e26]/80 backdrop-blur-xl border border-white/10 shadow-lg overflow-hidden group hover:border-white/20 transition-all">
+                    <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
                         <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
                             <span>Devis contractuel</span>
-                            <div className="p-1.5 rounded-lg bg-[#2563EB]/10 text-[#2563EB]">
+                            <div className="p-1.5 rounded-lg bg-white/5 text-slate-400">
                                 <FileText className="w-4 h-4" />
                             </div>
                         </div>
@@ -388,7 +351,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                     </div>
 
                     {/* Carte 2: Total Facturé */}
-                    <div className="relative p-5 rounded-2xl bg-[#1a1e26]/80 backdrop-blur-xl border border-white/10 shadow-lg overflow-hidden group hover:border-white/20 transition-all">
+                    <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
                         <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
                             <span>Total émis</span>
                             <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
@@ -404,7 +367,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                     </div>
 
                     {/* Carte 3: Total Encaissé */}
-                    <div className="relative p-5 rounded-2xl bg-emerald-950/20 backdrop-blur-xl border border-emerald-500/20 shadow-lg overflow-hidden group hover:border-emerald-500/40 transition-all">
+                    <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
                         <div className="flex items-center justify-between text-xs font-semibold text-emerald-300/80 mb-2">
                             <span>Total encaissé</span>
                             <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
@@ -422,7 +385,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
 
                     {/* Carte 4: En retard ou En attente */}
                     {overdueCount > 0 ? (
-                        <div className="relative p-5 rounded-2xl bg-rose-950/20 backdrop-blur-xl border border-rose-500/30 shadow-lg overflow-hidden group hover:border-rose-500/50 transition-all">
+                        <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
                             <div className="flex items-center justify-between text-xs font-semibold text-rose-300/80 mb-2">
                                 <span>Factures en retard</span>
                                 <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 animate-pulse">
@@ -438,7 +401,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                             </div>
                         </div>
                     ) : (
-                        <div className="relative p-5 rounded-2xl bg-[#1a1e26]/80 backdrop-blur-xl border border-white/10 shadow-lg overflow-hidden group hover:border-white/20 transition-all">
+                        <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
                             <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
                                 <span>En attente de paiement</span>
                                 <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
@@ -456,7 +419,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                 </div>
 
                 {/* Barre de progression segmentée */}
-                <div className="p-4 rounded-2xl bg-[#14171d]/90 border border-white/10 space-y-2">
+                <div className="p-4 rounded-lg bg-transparent sm:bg-[#111113] border-0 sm:border border-white/5 space-y-2 sm:mt-0">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
                         <span className="flex items-center gap-2">
                             <span>Avancement de la facturation</span>
@@ -480,7 +443,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                         </div>
                     </div>
 
-                    <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex shadow-inner">
+                    <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex ">
                         <div 
                             className="h-full bg-emerald-500 transition-all duration-500"
                             style={{ width: `${paidPercent}%` }}
@@ -506,9 +469,9 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                             key={btn.key}
                             onClick={() => setFilter(btn.key)}
                             className={cn(
-                                "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5",
+                                "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5",
                                 filter === btn.key
-                                    ? "bg-[#2563EB] text-white border-[#2563EB] shadow-md shadow-[#2563EB]/25"
+                                    ? "bg-white/10 text-white border-white/20"
                                     : "bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border-white/10"
                             )}
                         >
@@ -568,7 +531,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
             ═══════════════════════════════════════════════════════════ */}
             {filteredInvoices.length === 0 ? (
                 <div className="py-20 text-center rounded-3xl bg-white/[0.02] border border-dashed border-white/10 p-8 flex flex-col items-center justify-center">
-                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 mb-3 shadow-inner">
+                    <div className="w-14 h-14 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 mb-3 ">
                         <Receipt className="w-6 h-6" />
                     </div>
                     <h3 className="text-base font-bold text-white mb-1">
@@ -583,7 +546,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                         <Button
                             onClick={handleGenerateNextInvoice}
                             disabled={isGeneratingNext}
-                            className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold text-xs h-9 px-4 rounded-xl gap-2 shadow-lg shadow-[#2563EB]/25"
+                            className="bg-white text-black hover:bg-slate-200 font-bold text-xs h-9 px-4 rounded-lg gap-2 transition-colors"
                         >
                             <Plus className="w-3.5 h-3.5" />
                             Générer la prochaine facture
@@ -591,7 +554,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                     )}
                 </div>
             ) : viewMode === "grid" ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-5 gap-y-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-x-5 gap-y-8">
                     <AnimatePresence mode="popLayout">
                         {filteredInvoices.map((invoice) => (
                             <InvoiceImpactCard key={invoice.id} invoice={invoice} />
@@ -599,7 +562,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                     </AnimatePresence>
                 </div>
             ) : (
-                <div className="rounded-2xl border border-white/10 bg-[#161920]/90 backdrop-blur-xl overflow-hidden shadow-xl">
+                <div className="rounded-lg border border-white/5 bg-[#111113] overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
                             <thead className="bg-white/5 text-slate-400 uppercase font-black tracking-wider text-[10px] border-b border-white/10">
@@ -623,7 +586,7 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                                         <tr key={invoice.id} className="hover:bg-white/[0.03] transition-colors group">
                                             <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2">
                                                 <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", isOverdue ? "bg-rose-500" : invoice.status === "PAID" ? "bg-emerald-500" : "bg-[#2563EB]")} />
-                                                <span className="group-hover:text-[#2563EB] transition-colors">
+                                                <span className="transition-colors">
                                                     {invoice.number || "Sans numéro"}
                                                 </span>
                                             </td>
@@ -697,12 +660,8 @@ function InvoiceImpactCard({ invoice }: { invoice: ProjectTreeInvoice }) {
             className="group flex flex-col"
         >
             <div className={cn(
-                "relative w-full aspect-[4/5] rounded-2xl p-2 transition-all duration-300 overflow-hidden",
-                "bg-slate-100/50 dark:bg-white/[0.02] border flex flex-col justify-between",
-                "group-hover:-translate-y-1 group-hover:shadow-2xl shadow-lg",
-                isOverdue
-                    ? "border-rose-500/30 group-hover:border-rose-500/60 group-hover:shadow-rose-500/10"
-                    : "border-slate-200/50 dark:border-white/5 group-hover:border-[#2563EB]/60 group-hover:shadow-[#2563EB]/15"
+                "relative w-full aspect-[4/5] rounded-lg p-2 transition-all duration-300 overflow-hidden",
+                "bg-slate-100/50 dark:bg-white/[0.02] border flex flex-col justify-between border-slate-200/50 dark:border-white/5 group-hover:border-slate-300 dark:group-hover:border-white/10"
             )}>
                 {/* ══════════════════════════════════════════════════════
                     PRÉVISUALISATION RÉELLE DU DOCUMENT (IMAGE PNG)
@@ -716,7 +675,7 @@ function InvoiceImpactCard({ invoice }: { invoice: ProjectTreeInvoice }) {
                     {/* Badge statut en haut à droite */}
                     <div className="absolute top-2.5 right-2.5 z-20">
                         <div className={cn(
-                            "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border shadow-lg backdrop-blur-md",
+                            "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border  ",
                             config.bg, config.color, config.border
                         )}>
                             <StatusIcon className="w-3 h-3" />
@@ -726,7 +685,7 @@ function InvoiceImpactCard({ invoice }: { invoice: ProjectTreeInvoice }) {
 
                     {/* Badge type de facture en haut à gauche */}
                     <div className="absolute top-2.5 left-2.5 z-20">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-black/75 backdrop-blur-md border border-white/10 text-white shadow-md">
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-black/75  border border-white/10 text-white ">
                             {invoice.invoice_type || "Facture"}
                         </span>
                     </div>
@@ -734,7 +693,7 @@ function InvoiceImpactCard({ invoice }: { invoice: ProjectTreeInvoice }) {
                     {/* Titre milestone si associé */}
                     {invoice.milestone_title && (
                         <div className="absolute bottom-2.5 left-2.5 z-20 max-w-[85%]">
-                            <span className="px-2 py-1 rounded-md text-[10px] font-bold bg-[#14171d]/90 backdrop-blur-md border border-white/15 text-slate-200 truncate block shadow-md">
+                            <span className="px-2 py-1 rounded-md text-[10px] font-bold bg-[#14171d]/90  border border-white/15 text-slate-200 truncate block ">
                                 {invoice.milestone_title}
                             </span>
                         </div>
@@ -743,7 +702,7 @@ function InvoiceImpactCard({ invoice }: { invoice: ProjectTreeInvoice }) {
                     {/* Hover Overlay avec bouton d'accès rapide */}
                     <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 z-30">
                         <Link href={`/dashboard/invoices/${invoice.id}`}>
-                            <Button size="sm" className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold rounded-xl h-10 px-4 shadow-xl gap-2 hover:scale-105 transition-transform">
+                            <Button size="sm" className="bg-white text-black hover:bg-slate-200 font-bold rounded-lg h-10 px-4 gap-2 transition-colors">
                                 <Eye className="w-4 h-4" />
                                 <span>Consulter la facture</span>
                             </Button>
@@ -755,7 +714,7 @@ function InvoiceImpactCard({ invoice }: { invoice: ProjectTreeInvoice }) {
             {/* Détails textuels sous la carte */}
             <div className="mt-3 px-1">
                 <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-black text-slate-900 dark:text-white truncate group-hover:text-[#2563EB] transition-colors">
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white truncate transition-colors">
                         {invoice.number || "Facture sans numéro"}
                     </h4>
                     <span className="text-sm font-black text-slate-900 dark:text-white shrink-0">
@@ -765,7 +724,7 @@ function InvoiceImpactCard({ invoice }: { invoice: ProjectTreeInvoice }) {
 
                 <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1">
                     {invoice.due_date && invoice.status !== "PAID" ? (
-                        <span className={cn(isOverdue ? "text-rose-500 dark:text-rose-400 font-bold" : "text-slate-500 dark:text-slate-400")}>
+                        <span className={cn("text-slate-500 dark:text-slate-400 font-medium")}>
                             Échéance {new Date(invoice.due_date).toLocaleDateString('fr-FR')}
                             {isOverdue && invoice.days_late && invoice.days_late > 0 && (
                                 <span className="ml-1 text-[10px] font-black text-rose-500 dark:text-rose-400">

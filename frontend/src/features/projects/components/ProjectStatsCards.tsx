@@ -49,14 +49,19 @@ export function ProjectStatsCards({ summary }: ProjectStatsCardsProps) {
     ];
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className={cn(
+            "flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6",
+            "snap-x snap-mandatory",
+            "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            "md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-4 md:pb-0 md:-mx-0 md:px-0 md:overflow-visible"
+        )}>
             {cards.map((card) => {
                 const Icon = card.icon;
                 return (
                     <div
                         key={card.label}
                         className={cn(
-                            "relative p-5 rounded-xl border bg-white dark:bg-[#111111] transition-all",
+                            "relative p-5 rounded-lg border bg-white dark:bg-[#111113] border-slate-200 dark:border-white/5 transition-all w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none",
                             card.highlight
                                 ? "border-rose-200 dark:border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.1)]"
                                 : "border-slate-200 dark:border-slate-800"

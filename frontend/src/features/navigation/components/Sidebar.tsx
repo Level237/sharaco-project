@@ -191,6 +191,7 @@ export default function Sidebar({ setIsSidebarOpen, isSidebarOpen }: { setIsSide
                             <Link
                                 key={index}
                                 href={tab.href}
+                                data-tour={`mobile-tab-${tab.title.toLowerCase()}`}
                                 className="flex flex-col items-center justify-center w-full h-full gap-1 relative group"
                             >
                                 <div className={cn(
@@ -219,6 +220,7 @@ export default function Sidebar({ setIsSidebarOpen, isSidebarOpen }: { setIsSide
                     {/* ✅ TAB PLUS → ouvre le MobileMoreSheet (plus la sidebar) */}
                     <button
                         onClick={() => setIsMoreOpen(true)}
+                        data-tour="mobile-tab-plus"
                         className={cn(
                             "flex flex-col items-center justify-center w-full h-full gap-1 transition-colors",
                             isMoreOpen ? "text-[#2563EB]" : "text-slate-400 hover:text-slate-200"

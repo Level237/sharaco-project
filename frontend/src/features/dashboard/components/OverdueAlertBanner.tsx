@@ -45,20 +45,20 @@ export function OverdueAlertBanner() {
     // Déterminer le niveau d'urgence
     const config = hasOverdue
         ? {
-            bg: "bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent",
-            border: "border-rose-500/30",
+            bg: "bg-[#111113]",
+            border: "border border-white/5 border-l-4 border-l-rose-500",
             icon: AlertTriangle,
-            iconColor: "text-rose-400",
-            titleColor: "text-rose-400",
-            glow: "shadow-[0_0_40px_rgba(244,63,94,0.15)]",
+            iconColor: "text-rose-500",
+            titleColor: "text-white",
+            buttonStyle: "bg-rose-500 hover:bg-rose-600 text-white",
         }
         : {
-            bg: "bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent",
-            border: "border-amber-500/30",
+            bg: "bg-[#111113]",
+            border: "border border-white/5 border-l-4 border-l-amber-500",
             icon: Clock,
-            iconColor: "text-amber-400",
-            titleColor: "text-amber-400",
-            glow: "shadow-[0_0_40px_rgba(245,158,11,0.15)]",
+            iconColor: "text-amber-500",
+            titleColor: "text-white",
+            buttonStyle: "bg-amber-500 hover:bg-amber-600 text-black",
         };
 
     const Icon = config.icon;
@@ -70,20 +70,19 @@ export function OverdueAlertBanner() {
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -20, height: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="mb-6"
+                className="mb-6 w-full min-w-0"
             >
                 <div className={cn(
-                    "relative overflow-hidden rounded-2xl border p-5 backdrop-blur-xl",
-                    config.bg, config.border, config.glow
+                    "relative w-full overflow-hidden rounded-lg p-4 sm:p-5 min-w-0",
+                    config.bg, config.border
                 )}>
-                    {/* Glow background */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-3xl opacity-50" />
+                    
 
-                    <div className="relative flex items-center justify-between gap-4 flex-wrap">
+                    <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         {/* Left: Info */}
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0 w-full">
                             <div className={cn(
-                                "h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0",
+                                "h-12 w-12 rounded-md flex items-center justify-center flex-shrink-0",
                                 "bg-white/5 border border-white/10"
                             )}>
                                 <Icon className={cn("h-6 w-6", config.iconColor)} />
@@ -118,17 +117,15 @@ export function OverdueAlertBanner() {
                         </div>
 
                         {/* Right: Actions */}
-                        <div className="flex items-center gap-2">
+                        <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
                             <Link
                                 href={hasOverdue 
                                     ? "/dashboard/invoices?filter=overdue" 
                                     : "/dashboard/invoices?filter=due_soon"
                                 }
                                 className={cn(
-                                    "inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all",
-                                    hasOverdue
-                                        ? "bg-rose-500 hover:bg-rose-400 text-white shadow-[0_0_20px_rgba(244,63,94,0.3)]"
-                                        : "bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                                    "inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md font-bold text-sm transition-all w-full sm:w-auto",
+                                    config.buttonStyle
                                 )}
                             >
                                 Consulter les factures

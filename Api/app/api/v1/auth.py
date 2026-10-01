@@ -287,7 +287,7 @@ async def verify_email(
     if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", normalized_email):
         return False
 
-    user = await AuthService.verifyIfEmailExist(db, email)
+    user = await UserService.get_by_email(db, normalized_email)
     if user:
         return True
     return False

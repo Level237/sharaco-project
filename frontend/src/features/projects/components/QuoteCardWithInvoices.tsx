@@ -23,7 +23,7 @@ interface QuoteCardWithInvoicesProps {
 const statusConfig: Record<string, { label: string; icon: any; color: string }> = {
     ACCEPTED: { label: "Accepté", icon: CreditCard, color: "text-emerald-500" },
     REFUSED: { label: "Refusé", icon: Ban, color: "text-rose-500" },
-    SENT: { label: "Envoyé", icon: FileCheck, color: "text-sky-500" },
+    SENT: { label: "Envoyé", icon: FileCheck, color: "text-blue-500" },
     VIEWED: { label: "Consulté", icon: Eye, color: "text-amber-500" },
     DRAFT: { label: "Brouillon", icon: FileText, color: "text-slate-500" },
     PAID: { label: "Payé", icon: CreditCard, color: "text-emerald-500" },
@@ -61,9 +61,9 @@ export function QuoteCardWithInvoices({ quote, variants, onExpand }: QuoteCardWi
             layout
             className="group flex flex-col"
         >
-            <div className="relative w-full aspect-[4/5] rounded-2xl bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300 p-2 flex items-center justify-center">
+            <div className="relative w-full aspect-[4/5] rounded-lg bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300 p-2 flex items-center justify-center">
                 {/* Preview */}
-                <div className="w-full h-full rounded-xl overflow-hidden shadow-sm bg-white dark:bg-slate-950/50 relative">
+                <div className="w-full h-full rounded-md overflow-hidden shadow-sm bg-white dark:bg-slate-950/50 relative">
                     <DocumentPreview
                         documentId={quote.id}
                         layoutStyle="modern"
@@ -117,9 +117,9 @@ export function QuoteCardWithInvoices({ quote, variants, onExpand }: QuoteCardWi
                                 <MoreVertical className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-2xl p-2 w-56 bg-white dark:bg-[#111113] border border-slate-200/60 dark:border-white/10 shadow-2xl">
+                        <DropdownMenuContent align="end" className="rounded-xl p-2 w-56 bg-white dark:bg-[#111113] border border-slate-200/60 dark:border-white/10 shadow-2xl">
                             <DropdownMenuItem onClick={handleDownloadPdf} className="cursor-pointer rounded-xl py-2.5 px-3 font-medium">
-                                <FileText className="mr-2.5 h-4 w-4 text-sky-500" />
+                                <FileText className="mr-2.5 h-4 w-4 text-blue-500" />
                                 Télécharger PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleDelete} className="cursor-pointer rounded-xl py-2.5 px-3 text-rose-600 dark:text-rose-500 focus:text-rose-700 font-medium">

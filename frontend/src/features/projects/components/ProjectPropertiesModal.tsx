@@ -30,7 +30,7 @@ export function ProjectPropertiesModal({ project, open, onOpenChange }: ProjectP
                 <div className="p-4 space-y-4">
                     {/* Icon and Name */}
                     <div className="flex items-center gap-4 pb-4 border-b border-slate-300 dark:border-[#333]">
-                        <Folder className="w-12 h-12 text-sky-500 fill-sky-500/20" strokeWidth={1} />
+                        <Folder className="w-12 h-12 text-blue-500 fill-blue-500/20" strokeWidth={1} />
                         <input 
                             readOnly 
                             value={project.name} 

@@ -41,7 +41,7 @@ export function ProjectFolder({ project, onDelete }: ProjectFolderProps) {
             case 'ACTIVE':
                 return <TrendingUp className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600 dark:text-emerald-400" strokeWidth={1.5} />;
             case 'COMPLETED':
-                return <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-sky-600 dark:text-sky-400" strokeWidth={1.5} />;
+                return <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" strokeWidth={1.5} />;
             default:
                 return <CloudUpload className="w-6 h-6 sm:w-8 sm:h-8 text-slate-800 dark:text-slate-200" strokeWidth={1.5} />;
         }
@@ -58,11 +58,11 @@ export function ProjectFolder({ project, onDelete }: ProjectFolderProps) {
                         {/* ═══════════ DOSSIER VISUEL ═══════════ */}
                         <div className="relative pt-2 sm:pt-3 w-full">
                             {/* Back Tab (onglet supérieur) */}
-                            <div className="absolute top-0 left-0 w-[40%] sm:w-[45%] h-6 sm:h-8 bg-slate-200 dark:bg-slate-800/80 rounded-t-lg sm:rounded-t-xl transition-colors duration-300 group-hover:bg-slate-300 dark:group-hover:bg-slate-700" />
+                            <div className="absolute top-0 left-0 w-[40%] sm:w-[45%] h-6 sm:h-8 bg-slate-200 dark:bg-slate-800/80 rounded-t-md sm:rounded-t-lg transition-colors duration-300 group-hover:bg-slate-300 dark:group-hover:bg-slate-700" />
 
                             {/* Front Body */}
                             <div className={cn(
-                                "relative z-10 w-full bg-slate-100 dark:bg-[#1a1a1a] rounded-xl sm:rounded-2xl",
+                                "relative z-10 w-full bg-slate-100 dark:bg-[#1a1a1a] rounded-md sm:rounded-lg",
                                 "flex items-center justify-center transition-all duration-300",
                                 "group-hover:shadow-lg group-hover:-translate-y-0.5 sm:group-hover:-translate-y-1",
                                 "border border-black/5 dark:border-white/5",

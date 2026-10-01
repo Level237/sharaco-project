@@ -85,7 +85,7 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-10 w-10 text-sky-500 animate-spin opacity-50" />
+                <Loader2 className="h-10 w-10 text-[#2563EB] animate-spin opacity-80" />
             </div>
         );
     }
@@ -101,46 +101,37 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
                 FILTRES
             ═══════════════════════════════════════════════════════════ */}
             {!compact && (
-                <div className="space-y-2 sm:space-y-3">
-                    {/* Type filters (Projets / Documents / Tous) */}
-                    <div className="relative">
-                        {/* Fondus latéraux pour indiquer le scroll sur mobile */}
-                        <div className="pointer-events-none absolute inset-y-0 left-0 w-4 z-10 bg-gradient-to-r from-[#FAFAFA] dark:from-[#0A0A0A] to-transparent sm:hidden" />
-                        <div className="pointer-events-none absolute inset-y-0 right-0 w-4 z-10 bg-gradient-to-l from-[#FAFAFA] dark:from-[#0A0A0A] to-transparent sm:hidden" />
-
-                        <div className="flex items-center gap-1.5 bg-slate-100/50 dark:bg-[#111] p-1.5 rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-sm overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                            {[
-                                { id: "all", label: "Tous" },
-                                { id: "PROJECT", label: "Projets" },
-                                { id: "DOCUMENT", label: "Documents" },
-                            ].map((type) => (
-                                <button
-                                    key={type.id}
-                                    type="button"
-                                    onClick={() => setTypeFilter(type.id)}
-                                    className={cn(
-                                        "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 whitespace-nowrap shrink-0 snap-center",
-                                        typeFilter === type.id
-                                            ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                            : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                                    )}
-                                >
-                                    {type.label}
-                                </button>
-                            ))}
-                        </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    {/* Type filters (Segmented control) */}
+                    <div className="flex items-center gap-1 bg-zinc-900/80 p-1 rounded-xl border border-white/5 self-start">
+                        {[
+                            { id: "all", label: "Tous" },
+                            { id: "PROJECT", label: "Projets" },
+                            { id: "DOCUMENT", label: "Documents" },
+                        ].map((type) => (
+                            <button
+                                key={type.id}
+                                type="button"
+                                onClick={() => setTypeFilter(type.id)}
+                                className={cn(
+                                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 whitespace-nowrap",
+                                    typeFilter === type.id
+                                        ? "bg-[#2563EB] text-white shadow-sm"
+                                        : "text-zinc-400 hover:text-white"
+                                )}
+                            >
+                                {type.label}
+                            </button>
+                        ))}
                     </div>
 
-                    {/* Action filters */}
-                    <div className="relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 w-4 z-10 bg-gradient-to-r from-[#FAFAFA] dark:from-[#0A0A0A] to-transparent xl:hidden" />
-                        <div className="pointer-events-none absolute inset-y-0 right-0 w-4 z-10 bg-gradient-to-l from-[#FAFAFA] dark:from-[#0A0A0A] to-transparent xl:hidden" />
-
-                        <div className="flex items-center gap-1 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1 xl:pb-0">
+                    {/* Action filters (Pills bar, responsive scroll on mobile) */}
+                    <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <div className="flex items-center gap-1.5 py-0.5">
                             {[
                                 { id: "all", label: "Toutes" },
                                 { id: "CREATED", label: "Création" },
-                                { id: "UPDATED", label: "Modification" },
+                                { id: "UPDATED", label: "Modif." },
                                 { id: "SENT", label: "Envoi" },
                                 { id: "ACCEPTED", label: "Accepté" },
                                 { id: "PAID", label: "Payé" },
@@ -151,12 +142,12 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
                                     type="button"
                                     onClick={() => setActionFilter(action.id)}
                                     className={cn(
-                                        "px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-300 shrink-0 snap-center",
+                                        "px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-200 shrink-0",
                                         actionFilter === action.id
                                             ? action.id === "PAID"
-                                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20"
-                                                : "bg-sky-500/10 text-sky-600 dark:text-sky-400 ring-1 ring-sky-500/20"
-                                            : "text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-white/5"
+                                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                                                : "bg-[#2563EB]/15 text-blue-400 border border-[#2563EB]/30"
+                                            : "text-zinc-400 hover:text-white bg-zinc-900/40 border border-white/5 hover:border-white/10"
                                     )}
                                 >
                                     {action.label}
@@ -172,28 +163,28 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
             ═══════════════════════════════════════════════════════════ */}
             {Object.keys(groupedActivities).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 sm:py-20 text-center">
-                    <Search className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 dark:text-slate-700 mb-4" />
-                    <h4 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                    <Search className="h-10 w-10 sm:h-12 sm:w-12 text-zinc-700 mb-4" />
+                    <h4 className="text-lg sm:text-xl font-black text-white">
                         Aucune activité récente
                     </h4>
-                    <p className="text-sm sm:text-base text-slate-500 mt-2 font-medium">
+                    <p className="text-sm sm:text-base text-zinc-400 mt-2 font-medium">
                         Modifiez vos filtres ou revenez plus tard.
                     </p>
                 </div>
             ) : (
-                <div className="space-y-8 sm:space-y-12">
+                <div className="space-y-6 sm:space-y-8">
                     {Object.entries(groupedActivities).map(([group, items]) => (
                         <div key={group}>
-                            <h3 className="text-[11px] sm:text-sm font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 mb-3 sm:mb-4 px-1 flex items-center gap-4">
-                                {group}
-                                <div className="h-px flex-1 bg-slate-200 dark:bg-white/5" />
+                            <h3 className="text-xs font-black uppercase tracking-wider text-zinc-500 mb-3 sm:mb-4 px-1 flex items-center gap-3">
+                                <span>{group}</span>
+                                <div className="h-px flex-1 bg-white/5" />
                             </h3>
 
                             <motion.div
                                 variants={containerVariants}
                                 initial="hidden"
                                 animate="show"
-                                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-4 md:gap-6"
+                                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4"
                             >
                                 <AnimatePresence mode="popLayout">
                                     {items.map((activity) => {
@@ -212,23 +203,22 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
                                             <motion.div
                                                 key={`${activity.id}-${activity.action}`}
                                                 layout
-                                                initial={{ opacity: 0, x: -20 }}
+                                                initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
-                                                transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
+                                                transition={{ duration: 0.3 }}
                                             >
                                                 <Link
                                                     href={activity.link || "#"}
                                                     className={cn(
-                                                        "group relative flex items-start gap-3 sm:gap-4 md:gap-6 p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-300",
-                                                        "hover:bg-slate-50 dark:hover:bg-white/[0.02]",
-                                                        "border border-transparent hover:border-slate-200/50 dark:hover:border-white/5"
+                                                        "group relative flex items-start gap-3 p-3 sm:p-3.5 rounded-xl transition-all duration-200",
+                                                        "bg-zinc-900/40 border border-white/5 hover:border-white/10 hover:bg-zinc-900/80"
                                                     )}
                                                 >
                                                     {/* ═══════════ VISUAL / THUMBNAIL ═══════════ */}
                                                     <div className="relative flex-shrink-0">
                                                         {isDocument && docId && (
-                                                            <div className="relative w-14 sm:w-16 md:w-20 aspect-[4/5] rounded-lg sm:rounded-xl overflow-hidden border border-slate-200/50 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900 group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-300">
+                                                            <div className="relative w-12 sm:w-14 aspect-[4/5] rounded-md overflow-hidden border border-white/10 shadow-sm bg-zinc-950 group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-200">
                                                                 <div className="w-full h-full relative pointer-events-none">
                                                                     <DocumentPreview
                                                                         documentId={docId}
@@ -239,29 +229,29 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
                                                         )}
                                                         {isProjet && (
                                                             <div className={cn(
-                                                                "relative w-12 h-12 sm:w-14 sm:h-14 md:w-20 md:h-20 rounded-lg sm:rounded-xl flex items-center justify-center border shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-300",
+                                                                "relative w-11 h-11 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center border shadow-sm group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-200",
                                                                 colors.icon,
-                                                                "border-slate-200/50 dark:border-white/10",
+                                                                "border-white/10",
                                                                 colors.border
                                                             )}>
-                                                                <Icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-10 md:h-10 opacity-80" strokeWidth={1.5} />
+                                                                <Icon className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" strokeWidth={1.5} />
                                                             </div>
                                                         )}
                                                     </div>
 
                                                     {/* ═══════════ CONTENT ═══════════ */}
-                                                    <div className="flex-1 min-w-0 pt-0.5 sm:pt-1 md:pt-2">
-                                                        <div className="flex items-start justify-between gap-2 sm:gap-4">
-                                                            <h4 className="font-bold text-sm sm:text-base md:text-lg transition-colors line-clamp-2 text-slate-900 dark:text-white group-hover:text-sky-500">
+                                                    <div className="flex-1 min-w-0 pt-0.5">
+                                                        <div className="flex items-start justify-between gap-1.5">
+                                                            <h4 className="font-bold text-xs sm:text-sm transition-colors line-clamp-1 text-white group-hover:text-blue-400">
                                                                 {activity.title}
                                                             </h4>
-                                                            <span className="text-[9px] sm:text-[10px] md:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-full whitespace-nowrap text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/5 shrink-0">
+                                                            <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md whitespace-nowrap text-zinc-400 bg-white/5 shrink-0">
                                                                 {time}
                                                             </span>
                                                         </div>
 
                                                         {activity.subtitle && (
-                                                            <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                                            <p className="text-[11px] sm:text-xs font-medium text-zinc-400 mt-0.5 line-clamp-1 leading-relaxed">
                                                                 {activity.subtitle}
                                                             </p>
                                                         )}

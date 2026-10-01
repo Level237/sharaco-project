@@ -18,8 +18,8 @@ export function ProjectStatsCards({ summary }: ProjectStatsCardsProps) {
             value: formatCurrency(summary.total_quoted),
             sublabel: `${summary.quote_count} devis`,
             icon: FileText,
-            color: "text-sky-500",
-            bgColor: "bg-sky-500/10",
+            color: "text-blue-500",
+            bgColor: "bg-blue-500/10",
         },
         {
             label: "Total facturé",

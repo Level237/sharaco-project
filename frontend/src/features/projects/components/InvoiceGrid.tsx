@@ -50,10 +50,10 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
     },
     SENT: { 
         label: "Envoyée", 
-        color: "text-sky-400", 
-        bg: "bg-sky-500/10", 
-        border: "border-sky-500/30",
-        glow: "from-sky-500/20 to-transparent",
+        color: "text-blue-400", 
+        bg: "bg-blue-500/10", 
+        border: "border-blue-500/30",
+        glow: "from-blue-500/20 to-transparent",
         icon: Clock 
     },
     VIEWED: { 
@@ -391,14 +391,14 @@ export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
                     <div className="relative p-5 rounded-2xl bg-[#1a1e26]/80 backdrop-blur-xl border border-white/10 shadow-lg overflow-hidden group hover:border-white/20 transition-all">
                         <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
                             <span>Total émis</span>
-                            <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400">
+                            <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
                                 <TrendingUp className="w-4 h-4" />
                             </div>
                         </div>
                         <div className="text-2xl font-black text-white tracking-tight">
                             {formatCurrency(totalInvoicedCents)}
                         </div>
-                        <div className="text-xs text-sky-400 font-semibold mt-1">
+                        <div className="text-xs text-blue-400 font-semibold mt-1">
                             {invoicedPercent}% du montant devisé
                         </div>
                     </div>

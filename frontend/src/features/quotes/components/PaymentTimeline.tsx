@@ -159,7 +159,7 @@ export function PaymentTimeline({
     };
 
     return (
-        <div className="bg-white/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl">
+        <div className="bg-white/80 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 rounded-lg p-4 sm:p-5 md:p-6 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] backdrop-blur-xl">
             {/* ═══════════ HEADER ═══════════ */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6 md:mb-8">
                 <div>
@@ -262,7 +262,7 @@ export function PaymentTimeline({
 
                                     {/* ═══════════ CARTE MILESTONE ═══════════ */}
                                     <div className={cn(
-                                        "flex-1 bg-white dark:bg-slate-950 border rounded-lg sm:rounded-xl overflow-hidden transition-all duration-200 min-w-0",
+                                        "flex-1 bg-white dark:bg-slate-950 border rounded-md overflow-hidden transition-all duration-200 min-w-0",
                                         isNext ? "border-[#2563EB]/40 dark:border-[#2563EB]/50 shadow-sm ring-1 ring-[#2563EB]/20 dark:ring-[#2563EB]/30" : "border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700"
                                     )}>
                                         <div className="p-3 sm:p-4 md:p-5">

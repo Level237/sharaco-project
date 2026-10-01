@@ -64,7 +64,7 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
                     {[...Array(4)].map((_, i) => (
                         <div
                             key={i}
-                            className="w-[78vw] sm:w-[320px] md:w-auto shrink-0 snap-center bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-xl border border-slate-200/50 dark:border-white/5 rounded-3xl p-6 md:p-8 flex flex-col justify-between h-44"
+                            className="w-[78vw] sm:w-[320px] md:w-auto shrink-0 snap-center bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-xl border border-slate-200/50 dark:border-white/5 rounded-2xl p-6 md:p-8 flex flex-col justify-between h-44"
                         >
                             <div className="flex justify-between items-center">
                                 <div className="h-3 w-24 bg-slate-200 dark:bg-white/10 rounded-full" />
@@ -196,7 +196,7 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
                                     "w-[78vw] sm:w-[320px] shrink-0 snap-center",
                                     // ✅ Desktop : largeur auto dans la grille
                                     "md:w-auto md:shrink md:snap-none",
-                                    "relative group overflow-hidden text-left rounded-3xl",
+                                    "relative group overflow-hidden text-left rounded-2xl",
                                     "bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border",
                                     isClickable ? "cursor-pointer" : "cursor-default",
                                     isActive
@@ -233,7 +233,7 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
                                             </span>
                                         </div>
                                         <div className={cn(
-                                            "h-10 w-10 rounded-2xl flex items-center justify-center transition-transform duration-500",
+                                            "h-10 w-10 rounded-xl flex items-center justify-center transition-transform duration-500",
                                             colors?.icon,
                                             isClickable && "group-hover:scale-110",
                                             isActive && "scale-110"

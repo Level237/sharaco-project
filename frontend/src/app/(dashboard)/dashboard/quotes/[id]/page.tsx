@@ -180,7 +180,7 @@ export default function QuoteDetailPage() {
                 HEADER (sticky)
             ═══════════════════════════════════════════════════════════ */}
             <header className="sticky top-0 z-30 w-full bg-[#FAFAFA]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-                <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 h-14 sm:h-16 flex items-center justify-between">
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                         <Link
                             href="/dashboard/quotes"
@@ -205,7 +205,7 @@ export default function QuoteDetailPage() {
                                 <span className=" sm:inline">Accepté</span>
                             </div>
                         ) : quote.status === "SENT" ? (
-                            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium text-sky-500">
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium text-blue-500">
                                 <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                 <span className=" sm:inline">Envoyé</span>
                             </div>
@@ -240,7 +240,7 @@ export default function QuoteDetailPage() {
                 <div className="w-full xl:w-[400px] 2xl:w-[580px] flex flex-col shrink-0 xl:pt-2 gap-4 sm:gap-6">
 
                     {/* ═══════════ MONTANTS CARD ═══════════ */}
-                    <div className="rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/60 p-4 sm:p-5 shadow-[0_1px_0_rgba(15,23,42,0.03),0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+                    <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/60 p-4 sm:p-5 shadow-[0_1px_0_rgba(15,23,42,0.03),0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-3 sm:mb-4">
                             <h3 className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-[0.14em] uppercase">
                                 Récapitulatif
@@ -276,7 +276,7 @@ export default function QuoteDetailPage() {
                                 <Button
                                     onClick={handleGenerateNext}
                                     disabled={isGenerating}
-                                    className="w-full h-11 sm:h-12 rounded-lg sm:rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-medium shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+                                    className="w-full h-11 sm:h-12 rounded-md bg-[#2563EB] hover:bg-blue-700 text-white font-medium shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
                                 >
                                     {isGenerating ? (
                                         <>
@@ -295,7 +295,7 @@ export default function QuoteDetailPage() {
                     </div>
 
                     {/* ═══════════ ACTIONS CARD ═══════════ */}
-                    <div className="rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/60 p-4 sm:p-5 shadow-[0_1px_0_rgba(15,23,42,0.03),0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+                    <div className="rounded-lg border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/60 p-4 sm:p-5 shadow-[0_1px_0_rgba(15,23,42,0.03),0_8px_20px_rgba(15,23,42,0.04)] backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-3 sm:mb-4">
                             <h3 className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-[0.14em] uppercase">
                                 Actions rapides

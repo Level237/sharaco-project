@@ -33,7 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 ✅ Pas de transition (le sidebar est fixed, ne doit rien animer)
             ═══════════════════════════════════════════════════════════ */}
             <div className="flex-1 ml-0 md:ml-[88px]">
-                <main className="relative flex-1 p-4 md:p-8 lg:p-10 w-full pb-20 md:pb-0">
+                <main className="relative flex-1 p-4 md:p-8 lg:p-10 w-full pb-28 md:pb-8">
                     {children}
                     <Toaster />
                 </main>

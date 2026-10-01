@@ -59,7 +59,7 @@ export function ProjectQuoteGrid({ tree, projectId, onRefresh }: ProjectQuoteGri
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-5 gap-y-8"
+                className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
             >
                 {/* ═══════════ Nouveau Devis Card ═══════════ */}
                 <motion.div variants={cardVariants} className="h-full">
@@ -124,7 +124,7 @@ export function ProjectQuoteGrid({ tree, projectId, onRefresh }: ProjectQuoteGri
                         <div className="h-px bg-slate-200 dark:bg-white/10 flex-1" />
                     </div>
                     
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-5 gap-y-8">
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                         <FolderCard
                             title="Factures isolées"
                             subtitle="Sans devis parent"

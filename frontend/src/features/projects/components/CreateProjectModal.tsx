@@ -86,12 +86,12 @@ export function CreateProjectModal({ open, onOpenChange, project }: CreateProjec
                     {/* ═══════════════════════════════════════════════════════════
                         TOP AREA - Icon & Name
                     ═══════════════════════════════════════════════════════════ */}
-                    <div className="pt-8 sm:pt-10 pb-5 sm:pb-6 px-4 sm:px-6 flex flex-col items-center justify-center bg-gradient-to-b from-sky-500/10 to-transparent">
-                        <div className="w-16 h-16 sm:w-24 sm:h-24 bg-sky-100 dark:bg-sky-500/20 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-4 sm:mb-6 shadow-inner ring-1 ring-white/20 dark:ring-white/10 relative group">
+                    <div className="pt-8 sm:pt-10 pb-5 sm:pb-6 px-4 sm:px-6 flex flex-col items-center justify-center bg-gradient-to-b from-blue-500/10 to-transparent">
+                        <div className="w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 dark:bg-blue-500/20 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-4 sm:mb-6 shadow-inner ring-1 ring-white/20 dark:ring-white/10 relative group">
                             {project ? (
-                                <Edit3 className="w-8 h-8 sm:w-12 sm:h-12 text-sky-600 dark:text-sky-400 transition-transform group-hover:scale-110 duration-300" strokeWidth={1.5} />
+                                <Edit3 className="w-8 h-8 sm:w-12 sm:h-12 text-blue-600 dark:text-blue-400 transition-transform group-hover:scale-110 duration-300" strokeWidth={1.5} />
                             ) : (
-                                <FolderPlus className="w-8 h-8 sm:w-12 sm:h-12 text-sky-600 dark:text-sky-400 transition-transform group-hover:scale-110 duration-300" strokeWidth={1.5} />
+                                <FolderPlus className="w-8 h-8 sm:w-12 sm:h-12 text-blue-600 dark:text-blue-400 transition-transform group-hover:scale-110 duration-300" strokeWidth={1.5} />
                             )}
                         </div>
 
@@ -186,7 +186,7 @@ export function CreateProjectModal({ open, onOpenChange, project }: CreateProjec
                             <Button
                                 type="submit"
                                 disabled={!name || !clientId || isPending}
-                                className="flex-1 rounded-xl h-10 sm:h-11 text-sm bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-500/20"
+                                className="flex-1 rounded-xl h-10 sm:h-11 text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
                             >
                                 {isPending ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />

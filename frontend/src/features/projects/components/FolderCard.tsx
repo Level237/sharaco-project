@@ -42,7 +42,7 @@ export function FolderCard({
             <div className="relative w-full aspect-[4/5] flex flex-col justify-end">
                 {/* Onglet du dossier (haut gauche) */}
                 <div className={cn(
-                    "absolute top-0 left-3 w-28 h-10 rounded-t-2xl transition-colors",
+                    "absolute top-0 left-3 w-28 h-10 rounded-t-md transition-colors",
                     hasOverdue
                         ? "bg-rose-500/20 group-hover:bg-rose-500/30"
                         : "bg-slate-700/40 group-hover:bg-slate-600/50"
@@ -50,7 +50,7 @@ export function FolderCard({
 
                 {/* Corps du dossier */}
                 <div className={cn(
-                    "relative mt-4 flex-1 rounded-2xl border transition-all duration-300",
+                    "relative mt-4 flex-1 rounded-lg border transition-all duration-300",
                     "flex flex-col items-center justify-center gap-3",
                     "group-hover:-translate-y-1 group-hover:shadow-xl",
                     hasOverdue

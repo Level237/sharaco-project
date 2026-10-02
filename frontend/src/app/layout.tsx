@@ -23,8 +23,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Logiciel de devis professionnel en ligne — Sharaco",
-  description: "Créez des devis et factures professionnels en 2 minutes. La plateforme tout-en-un pour freelances et PME. Fini Word et Excel, bienvenue dans l'efficacité.",
+  title: "Logiciel de Devis et Facturation en Ligne | Sharaco",
+  description: "Créez vos devis et factures professionnels en 2 minutes. La plateforme IA tout-en-un pour freelances, artisans et PME. Fini Word et Excel, gagnez 2h par jour.",
+  keywords: ["logiciel devis", "facturation en ligne", "modèle de devis", "outil freelance", "créer un devis"],
+  openGraph: {
+    title: "Logiciel de Devis et Facturation en Ligne | Sharaco",
+    description: "Créez vos devis et factures professionnels en 2 minutes avec Sharaco.",
+    type: "website",
+    locale: "fr_FR",
+  }
 };
 
 export default function RootLayout({
@@ -37,6 +44,24 @@ export default function RootLayout({
       <body
         className={`${outfit.variable} antialiased`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "Sharaco",
+              "applicationCategory": "BusinessApplication",
+              "operatingSystem": "Web",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "EUR"
+              },
+              "description": "Logiciel de devis et facturation en ligne pour freelances et PME."
+            })
+          }}
+        />
         <Providers>
           <ThemeProvider
             attribute="class"

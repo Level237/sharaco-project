@@ -105,14 +105,7 @@ export default function Sidebar({ setIsSidebarOpen, isSidebarOpen }: { setIsSide
                 )
               })}
 
-              <button className="flex flex-col items-center justify-center w-full py-3.5 rounded-2xl transition-all duration-300 group text-slate-400 hover:text-white mt-2">
-                <div className="flex gap-1 mb-2.5 mt-1 transition-transform">
-                  <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
-                  <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
-                  <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
-                </div>
-                <span className="text-[10px] font-bold tracking-wide">Plus</span>
-              </button>
+            
             </nav>
           </ScrollArea>
 

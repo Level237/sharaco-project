@@ -75,7 +75,7 @@ export function UpdateClientModal({ open, onOpenChange, client }: UpdateClientMo
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-1.5">
-                            <Label htmlFor="name" className="text-slate-700 dark:text-slate-300 font-bold ml-1">Nom complet *</Label>
+                            <Label htmlFor="name" className="text-slate-700 dark:text-slate-300 font-bold ml-1">Nom complet ou Nom de l'entreprise *</Label>
                             <Input
                                 id="name"
                                 value={name}

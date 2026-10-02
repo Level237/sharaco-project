@@ -1,10 +1,9 @@
 // features/quotes/components/QuoteHeader.tsx
 "use client"
 
-import { Plus, Search, Sparkles, CreditCard, Ban, FileCheck, Eye, FileText, LayoutGrid } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { motion } from "framer-motion"
+import { Search,CreditCard, Ban, FileCheck, Eye, FileText, LayoutGrid } from "lucide-react"
+
+
 import { cn } from "@/lib/utils"
 
 interface QuoteHeaderProps {
@@ -34,20 +33,16 @@ export function QuoteHeader({ searchQuery, onSearchChange, statusFilter, onStatu
 
             <div className="relative z-10 w-full min-w-0 max-w-3xl flex flex-col items-center">
                 {/* ═══════════ TITRE ═══════════ */}
-                <motion.h2
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
+                <h2
+                   
                     className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white mb-6 sm:mb-8 md:mb-10"
                 >
-                    Tous vos Devis
-                </motion.h2>
+                    Tout vos Devis
+                </h2>
 
                 {/* ═══════════ BARRE DE RECHERCHE ═══════════ */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+                <div
+                    
                     className="w-full min-w-0 flex flex-col sm:flex-row gap-4 items-center"
                 >
                     <div className="relative flex-1 w-full group">
@@ -62,13 +57,11 @@ export function QuoteHeader({ searchQuery, onSearchChange, statusFilter, onStatu
                             className="w-full h-12 sm:h-14 md:h-[60px] pl-10 sm:pl-12 md:pl-14 pr-4 sm:pr-6 bg-[#0a0a0a]/90 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 rounded-lg sm:rounded-lg shadow-[0_8px_30px_rgba(0,0,0,0.2)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all text-white placeholder:text-slate-500 font-medium text-sm sm:text-base"
                         />
                     </div>
-                </motion.div>
+                </div>
 
                 {/* ═══════════ FILTRES (scrollable mobile) ═══════════ */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
+                <div
+                   
                     className="w-full min-w-0 mt-5 sm:mt-6 md:mt-8 relative"
                 >
                     {/* Fondus latéraux (mobile) */}
@@ -108,7 +101,7 @@ export function QuoteHeader({ searchQuery, onSearchChange, statusFilter, onStatu
                             )
                         })}
                     </div>
-                </motion.div>
+                </div>
             </div>
         </div>
     )

@@ -1,25 +1,14 @@
 
 
 import type { Metadata } from "next";
-import { Geist, Geist_Mono,Outfit } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Providers } from "@/components/providers";
 
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const outfit = Outfit({ 
-  subsets: ['latin'], // Optionnel : spécifie les sous-ensembles de caractères
-  variable: '--font-outfit' // Optionnel : définit une variable CSS pour un usage flexible
-})
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -40,9 +29,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning data-scroll-behavior="smooth">
       <body
-        className={`${outfit.variable} antialiased`}
+        className={`${inter.className} antialiased bg-[#0a0a0a] text-slate-50`}
       >
         <script
           type="application/ld+json"
@@ -65,8 +54,8 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="dark"
+            enableSystem={false}
             disableTransitionOnChange
           >
             {children}

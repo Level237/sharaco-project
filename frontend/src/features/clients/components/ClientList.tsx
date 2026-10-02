@@ -2,7 +2,7 @@
 
 import { useClients, useDeleteClient } from "../hooks/useClients";
 import { User, Phone, Mail, MapPin, MoreVertical, Edit2, Trash2, Loader2, Users } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -68,21 +68,14 @@ export function ClientList({ searchQuery }: ClientListProps) {
     };
 
     return (
-        <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
+        <div
+          
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mt-6"
         >
-            <AnimatePresence mode="popLayout">
+            
                 {filteredClients.map((client) => (
-                    <motion.div
+                    <div
                         key={client.id}
-                        layout
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
                         className={cn(
                             "group relative bg-[#111113] rounded-lg p-5 sm:p-6 border border-white/5 min-w-0",
                             "hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition-all duration-500",
@@ -166,15 +159,15 @@ export function ClientList({ searchQuery }: ClientListProps) {
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </div>
                 ))}
-            </AnimatePresence>
+           
 
             <UpdateClientModal
                 open={!!clientToUpdate}
                 onOpenChange={(open) => !open && setClientToUpdate(null)}
                 client={clientToUpdate}
             />
-        </motion.div>
+        </div>
     );
 }

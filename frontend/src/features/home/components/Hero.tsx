@@ -119,7 +119,7 @@ export default function Hero() {
 
         {/* Mobile Menu */}
         <div
-          className={`absolute top-full left-0 right-0 mt-2 mx-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg transform transition-all duration-200 ease-in-out lg:hidden z-40 origin-top ${isMobileMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'
+          className={`absolute top-full left-0 right-0 mt-2 mx-4 bg-white dark:bg-slate-900 border border-slate-800 rounded-xl shadow-lg transform transition-all duration-200 ease-in-out lg:hidden z-40 origin-top ${isMobileMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'
             }`}
         >
           <div className="p-5">
@@ -181,7 +181,7 @@ export default function Hero() {
                   <Rocket className="h-3.5 w-3.5 text-white" />
                 </div>
                 <span className="text-sm max-sm:text-xs font-bold text-white ">
-                  Rejoignez plus de 200 Freelancers sur Sharaco
+                  Concu pour les Freelancers et PME
                 </span>
                 <ArrowRight className="h-4 w-4 text-sky-400 group-hover:translate-x-1 transition-transform" />
               </div>

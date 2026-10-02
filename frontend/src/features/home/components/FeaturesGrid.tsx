@@ -54,9 +54,17 @@ export default function FeaturesGrid() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
-        
-        {/* 6 Cards Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="mb-12 lg:mb-16 text-center max-w-3xl mx-auto px-4">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Tout ce qu'il vous faut pour facturer sereinement
+          </h2>
+          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
+            De la création du devis jusqu'au paiement final, on s'occupe de la paperasse.
+          </p>
+        </div>
+
+        {/* 6 Cards Grid / Carousel */}
+        <div className="flex lg:grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 overflow-x-auto lg:overflow-visible pb-8 lg:pb-0 snap-x snap-mandatory hide-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
           {features.map((feature, index) => (
             <motion.div
               key={index}
@@ -70,7 +78,7 @@ export default function FeaturesGrid() {
                 stiffness: 80, 
                 damping: 20 
               }}
-              className="group relative flex flex-col sm:flex-row items-center gap-8 p-8 sm:p-10 bg-white dark:bg-[#111113] rounded-xl border border-slate-100 dark:border-white/5 transition-colors duration-300"
+              className="w-[85vw] sm:w-[60vw] lg:w-auto flex-shrink-0 snap-center group relative flex flex-col sm:flex-row items-center gap-8 p-8 sm:p-10 bg-white dark:bg-[#111113] rounded-xl border border-slate-100 dark:border-white/5 transition-colors duration-300"
             >
               {/* Liquid Glass Refraction Effect (Dark Mode only) */}
               <div className="absolute inset-0 rounded-xl border border-white/5 opacity-0 dark:opacity-100 pointer-events-none shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]" />

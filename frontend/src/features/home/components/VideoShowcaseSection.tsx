@@ -38,7 +38,7 @@ export default function VideoShowcaseSection() {
             transition={{ duration: 0.7, type: "spring", damping: 25 }}
             className="w-full h-full flex flex-col justify-center"
           >
-            <div className="relative bg-[#eff5ff] dark:bg-slate-900/80 p-4 sm:p-6 md:p-7 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xl shadow-blue-500/5 group h-full flex flex-col justify-center">
+            <div className="relative bg-[#eff5ff] max-sm:hidden block  dark:bg-slate-900/80 p-4 sm:p-6 md:p-7 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xl shadow-blue-500/5 group h-full flex flex-col justify-center">
               {/* Decorative Corner Glow */}
               <div className="absolute -top-12 -left-12 w-40 h-40 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
 
@@ -77,7 +77,25 @@ export default function VideoShowcaseSection() {
             <h2 className="text-3xl md:text-4xl lg:text-[2.5rem] font-extrabold text-[#0B172E] dark:text-white leading-[1.18] mb-4 tracking-tight">
               Passez de l&apos;idée au devis parfait en un instant.
             </h2>
+            <div className="relative bg-[#eff5ff] max-sm:block hidden  dark:bg-slate-900/80 p-4 sm:p-6 md:p-7 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xl shadow-blue-500/5 group h-full flex flex-col justify-center">
+              {/* Decorative Corner Glow */}
+              <div className="absolute -top-12 -left-12 w-40 h-40 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
 
+              {/* Video Wrapper */}
+              <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 dark:border-white/10 bg-slate-900 aspect-[4/3] sm:aspect-[16/11] flex items-center justify-center">
+                <video 
+                  src="/video/video.mp4"
+                  autoPlay 
+                  loop 
+                  muted 
+                  playsInline 
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Floating Live Badge */}
+               
+              </div>
+            </div>
             {/* Subtext */}
             <p className="text-base text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
               Transformez vos devis et factures en une expérience visuelle captivante. Donnez confiance à vos clients dès la première seconde.

@@ -208,3 +208,13 @@ body {
   box-shadow: 0 0 0 2px #2563EB, 0 0 0 9999px rgba(0, 0, 0, 0.6) !important;
   border-radius: 8px !important;
 }
+/* Utilitaires personnalisés */
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}

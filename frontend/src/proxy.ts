@@ -23,7 +23,7 @@ export function proxy(request: NextRequest) {
     }
 
     // 3. Si l'utilisateur est déjà connecté et essaie d'aller sur le login
-    if (pathname === '/login' && token) {
+    if ((pathname === '/login'  && token) || (pathname === '/signup' && token)) {
         return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 

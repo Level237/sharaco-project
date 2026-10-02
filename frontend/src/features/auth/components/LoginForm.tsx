@@ -115,7 +115,7 @@ export function LoginForm() {
                     <Logo width={160} height={160} />
                 </div>
                 <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Sign in to Sharaco</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Connectez vous sur Sharaco</h1>
                     <p className="text-zinc-500 text-sm font-medium">
                         Identifiez-vous pour accéder à votre espace.
                     </p>
@@ -265,7 +265,7 @@ export function LoginForm() {
 
             <p className="text-zinc-500 text-sm font-medium pt-4">
                 Vous n'aviez pas un compte ?{" "}
-                <Link href="/signup" className="text-[#2563EB] hover:text-sky-400 font-bold underline-offset-4 hover:underline">
+                <Link href="/register" className="text-[#2563EB] hover:text-sky-400 font-bold underline-offset-4 hover:underline">
                     Créer
                 </Link>
             </p>

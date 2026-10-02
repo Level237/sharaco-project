@@ -95,7 +95,7 @@ export default function Hero() {
               Connexion
             </Link>
             <Link href="/register">
-              <button className="bg-[#2563EB] text-white  px-6 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-black dark:hover:bg-gray-100 shadow-md">
+              <button className="bg-[#2563EB] text-white  px-6 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-[#1d4ed8] cursor-pointer shadow-md">
                 Get Started
               </button>
             </Link>
@@ -197,7 +197,7 @@ export default function Hero() {
               </p>
           <BackgroundRippleEffect />
 
-              <div className="mt-12 flex  sm:flex-row items-center justify-center gap-5 max-sm:gap-0">
+              <div className="mt-12 flex z-10  sm:flex-row items-center justify-center gap-5 max-sm:gap-0">
                 <Link href="/register">
                   <button className="bg-[#2563EB] max-sm:text-sm text-white  px-8 py-4 rounded-full text-lg font-bold cursor-pointer shadow-xl shadow-black/10 dark:shadow-white/10 flex items-center justify-center">
                     Créer mon compte

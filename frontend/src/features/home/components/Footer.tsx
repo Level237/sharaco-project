@@ -44,8 +44,8 @@ export default function Footer() {
       { name: "À propos", href: "#about" },
       { name: "Blog", href: "#blog" },
       { name: "Contact & Support", href: "#contact" },
-      { name: "Mentions légales", href: "#legal" },
-      { name: "Confidentialité", href: "#privacy" },
+      { name: "CGU", href: "/terms" },
+      { name: "Confidentialité", href: "/privacy" },
     ],
   }
 

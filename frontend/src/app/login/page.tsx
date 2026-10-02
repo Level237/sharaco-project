@@ -1,9 +1,13 @@
-"use client"
-
 import Link from "next/link"
+import { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import Logo from "@/components/ui/logo"
 import { LoginForm } from "@/features/auth/components/LoginForm"
+
+export const metadata: Metadata = {
+    title: "Connexion | Sharaco",
+    description: "Connectez-vous à votre espace Sharaco pour gérer vos devis, vos factures et suivre votre activité en temps réel.",
+}
 
 export default function LoginPage() {
     return (

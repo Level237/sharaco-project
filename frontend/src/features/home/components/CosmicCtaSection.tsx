@@ -32,7 +32,7 @@ export default function CosmicCtaSection() {
           transition={{ duration: 0.6, delay: 0.15 }}
         >
           <Link
-            href="/signup"
+            href="/register"
             className="inline-flex items-center justify-center px-8 py-3.5 bg-white hover:bg-slate-100 text-slate-900 text-sm font-semibold rounded-full shadow-lg transition-colors"
           >
             Commencez gratuitement

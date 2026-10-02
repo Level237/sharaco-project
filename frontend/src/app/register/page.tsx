@@ -1,8 +1,14 @@
 import { Suspense } from "react"
 import Link from "next/link"
+import { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import Logo from "@/components/ui/logo"
 import { RegisterForm } from "@/features/auth/components/RegisterForm"
+
+export const metadata: Metadata = {
+    title: "Créer un compte | Sharaco",
+    description: "Inscrivez-vous gratuitement sur Sharaco et créez votre premier devis professionnel en quelques clics.",
+}
 
 export default function RegisterPage() {
     return (

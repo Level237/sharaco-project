@@ -54,14 +54,7 @@ export default function FeaturesGrid() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
-        <div className="mb-16 text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Tout ce qu'il vous faut pour facturer sereinement
-          </h2>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-            De la création du devis jusqu'au paiement final, on s'occupe de la paperasse. Vous vous concentrez sur votre métier.
-          </p>
-        </div>
+        
         {/* 6 Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {features.map((feature, index) => (

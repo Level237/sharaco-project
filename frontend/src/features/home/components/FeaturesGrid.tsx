@@ -44,7 +44,11 @@ const features = [
 
 export default function FeaturesGrid() {
   return (
-    <section className="relative py-24 mt-24 sm:py-32 bg-[#92C7FE] dark:bg-[#0B172E] overflow-hidden transition-colors duration-300">
+    <section id="fonctionnalites" className="relative py-24 mt-24 sm:py-32 bg-slate-50 dark:bg-[#0c0c0f] overflow-hidden transition-colors duration-300">
+      {/* Gradient bleed top: blend from Hero (white) into this section */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white dark:from-[#0a0a0a] to-transparent pointer-events-none" />
+      {/* Gradient bleed bottom: blend into HowItWorks (white) */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-slate-950 to-transparent pointer-events-none" />
 
 
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 relative z-10">
@@ -67,13 +71,13 @@ export default function FeaturesGrid() {
                 stiffness: 80, 
                 damping: 20 
               }}
-              className="group relative flex flex-col sm:flex-row items-center gap-8 p-8 sm:p-10 bg-white dark:bg-[#16243D] rounded-[1.5rem] border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]  transition-all duration-300 ease-out"
+              className="group relative flex flex-col sm:flex-row items-center gap-8 p-8 sm:p-10 bg-white dark:bg-[#111113] rounded-xl border border-slate-100 dark:border-white/5 transition-colors duration-300"
             >
               {/* Liquid Glass Refraction Effect (Dark Mode only) */}
-              <div className="absolute inset-0 rounded-[1.5rem] border border-white/5 opacity-0 dark:opacity-100 pointer-events-none shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]" />
+              <div className="absolute inset-0 rounded-xl border border-white/5 opacity-0 dark:opacity-100 pointer-events-none shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]" />
 
               {/* Image Container */}
-              <div className="w-full sm:w-[45%] flex-shrink-0 relative aspect-[4/3] rounded-[1.5rem] overflow-hidden  border border-slate-100 dark:border-white/5 flex items-center justify-center shadow-inner">
+              <div className="w-full sm:w-[45%] flex-shrink-0 relative aspect-[4/3] rounded-xl overflow-hidden  border border-slate-100 dark:border-white/5 flex items-center justify-center shadow-inner">
                 <Image
                   src={feature.image}
                   alt={feature.title}

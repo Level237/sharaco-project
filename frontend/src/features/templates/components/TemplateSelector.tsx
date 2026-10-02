@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 interface TemplateSelectorProps {
     onSelect: (layoutId: string) => void
     onClose?: () => void
+    isPublic?: boolean
 }
 
 /**
@@ -21,11 +22,13 @@ interface TemplateSelectorProps {
 const TemplateCard = React.memo(({
     layout,
     onSelect,
-    index
+    index,
+    isPublic
 }: {
     layout: any
     onSelect: (id: string) => void
     index: number
+    isPublic?: boolean
 }) => {
     const router = useRouter()
 
@@ -59,7 +62,7 @@ const TemplateCard = React.memo(({
 
                 <div className="absolute inset-2 sm:inset-3 md:inset-4 overflow-hidden border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20">
     <img
-        src={`http://localhost:8000/api/v1/templates/${layout.id}/preview.png`}
+        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/templates/${layout.id}/preview.png`}
         alt={`Template ${layout.name}`}
         className="w-full h-full object-cover"
         sizes="(max-width: 640px) 90vw, (max-width: 768px) 45vw, (max-width: 1200px) 30vw, 22vw"
@@ -89,13 +92,15 @@ const TemplateCard = React.memo(({
                             <span>Sélectionner</span>
                             <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-auto opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
                         </Button>
-                        <Button
-                            onClick={() => router.push(`/dashboard/templates/preview/${layout.id}`)}
-                            variant="ghost"
-                            className="w-full h-9 sm:h-10 md:h-12 text-white text-xs sm:text-sm hover:bg-white/10 font-bold rounded-xl sm:rounded-2xl transition-all"
-                        >
-                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Preview
-                        </Button>
+                        {!isPublic && (
+                            <Button
+                                onClick={() => router.push(`/dashboard/templates/preview/${layout.id}`)}
+                                variant="ghost"
+                                className="w-full h-9 sm:h-10 md:h-12 text-white text-xs sm:text-sm hover:bg-white/10 font-bold rounded-xl sm:rounded-2xl transition-all"
+                            >
+                                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" /> Preview
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -105,7 +110,7 @@ const TemplateCard = React.memo(({
 
 TemplateCard.displayName = "TemplateCard"
 
-export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
+export function TemplateSelector({ onSelect, onClose, isPublic }: TemplateSelectorProps) {
     const { data: layouts, isLoading, error } = useLayouts()
 
     return (
@@ -193,6 +198,7 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
                                         layout={layout}
                                         onSelect={onSelect}
                                         index={index}
+                                        isPublic={isPublic}
                                     />
                                 ))}
                             </motion.div>

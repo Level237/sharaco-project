@@ -23,7 +23,7 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https:",
+      "img-src 'self' data: blob: https: http://localhost:8000",
       "font-src 'self' data:",
       "connect-src 'self' http://localhost:8000 https:",
       "frame-ancestors 'none'",

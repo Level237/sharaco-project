@@ -54,9 +54,9 @@ export default function HowItWorksSection() {
   ]
 
   return (
-    <section className="relative bg-white dark:bg-slate-950 pt-40 pb-32 overflow-hidden">
-      {/* Seamless Gradient Transition from FeaturesGrid */}
-      <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-[#92C7FE] to-white dark:from-[#0B172E] dark:to-slate-950 pointer-events-none" />
+    <section id="comment-ca-marche" className="relative bg-white dark:bg-slate-950 pt-40 pb-32 overflow-hidden">
+      {/* Gradient bleed top: blend from FeaturesGrid (slate-50) into this section */}
+      <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-slate-50 dark:from-[#0c0c0f] to-transparent pointer-events-none" />
 
       {/* Background Decorative Mesh (Subtle) */}
       <div className="absolute inset-0 hidden dark:block -z-10 opacity-30">

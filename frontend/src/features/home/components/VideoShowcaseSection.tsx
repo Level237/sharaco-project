@@ -23,7 +23,7 @@ export default function VideoShowcaseSection() {
   ]
 
   return (
-    <section className="relative bg-white dark:bg-slate-950 py-20 md:py-32 overflow-hidden border-t border-slate-100 dark:border-slate-900">
+    <section id="demo" className="relative bg-white dark:bg-slate-950 py-20 md:py-32 overflow-hidden">
       {/* Subtle Background Glow */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
@@ -38,7 +38,7 @@ export default function VideoShowcaseSection() {
             transition={{ duration: 0.7, type: "spring", damping: 25 }}
             className="w-full h-full flex flex-col justify-center"
           >
-            <div className="relative bg-[#eff5ff] dark:bg-slate-900/80 p-4 sm:p-6 md:p-7 rounded-[2.5rem] border border-slate-200/80 dark:border-slate-800 shadow-2xl shadow-blue-500/5 group h-full flex flex-col justify-center">
+            <div className="relative bg-[#eff5ff] dark:bg-slate-900/80 p-4 sm:p-6 md:p-7 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xl shadow-blue-500/5 group h-full flex flex-col justify-center">
               {/* Decorative Corner Glow */}
               <div className="absolute -top-12 -left-12 w-40 h-40 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
 

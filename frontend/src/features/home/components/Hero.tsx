@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Sparkles, BarChart3, Users, CheckCircle, ArrowRight, Menu, X, Rocket, Zap, Globe, ShieldCheck, Mail, Star, AlertTriangle, Clock, EyeOff, UserX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SwitchTheme } from '@/components/ui/switch-theme'
 import Image from 'next/image'
 import Logo from '@/components/ui/logo'
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
+import { PublicTemplateModal } from '@/features/home/components/PublicTemplateModal';
 
 // Types
 interface NavItem {
@@ -24,9 +26,9 @@ interface Feature {
 
 // Constants
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Solutions', href: '/solutions' },
-  { label: 'Templates', href: '/templates' },
-  { label: 'Comment ça marche?', href: '/how-it-works' },
+  { label: 'Fonctionnalités', href: '#fonctionnalites' },
+  { label: 'Comment ça marche', href: '#comment-ca-marche' },
+  { label: 'Démo', href: '#demo' },
 ]
 
 const FEATURES: Feature[] = [
@@ -53,6 +55,8 @@ const FEATURES: Feature[] = [
 export default function Hero() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -115,16 +119,16 @@ export default function Hero() {
 
         {/* Mobile Menu */}
         <div
-          className={`absolute top-full left-0 right-0 mt-2 mx-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-gray-200 dark:border-slate-800 rounded-3xl shadow-2xl transform transition-all duration-300 ease-in-out lg:hidden z-40 origin-top ${isMobileMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'
+          className={`absolute top-full left-0 right-0 mt-2 mx-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg transform transition-all duration-200 ease-in-out lg:hidden z-40 origin-top ${isMobileMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'
             }`}
         >
-          <div className="p-6">
-            <div className="space-y-2">
+          <div className="p-5">
+            <div className="space-y-1">
               {NAV_ITEMS.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block rounded-xl px-4 py-3 text-lg font-semibold text-gray-900 dark:text-white hover:bg-sky-50 dark:hover:bg-sky-900/30 transition-colors"
+                  className="block rounded-lg px-4 py-3 text-base font-semibold text-gray-900 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -132,15 +136,15 @@ export default function Hero() {
               ))}
             </div>
 
-            <div className="mt-8 flex flex-col gap-3">
+            <div className="mt-6 flex flex-col gap-3">
               <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                <Button variant="outline" className="w-full h-12 rounded-xl text-lg font-bold border-gray-200 dark:border-slate-700">
+                <Button variant="outline" className="w-full h-11 rounded-lg text-base font-bold border-slate-200 dark:border-slate-700">
                   Connexion
                 </Button>
               </Link>
               <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                <Button className="w-full h-12 rounded-xl text-lg font-bold bg-[#1a1a1a] hover:bg-black dark:bg-white dark:hover:bg-gray-100 dark:text-[#1a1a1a] text-white">
-                  Get Started
+                <Button className="w-full h-11 rounded-lg text-base font-bold bg-[#2563EB] hover:bg-[#1d4ed8] text-white">
+                  Commencer gratuitement
                 </Button>
               </Link>
             </div>
@@ -166,25 +170,26 @@ export default function Hero() {
               className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
               style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, gray 1px, transparent 0)', backgroundSize: '40px 40px' }}
             />
+            
           </div>
 
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center flex flex-col items-center">
               {/* Announcement banner */}
-              <div className="inline-flex items-center gap-3 rounded-full bg-sky-50 dark:bg-sky-900/30 border border-sky-100 dark:border-sky-800 px-4 py-1.5 mb-10 transition-all hover:border-sky-300 cursor-pointer group shadow-sm">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-600 shadow-lg shadow-sky-500/40">
+              <div className="inline-flex items-center gap-3 rounded-full   border border-sky-100 bg-[#2563EB]/9  px-4 py-1.5 mb-10 transition-all hover:border-sky-300 cursor-pointer group shadow-sm">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2563EB] shadow-lg shadow-sky-500/40">
                   <Rocket className="h-3.5 w-3.5 text-white" />
                 </div>
-                <span className="text-sm font-bold text-sky-700 dark:text-sky-300">
-                  Rejoignez plus de 5,000 entreprises sur Sharaco
+                <span className="text-sm max-sm:text-xs font-bold text-white ">
+                  Rejoignez plus de 200 Freelancers sur Sharaco
                 </span>
                 <ArrowRight className="h-4 w-4 text-sky-400 group-hover:translate-x-1 transition-transform" />
               </div>
 
               {/* Hero content */}
               <h1 className="text-5xl max-sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-6xl lg:text-7xl max-w-5xl leading-[1.1] sm:leading-[1.1] lg:leading-[1.1]">
-                Des devis professionnels en <br className="hidden md:block" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-indigo-500">2 minutes</span>, pas en 2 heures.
+                Le logiciel de devis <br className="hidden md:block" />
+                qui vous fait gagner <span className="text-transparent bg-clip-text bg-[#2563EB] ">du temps</span>.
               </h1>
 
               <p className="mt-8 text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-3xl font-medium leading-relaxed">
@@ -192,18 +197,16 @@ export default function Hero() {
               </p>
           <BackgroundRippleEffect />
 
-              <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-5">
+              <div className="mt-12 flex  sm:flex-row items-center justify-center gap-5 max-sm:gap-0">
                 <Link href="/register">
-                  <button className="bg-[#2563EB] text-white  px-8 py-4 rounded-full text-lg font-bold cursor-pointer shadow-xl shadow-black/10 dark:shadow-white/10 flex items-center justify-center">
-                    Créer mon compte gratuitement
+                  <button className="bg-[#2563EB] max-sm:text-sm text-white  px-8 py-4 rounded-full text-lg font-bold cursor-pointer shadow-xl shadow-black/10 dark:shadow-white/10 flex items-center justify-center">
+                    Créer mon compte
                   </button>
                 </Link>
-                <Link href="/templates">
-                  <button className="px-8 py-4 rounded-full text-lg font-bold text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center group">
-                    Voir les modèles
+                <button onClick={() => setShowTemplates(true)} className="px-8 z-10 py-4 max-sm:text-sm rounded-full text-lg font-bold text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center group">
+                    modeles
                     <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -212,6 +215,11 @@ export default function Hero() {
 
           </div>
         </section>
+
+        <PublicTemplateModal
+            isOpen={showTemplates}
+            onClose={() => setShowTemplates(false)}
+        />
       </main>
     </div>
   )

@@ -23,8 +23,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sharaco — Devis & Factures",
-  description: "Créez, envoyez et suivez vos devis et factures professionnelles",
+  title: "Logiciel de devis professionnel en ligne — Sharaco",
+  description: "Créez des devis et factures professionnels en 2 minutes. La plateforme tout-en-un pour freelances et PME. Fini Word et Excel, bienvenue dans l'efficacité.",
 };
 
 export default function RootLayout({

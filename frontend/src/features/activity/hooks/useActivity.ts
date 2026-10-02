@@ -32,7 +32,7 @@ export function useActivity(params?: {
 
             const queryString = query.toString();
             return api.get<ActivityItem[]>(
-                `/api/v1/activity${queryString ? `?${queryString}` : ''}`
+                `/api/v1/activity/${queryString ? `?${queryString}` : ''}`
             );
         },
         staleTime: 1 * 60 * 1000, // 1 minute

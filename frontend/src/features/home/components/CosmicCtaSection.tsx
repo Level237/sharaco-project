@@ -33,7 +33,7 @@ export default function CosmicCtaSection() {
         >
           <Link
             href="/signup"
-            className="inline-flex items-center justify-center px-8 py-3.5 bg-white hover:bg-slate-100 text-slate-900 text-sm font-semibold rounded-full shadow-2xl transition-all hover:scale-105 active:scale-95"
+            className="inline-flex items-center justify-center px-8 py-3.5 bg-white hover:bg-slate-100 text-slate-900 text-sm font-semibold rounded-full shadow-lg transition-colors"
           >
             Commencez gratuitement
           </Link>

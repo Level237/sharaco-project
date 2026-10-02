@@ -3,7 +3,7 @@
 import { Editor } from "@/features/quotes/components/QuoteBuilder/Editor";
 
 
-export default async function EditQuotePage({ params }: { params: { id: string } }) {
+export default async function EditQuotePage({ params }: { params: Promise<{ id: string }> }) {
     // documentId fourni → Mode édition
     const resolvedParams = await params;
     console.log(resolvedParams.id);

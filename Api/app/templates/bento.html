@@ -38,7 +38,16 @@
         }
 
         @media print {
-            @page { size: A4; margin: 0; }
+            .page {
+                padding: 0 15mm !important;
+                margin: 0 !important;
+            }
+            thead { display: table-header-group; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            .summary-section, .schedule-section, .footer-table, .totals-section, .signature-section { page-break-inside: avoid; }
+
+            @page { size: A4; margin: 15mm 0; }
             body { padding: 0; }
             .page { margin: 0; padding: 15mm; }
         }

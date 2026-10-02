@@ -22,6 +22,7 @@ interface LivePreviewProps {
 // ═══════════════════════════════════════════════════════════════
 const PREVIEW_WIDTH = 860;
 const DEFAULT_HEIGHT = 1200;
+const A4_HEIGHT_PX = 1122; // Hauteur standard A4 à 96 DPI (297mm)
 
 function draftToPreviewRequest(
     draft: QuoteDraft,
@@ -165,6 +166,10 @@ export function LivePreview({ draft, layoutStyle = "classic", templateId }: Live
     const scaledWidth = PREVIEW_WIDTH * scale;
     const scaledHeight = contentHeight * scale;
 
+    // Calcul des marqueurs de sauts de page (guides visuels)
+    const pageCount = Math.floor(contentHeight / A4_HEIGHT_PX);
+    const pageBreaks = Array.from({ length: pageCount }, (_, i) => (i + 1) * A4_HEIGHT_PX);
+
     return (
         <div ref={containerRef} className="relative w-full">
             {/* ═══════════ LOADING BADGE ═══════════ */}
@@ -217,6 +222,18 @@ export function LivePreview({ draft, layoutStyle = "classic", templateId }: Live
                             title="Aperçu du document"
                             sandbox="allow-same-origin"
                         />
+                        {/* ═══════════ PAGE BREAK GUIDES ═══════════ */}
+                        {pageBreaks.map((top) => (
+                            <div 
+                                key={top}
+                                className="absolute left-0 right-0 border-b-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center z-20 pointer-events-none"
+                                style={{ top: top * scale }}
+                            >
+                                <span className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-slate-800 text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full translate-y-[50%] font-medium uppercase tracking-widest shadow-sm">
+                                    Saut de page
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

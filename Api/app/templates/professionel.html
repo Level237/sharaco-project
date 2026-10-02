@@ -64,6 +64,15 @@
         }
 
         @media print {
+            .page {
+                padding: 0 15mm !important;
+                margin: 0 !important;
+            }
+            thead { display: table-header-group; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            .summary-section, .schedule-section, .footer-table, .totals-section, .signature-section { page-break-inside: avoid; }
+
             body {
                 background: white;
                 padding: 0;
@@ -76,10 +85,7 @@
                 height: 100%;
             }
 
-            @page {
-                size: A4;
-                margin: 0;
-            }
+            @page { size: A4; margin: 15mm 0; }
         }
 
         /* ── Header ── */

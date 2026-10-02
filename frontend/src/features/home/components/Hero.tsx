@@ -96,12 +96,10 @@ export default function Hero() {
             </Link>
             <Link href="/register">
               <button className="bg-[#2563EB] text-white  px-6 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-[#1d4ed8] cursor-pointer shadow-md">
-                Get Started
+                Créer un compte
               </button>
             </Link>
-            <div className="pl-2">
-              <SwitchTheme />
-            </div>
+            
           </div>
 
           {/* Mobile Menu Button */}
@@ -176,7 +174,7 @@ export default function Hero() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center flex flex-col items-center">
               {/* Announcement banner */}
-              <div className="inline-flex items-center gap-3 rounded-full   border border-sky-100 bg-[#2563EB]/9  px-4 py-1.5 mb-10 transition-all hover:border-sky-300 cursor-pointer group shadow-sm">
+              <div className="inline-flex items-center gap-3 rounded-full   border border-slate-700 bg-[#2563EB]/9  px-4 py-1.5 mb-10 transition-all hover:border-sky-300 cursor-pointer group shadow-sm">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2563EB] shadow-lg shadow-sky-500/40">
                   <Rocket className="h-3.5 w-3.5 text-white" />
                 </div>

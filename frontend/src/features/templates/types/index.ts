@@ -20,7 +20,7 @@ export interface DocumentTemplate {
   footer_text?: string;
   show_bank_details: boolean;
   show_tax_id: boolean;
-  layout_style: 'classic' | 'modern' | 'minimal' | 'bold' | 'elegant' | 'premium' | 'bento' | 'studio';
+  layout_style: 'classic' | 'modern' | 'minimal' | 'bold' | 'elegant' | 'premium' | 'bento' | 'studio' | 'asymmetric' | 'fintech' | 'terminal' | 'aura' | 'bold' | 'elegant' | 'premium' | 'bento' | 'studio' | 'asymmetric' | 'fintech' | 'terminal' | 'aura';
   is_default: boolean;
   created_at: string;
   updated_at: string;
@@ -75,7 +75,7 @@ export interface TemplateCreate {
   footer_text?: string;
   show_bank_details?: boolean;
   show_tax_id?: boolean;
-  layout_style: 'classic' | 'modern' | 'minimal';
+  layout_style: 'classic' | 'modern' | 'minimal' | 'bold' | 'elegant' | 'premium' | 'bento' | 'studio' | 'asymmetric' | 'fintech' | 'terminal' | 'aura';
   is_default?: boolean;
 }
 
@@ -92,7 +92,7 @@ export interface TemplateUpdate {
   footer_text?: string;
   show_bank_details?: boolean;
   show_tax_id?: boolean;
-  layout_style?: 'classic' | 'modern' | 'minimal';
+  layout_style?: 'classic' | 'modern' | 'minimal' | 'bold' | 'elegant' | 'premium' | 'bento' | 'studio' | 'asymmetric' | 'fintech' | 'terminal' | 'aura';
   is_default?: boolean;
 }
 

@@ -68,7 +68,31 @@ async def get_available_layouts():
             "description": "Design moderne et structuré sous forme de cartes arrondies",
             "preview_url": "/api/v1/templates/layouts/bento/preview",
         },
+        
         {
+            "id": "asymmetric",
+            "name": "Asymétrique",
+            "description": "Style agence avec sidebar verticale élégante",
+            "preview_url": "/api/v1/templates/layouts/asymmetric/preview",
+        },
+        {
+            "id": "fintech",
+            "name": "FinTech",
+            "description": "Style startup/néo-banque, épuré sans bordures",
+            "preview_url": "/api/v1/templates/layouts/fintech/preview",
+        },
+        {
+            "id": "terminal",
+            "name": "Terminal",
+            "description": "Style brutaliste et monospace assumé",
+            "preview_url": "/api/v1/templates/layouts/terminal/preview",
+        },
+        {
+            "id": "aura",
+            "name": "Aura",
+            "description": "Gradient délicat et esthétique néomorphique",
+            "preview_url": "/api/v1/templates/layouts/aura/preview",
+        },   {
             "id": "studio",
             "name": "Studio",
             "description": "Style agence créative avec typographie audacieuse et asymétrique",
@@ -84,7 +108,7 @@ async def get_layout_preview_png(
 ):
     """Génère une image PNG de preview d'un layout (PUBLIC)."""
     
-    valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio"]
+    valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio", "asymmetric", "fintech", "terminal", "aura"]
     if layout_id not in valid_layouts:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document.type.value or 'DEVIS' }} - {{ document.number or 'N/A' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            font-size: 11px;
+            background-color: #f3f4f6;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            display: flex;
+            position: relative;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           SIDEBAR (GAUCHE)
+        ═══════════════════════════════════════════════════════════════ */
+        .sidebar {
+            width: 70mm;
+            background-color: {{ template.primary_color or '#111827' }};
+            color: white;
+            padding: 15mm 10mm;
+            display: flex;
+            flex-direction: column;
+            min-height: 297mm;
+        }
+        
+        .sidebar-logo {
+            max-width: 100%;
+            max-height: 60px;
+            margin-bottom: 20px;
+        }
+
+        .company-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .company-address {
+            color: rgba(255,255,255,0.7);
+            font-size: 10px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .meta-group {
+            margin-bottom: 20px;
+        }
+
+        .meta-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-footer-title {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 10px;
+        }
+
+        .sidebar-footer-content {
+            font-size: 10px;
+            color: rgba(255,255,255,0.8);
+            line-height: 1.4;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           CONTENT (DROITE)
+        ═══════════════════════════════════════════════════════════════ */
+        .content {
+            flex: 1;
+            padding: 15mm;
+            background: white;
+        }
+
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        .doc-title {
+            font-size: 32pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #111827;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .client-box {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            min-width: 200px;
+        }
+
+        .client-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .client-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+        
+        .client-details {
+            font-size: 11px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           TABLES
+        ═══════════════════════════════════════════════════════════════ */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        .items-table th {
+            text-align: left;
+            padding: 10px;
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .items-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: top;
+        }
+
+        .items-table th.text-right, .items-table td.text-right { text-align: right; }
+        .items-table th.text-center, .items-table td.text-center { text-align: center; }
+
+        .summary-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 40px;
+        }
+
+        .summary-box {
+            width: 60%;
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            color: #4b5563;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 10px;
+            margin-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 16px;
+            font-weight: 800;
+            color: {{ template.primary_color or '#111827' }};
+        }
+
+        /* SCHEDULE */
+        .schedule-title {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #111827;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+
+        .schedule-table th, .schedule-table td {
+            padding: 8px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .schedule-table th {
+            text-align: left;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+
+        @media print {
+            .page {
+                box-shadow: none;
+                margin: 0;
+            }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                width: 70mm;
+            }
+            .content {
+                margin-left: 70mm;
+            }
+            thead { display: table-header-group; }
+            tr { page-break-inside: avoid; }
+            .summary-section, .schedule-section { page-break-inside: avoid; }
+            @page { size: A4; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="sidebar">
+        {% if user.logo_url %}
+            <img src="{{ user.logo_url }}" alt="Logo" class="sidebar-logo">
+        {% else %}
+            <div class="company-name">{{ user.company_name or 'Entreprise' }}</div>
+        {% endif %}
+        
+        <div class="company-address">
+            {% if user.address %}
+                {{ user.address | replace('\n', '<br>') | safe }}
+            {% endif %}
+            <br>
+            {% if template.show_tax_id and user.tax_id %}
+                {{ user.tax_id }}
+            {% endif %}
+        </div>
+
+        <div class="meta-group">
+            <div class="meta-label">Numéro</div>
+            <div class="meta-value">{{ document.number or 'N/A' }}</div>
+        </div>
+        <div class="meta-group">
+            <div class="meta-label">Date</div>
+            <div class="meta-value">{{ document.created_at.strftime('%d/%m/%Y') if document.created_at else '-' }}</div>
+        </div>
+        {% if document.due_date %}
+        <div class="meta-group">
+            <div class="meta-label">Date de validité</div>
+            <div class="meta-value">{{ document.due_date.strftime('%d/%m/%Y') }}</div>
+        </div>
+        {% endif %}
+
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-title">Note</div>
+            <div class="sidebar-footer-content">
+                {{ template.footer_text or 'Merci pour votre confiance.' }}
+            </div>
+            {% if template.show_bank_details and user.payment_info %}
+            <div class="sidebar-footer-title" style="margin-top: 15px;">Paiement</div>
+            <div class="sidebar-footer-content">
+                {{ user.payment_info | replace('\n', '<br>') | safe }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="doc-header">
+            <div class="doc-title">{{ document.type.value or 'DEVIS' }}</div>
+            <div class="client-box">
+                <div class="client-label">Adressé à</div>
+                <div class="client-name">{{ client.name or 'Client' }}</div>
+                <div class="client-details">
+                    {% if client.email %}{{ client.email }}<br>{% endif %}
+                    {% if client.phone %}{{ client.phone }}<br>{% endif %}
+                    {% if client.address %}{{ client.address | replace('\n', '<br>') | safe }}{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th class="text-right">Qté</th>
+                    <th class="text-right">Prix HT</th>
+                    <th class="text-right">TVA</th>
+                    <th class="text-right">Total HT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                {% set ht = (item.quantity or 1) * (item.unit_price_cents or 0) %}
+                <tr>
+                    <td style="font-weight: 500;">{{ item.description or 'Article' }}</td>
+                    <td class="text-right">{{ item.quantity or 1 }}</td>
+                    <td class="text-right">{{ "{:,}".format(item.unit_price_cents or 0) }} {{ currency }}</td>
+                    <td class="text-right">{{ item.tax_rate or 0 }}%</td>
+                    <td class="text-right">{{ "{:,}".format(ht) }} {{ currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="summary-section">
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span>Sous-total HT</span>
+                    <span>{{ "{:,}".format(totals.subtotal_cents) }} {{ currency }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>TVA</span>
+                    <span>{{ "{:,}".format(totals.tax_total_cents) }} {{ currency }}</span>
+                </div>
+                <div class="summary-total">
+                    <span>TOTAL TTC</span>
+                    <span>{{ "{:,}".format(totals.grand_total_cents) }} {{ currency }}</span>
+                </div>
+            </div>
+        </div>
+
+        {% if document.payment_schedule and document.payment_schedule|length > 0 %}
+        <div class="schedule-section">
+            <div class="schedule-title">Échéancier de paiement</div>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Échéance</th>
+                        <th class="text-center">Part</th>
+                        <th class="text-right">Montant TTC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for milestone in document.payment_schedule | sort(attribute='sequence') %}
+                    <tr>
+                        <td>{{ milestone.sequence }}</td>
+                        <td>{{ milestone.title }}</td>
+                        <td class="text-center">{{ milestone.percent }}%</td>
+                        <td class="text-right">{{ "{:,}".format(milestone.amount_cents) }} {{ currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

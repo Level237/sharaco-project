@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document.type.value or 'DEVIS' }} - {{ document.number or 'N/A' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #0f172a;
+            font-size: 11px;
+            background-color: #f8fafc;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 15mm;
+            position: relative;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo { max-height: 50px; }
+        .doc-type {
+            font-size: 24pt;
+            font-weight: 700;
+            color: {{ template.primary_color or '#3b82f6' }};
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+        
+        /* INFO GRIDS */
+        .grid-2 {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        .info-col {
+            width: 48%;
+        }
+        .info-title {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .info-text {
+            color: #334155;
+            line-height: 1.6;
+        }
+        .meta-box {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .meta-item {
+            text-align: center;
+            flex: 1;
+            border-right: 1px solid #e2e8f0;
+        }
+        .meta-item:last-child { border-right: none; }
+        .meta-item span { display: block; }
+        .meta-item .lbl { font-size: 9px; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+        .meta-item .val { font-size: 13px; font-weight: 700; color: #0f172a; }
+
+        /* TABLES */
+        .items-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 30px;
+        }
+        .items-table th {
+            text-align: left;
+            padding: 10px 15px;
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 700;
+            background: #f8fafc;
+        }
+        .items-table th:first-child { border-radius: 20px 0 0 20px; }
+        .items-table th:last-child { border-radius: 0 20px 20px 0; }
+        
+        .items-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+        .items-table th.text-right, .items-table td.text-right { text-align: right; }
+        .items-table th.text-center, .items-table td.text-center { text-align: center; }
+
+        /* TOTALS */
+        .totals-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 40px;
+        }
+        .totals-card {
+            width: 50%;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: #64748b;
+            font-size: 12px;
+        }
+        .grand-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            margin-top: 10px;
+            border-top: 1px dashed #cbd5e1;
+            font-size: 18px;
+            font-weight: 800;
+            color: {{ template.primary_color or '#3b82f6' }};
+        }
+
+        /* SCHEDULE & FOOTER */
+        .schedule-title {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #0f172a;
+        }
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-bottom: 30px;
+        }
+        .schedule-table th, .schedule-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .schedule-table th { text-align: left; color: #64748b; }
+        
+        .footer {
+            border-top: 2px solid #f1f5f9;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #64748b;
+        }
+        .footer-col { width: 48%; }
+        .footer-title { font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; color: #0f172a; }
+
+        @media print {
+            .page { padding: 0 15mm !important; margin: 0 !important; box-shadow: none; border-radius: 0; }
+            thead { display: table-header-group; }
+            tr { page-break-inside: avoid; }
+            .totals-container, .schedule-section { page-break-inside: avoid; }
+            @page { size: A4; margin: 15mm 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="header">
+        <div>
+            {% if user.logo_url %}
+                <img src="{{ user.logo_url }}" alt="Logo" class="logo">
+            {% else %}
+                <div style="font-size: 18px; font-weight: 800;">{{ user.company_name or 'Entreprise' }}</div>
+            {% endif %}
+        </div>
+        <div class="doc-type">{{ document.type.value or 'DEVIS' }}</div>
+    </div>
+
+    <div class="meta-box">
+        <div class="meta-item">
+            <span class="lbl">Numéro</span>
+            <span class="val">{{ document.number or 'N/A' }}</span>
+        </div>
+        <div class="meta-item">
+            <span class="lbl">Date</span>
+            <span class="val">{{ document.created_at.strftime('%d/%m/%Y') if document.created_at else '-' }}</span>
+        </div>
+        {% if document.due_date %}
+        <div class="meta-item">
+            <span class="lbl">Validité</span>
+            <span class="val">{{ document.due_date.strftime('%d/%m/%Y') }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="grid-2">
+        <div class="info-col">
+            <div class="info-title">Émetteur</div>
+            <div class="info-text">
+                <strong>{{ user.company_name or 'Entreprise' }}</strong><br>
+                {% if user.address %}{{ user.address | replace('\n', '<br>') | safe }}<br>{% endif %}
+                {% if template.show_tax_id and user.tax_id %}SIRET/TVA : {{ user.tax_id }}{% endif %}
+            </div>
+        </div>
+        <div class="info-col">
+            <div class="info-title">Adressé à</div>
+            <div class="info-text">
+                <strong>{{ client.name or 'Client' }}</strong><br>
+                {% if client.address %}{{ client.address | replace('\n', '<br>') | safe }}<br>{% endif %}
+                {% if client.email %}{{ client.email }}<br>{% endif %}
+                {% if client.phone %}{{ client.phone }}{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th class="text-right">Qté</th>
+                <th class="text-right">Prix HT</th>
+                <th class="text-right">TVA</th>
+                <th class="text-right">Total HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            {% set ht = (item.quantity or 1) * (item.unit_price_cents or 0) %}
+            <tr>
+                <td style="font-weight: 500; color: #0f172a;">{{ item.description or 'Article' }}</td>
+                <td class="text-right">{{ item.quantity or 1 }}</td>
+                <td class="text-right">{{ "{:,}".format(item.unit_price_cents or 0) }} {{ currency }}</td>
+                <td class="text-right">{{ item.tax_rate or 0 }}%</td>
+                <td class="text-right font-semibold">{{ "{:,}".format(ht) }} {{ currency }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals-container">
+        <div class="totals-card">
+            <div class="total-row">
+                <span>Sous-total HT</span>
+                <span>{{ "{:,}".format(totals.subtotal_cents) }} {{ currency }}</span>
+            </div>
+            <div class="total-row">
+                <span>TVA</span>
+                <span>{{ "{:,}".format(totals.tax_total_cents) }} {{ currency }}</span>
+            </div>
+            <div class="grand-total">
+                <span>TOTAL TTC</span>
+                <span>{{ "{:,}".format(totals.grand_total_cents) }} {{ currency }}</span>
+            </div>
+        </div>
+    </div>
+
+    {% if document.payment_schedule and document.payment_schedule|length > 0 %}
+    <div class="schedule-section">
+        <div class="schedule-title">Échéancier de paiement</div>
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Échéance</th>
+                    <th class="text-center">Part</th>
+                    <th class="text-right">Montant TTC</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for milestone in document.payment_schedule | sort(attribute='sequence') %}
+                <tr>
+                    <td>{{ milestone.sequence }}</td>
+                    <td>{{ milestone.title }}</td>
+                    <td class="text-center">{{ milestone.percent }}%</td>
+                    <td class="text-right font-semibold">{{ "{:,}".format(milestone.amount_cents) }} {{ currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <div class="footer-col">
+            <div class="footer-title">Note</div>
+            <div>{{ template.footer_text or 'Merci pour votre confiance.' }}</div>
+        </div>
+        {% if template.show_bank_details and user.payment_info %}
+        <div class="footer-col">
+            <div class="footer-title">Paiement</div>
+            <div>{{ user.payment_info | replace('\n', '<br>') | safe }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

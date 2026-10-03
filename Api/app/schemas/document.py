@@ -171,7 +171,7 @@ class DocumentCreate(BaseModel):
     @field_validator("layout_style")
     @classmethod
     def validate_layout_style(cls, v: Optional[str]) -> Optional[str]:
-        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio"]
+        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio", "asymmetric", "fintech", "terminal", "aura"]
         if v and v not in valid_layouts:
             raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
         return v or "classic"
@@ -245,7 +245,7 @@ class DocumentUpdate(BaseModel):
     def validate_layout_style(cls, v: Optional[str]) -> Optional[str]:
         if v is None:
             return v
-        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio"]
+        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio", "asymmetric", "fintech", "terminal", "aura"]
         if v not in valid_layouts:
             raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
         return v

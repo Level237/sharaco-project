@@ -102,7 +102,7 @@ export default function Hero() {
             
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button */}*
           <div className="lg:hidden flex items-center gap-4">
             <SwitchTheme />
             <button

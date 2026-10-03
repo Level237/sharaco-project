@@ -44,6 +44,10 @@ class PDFRenderer:
         "premium": "premium.html",
         "bento": "bento.html",
         "studio": "studio.html",
+        "asymmetric": "asymmetric.html",
+        "fintech": "fintech.html",
+        "terminal": "terminal.html",
+        "aura": "aura.html",
     }
 
     INVOICE_TEMPLATE = "facture.html"

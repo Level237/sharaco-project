@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react"
 
 interface LayoutPreviewProps {
     
-    layoutId: 'classic' | 'modern' | 'minimal';
+    layoutId: 'classic' | 'modern' | 'minimal' | 'bold' | 'elegant' | 'premium' | 'bento' | 'studio' | 'asymmetric' | 'fintech' | 'terminal' | 'aura';
     className?: string;
 }
 

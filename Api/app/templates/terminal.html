@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ document.type.value or 'DEVIS' }} - {{ document.number or 'N/A' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Space Mono', monospace;
+            color: #000;
+            font-size: 11px;
+            background-color: #fff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            padding: 15mm;
+            border: 2px solid #000;
+            position: relative;
+        }
+        
+        .border-box {
+            border: 2px solid #000;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .logo { max-height: 50px; filter: grayscale(100%); }
+        .doc-type {
+            font-size: 20pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .info-grid {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .info-col { flex: 1; }
+        .info-title {
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .info-text { line-height: 1.6; }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            border: 2px solid #000;
+        }
+        .items-table th {
+            text-align: left;
+            padding: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            background: #f0f0f0;
+        }
+        .items-table td {
+            padding: 10px;
+            border-bottom: 1px solid #000;
+            border-right: 1px solid #000;
+        }
+        .items-table td:last-child { border-right: none; }
+        .text-right { text-align: right; }
+        
+        .summary-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 40px;
+        }
+        .summary-box {
+            width: 50%;
+            border: 2px solid #000;
+            padding: 15px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .grand-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 10px;
+            margin-top: 10px;
+            border-top: 2px solid #000;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            border: 1px solid #000;
+        }
+        .schedule-table th, .schedule-table td {
+            padding: 8px;
+            border: 1px solid #000;
+        }
+        .schedule-table th { background: #f0f0f0; }
+
+        .footer {
+            border-top: 2px solid #000;
+            padding-top: 15px;
+            display: flex;
+            gap: 20px;
+        }
+        .footer-col { flex: 1; }
+        
+        @media print {
+            .page { padding: 0 15mm !important; margin: 0 !important; border: none; }
+            thead { display: table-header-group; }
+            tr { page-break-inside: avoid; }
+            .summary-container { page-break-inside: avoid; }
+            @page { size: A4; margin: 15mm 0; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="header">
+        <div>
+            {% if user.logo_url %}
+                <img src="{{ user.logo_url }}" alt="Logo" class="logo">
+            {% else %}
+                <div style="font-size: 16px; font-weight: 700;">{{ user.company_name or 'Entreprise' }}</div>
+            {% endif %}
+        </div>
+        <div class="doc-type">[{{ document.type.value or 'DEVIS' }}]</div>
+    </div>
+
+    <div class="border-box">
+        <strong>REF:</strong> {{ document.number or 'N/A' }} | 
+        <strong>DATE:</strong> {{ document.created_at.strftime('%d/%m/%Y') if document.created_at else '-' }}
+        {% if document.due_date %} | <strong>VALIDE JUSQU'AU:</strong> {{ document.due_date.strftime('%d/%m/%Y') }}{% endif %}
+    </div>
+
+    <div class="info-grid">
+        <div class="info-col">
+            <div class="info-title">>>> EMETTEUR</div>
+            <div class="info-text">
+                <strong>{{ user.company_name or 'Entreprise' }}</strong><br>
+                {% if user.address %}{{ user.address | replace('\n', '<br>') | safe }}<br>{% endif %}
+                {% if template.show_tax_id and user.tax_id %}ID: {{ user.tax_id }}{% endif %}
+            </div>
+        </div>
+        <div class="info-col">
+            <div class="info-title">>>> CLIENT</div>
+            <div class="info-text">
+                <strong>{{ client.name or 'Client' }}</strong><br>
+                {% if client.address %}{{ client.address | replace('\n', '<br>') | safe }}<br>{% endif %}
+                {% if client.email %}E: {{ client.email }}<br>{% endif %}
+                {% if client.phone %}T: {{ client.phone }}{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>DESC</th>
+                <th class="text-right">QTE</th>
+                <th class="text-right">HT</th>
+                <th class="text-right">TVA</th>
+                <th class="text-right">TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            {% set ht = (item.quantity or 1) * (item.unit_price_cents or 0) %}
+            <tr>
+                <td>{{ item.description or 'Article' }}</td>
+                <td class="text-right">{{ item.quantity or 1 }}</td>
+                <td class="text-right">{{ "{:,}".format(item.unit_price_cents or 0) }}</td>
+                <td class="text-right">{{ item.tax_rate or 0 }}%</td>
+                <td class="text-right font-semibold">{{ "{:,}".format(ht) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary-container">
+        <div class="summary-box">
+            <div class="summary-row">
+                <span>SOUS-TOTAL</span>
+                <span>{{ "{:,}".format(totals.subtotal_cents) }} {{ currency }}</span>
+            </div>
+            <div class="summary-row">
+                <span>TAXES</span>
+                <span>{{ "{:,}".format(totals.tax_total_cents) }} {{ currency }}</span>
+            </div>
+            <div class="grand-total">
+                <span>TOTAL TTC</span>
+                <span>{{ "{:,}".format(totals.grand_total_cents) }} {{ currency }}</span>
+            </div>
+        </div>
+    </div>
+
+    {% if document.payment_schedule and document.payment_schedule|length > 0 %}
+    <div>
+        <div class="info-title">>>> ECHEANCIER</div>
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>SEQ</th>
+                    <th>DETAIL</th>
+                    <th class="text-right">PART</th>
+                    <th class="text-right">MONTANT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for milestone in document.payment_schedule | sort(attribute='sequence') %}
+                <tr>
+                    <td>#{{ milestone.sequence }}</td>
+                    <td>{{ milestone.title }}</td>
+                    <td class="text-right">{{ milestone.percent }}%</td>
+                    <td class="text-right">{{ "{:,}".format(milestone.amount_cents) }} {{ currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <div class="footer-col">
+            <strong>[NOTE]</strong><br>
+            {{ template.footer_text or 'Merci pour votre confiance.' }}
+        </div>
+        {% if template.show_bank_details and user.payment_info %}
+        <div class="footer-col">
+            <strong>[PAIEMENT]</strong><br>
+            {{ user.payment_info | replace('\n', '<br>') | safe }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

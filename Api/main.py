@@ -1,5 +1,6 @@
 # app/main.py
 import logging
+import sentry_sdk
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -25,6 +26,12 @@ from app.api.v1.activity import router as activity_router
 from app.api.v1.billing_settings import router as billing_settings_router
 from app.api.v1.payment_schedule import router as payment_schedule_router
 from app.api.v1.cron import router as cron_router  # ⚠️ à ajouter si pas fait
+
+sentry_sdk.init(
+    dsn="https://ca3962273c5362a943c64e025a581466@o4508954538082304.ingest.us.sentry.io/4512193670217728",
+    traces_sample_rate=1.0,
+    environment="production"
+)
 
 logger = logging.getLogger(__name__)
 

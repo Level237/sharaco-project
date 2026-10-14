@@ -5,6 +5,9 @@
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
+  // Désactivé en dev : évite le MaxListenersExceededWarning et le bruit dans Sentry
+  enabled: process.env.NODE_ENV === "production",
+
   dsn: "https://ca3962273c5362a943c64e025a581466@o4508954538082304.ingest.us.sentry.io/4512193670217728",
 
   // Add optional integrations for additional features

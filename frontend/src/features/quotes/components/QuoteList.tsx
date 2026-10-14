@@ -30,7 +30,7 @@ import Link from "next/link"
 import { DocumentPreview } from "./DocumentPreview"
 import { quotesApi } from "../api/quotesApi"
 import { useDeleteDocument } from "../hooks/useDeleteDocument"
-import { Button } from "@/components/ui/button"
+
 import { useLinkToProject } from "../hooks/useLinkToProject"
 import { useQuery } from "@tanstack/react-query"
 import { projectsApi } from "@/features/projects/api/projectsApi"
@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils"
 
 interface QuoteListProps {
     quotes: Document[],
+    isLoading?: boolean,
     onDeleteSuccess?: () => void,
     projectId?: string,
     searchQuery?: string,
@@ -56,6 +57,8 @@ const statusConfig: Record<DocumentStatus, { label: string, icon: any, color: st
 }
 
 import type { Variants } from "framer-motion"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -70,7 +73,7 @@ const cardVariants: Variants = {
     show: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 300, damping: 25 } }
 }
 
-export function QuoteList({ quotes, onDeleteSuccess, projectId, searchQuery = "", statusFilter = "ALL" }: QuoteListProps) {
+export function QuoteList({ quotes, isLoading = false, onDeleteSuccess, projectId, searchQuery = "", statusFilter = "ALL" }: QuoteListProps) {
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const unlinkMutation = useUnlinkFromProject();
 
@@ -164,8 +167,22 @@ export function QuoteList({ quotes, onDeleteSuccess, projectId, searchQuery = ""
                     </Link>
                 </motion.div>
 
+
+                {/* ═══════════ SKELETON CARDS ═══════════ */}
+                {isLoading && [...Array(7)].map((_, i) => (
+                    <motion.div key={`skeleton-${i}`} variants={cardVariants} className="flex flex-col min-w-0">
+                        <Skeleton className="w-full aspect-[4/5] rounded-lg bg-white/[0.03]" />
+                        <div className="mt-2 sm:mt-3 px-0.5 sm:px-1 space-y-1.5 sm:space-y-2">
+                            <Skeleton className="h-3 sm:h-4 w-3/4 rounded-md bg-white/[0.05]" />
+                            <Skeleton className="h-2.5 sm:h-3 w-1/2 rounded-md bg-white/[0.05]" />
+                        </div>
+                    </motion.div>
+                ))}
+
                 {/* ═══════════ DOCUMENT CARDS ═══════════ */}
-                <AnimatePresence mode="popLayout">
+                {!isLoading && (
+                    <AnimatePresence mode="popLayout">
+
                     {filteredQuotes.map((quote) => {
                         const config = statusConfig[quote.status] || statusConfig.DRAFT
                         const StatusIcon = config.icon
@@ -298,9 +315,10 @@ export function QuoteList({ quotes, onDeleteSuccess, projectId, searchQuery = ""
                         )
                     })}
                 </AnimatePresence>
+                )}
 
                 {/* ═══════════ EMPTY STATE ═══════════ */}
-                {filteredQuotes.length === 0 && (
+                {!isLoading && filteredQuotes.length === 0 && (
                     <div className="col-span-full py-12 sm:py-20 flex flex-col items-center justify-center text-center">
                         <Search className="h-8 w-8 sm:h-10 sm:w-10 text-slate-600 mb-3 sm:mb-4" />
                         <h4 className="text-base sm:text-lg font-bold text-white">Aucun devis trouvé</h4>

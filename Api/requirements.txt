@@ -1,5 +1,5 @@
 # FastAPI & Server
-fastapi==0.115.6
+fastapi[standard]==0.115.6
 uvicorn[standard]==0.34.0
 
 # ORM & Database

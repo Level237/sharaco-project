@@ -41,18 +41,7 @@ function QuotesPageContent() {
 
     return (
         <div className="flex-1 min-w-0 w-full space-y-4 sm:space-y-6 lg:space-y-8 xl:space-y-12 p-3 sm:p-4 md:p-8 pt-4 sm:pt-6 min-h-screen">
-            {isLoading ? (
-                /* ═══════════ SKELETON LOADING ═══════════ */
-                <div className="mt-4 sm:mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
-                    {[...Array(12)].map((_, i) => (
-                        <div key={i} className="space-y-2 sm:space-y-3">
-                            <Skeleton className="w-full aspect-[4/5] rounded-lg" />
-                            <Skeleton className="h-3 sm:h-4 w-3/4 rounded-md mx-1" />
-                            <Skeleton className="h-2.5 sm:h-3 w-full sm:w-1/2 rounded-md mx-1" />
-                        </div>
-                    ))}
-                </div>
-            ) : error ? (
+            {error ? (
                 /* ═══════════ ERROR STATE ═══════════ */
                 <div className="flex flex-col items-center justify-center p-6 sm:p-12 md:p-20 text-center bg-slate-950/40 rounded-lg border border-rose-500/20 backdrop-blur-xl mt-4 sm:mt-8">
                     <p className="text-rose-500 font-medium mb-3 sm:mb-4 text-sm sm:text-base px-4">
@@ -62,7 +51,7 @@ function QuotesPageContent() {
                         <RefreshCcw className="mr-2 h-4 w-4" /> Réessayer
                     </Button>
                 </div>
-            ) : !hasQuotes ? (
+            ) : !isLoading && !hasQuotes ? (
                 /* ═══════════ EMPTY STATE ═══════════ */
                 <div className="flex flex-col items-center justify-center py-16 sm:py-24 md:py-32 text-center px-4">
                     <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg bg-[#2563EB]/10 flex items-center justify-center mb-4 sm:mb-6 border border-blue-500/20 shadow-xl shadow-blue-500/10 group hover:scale-105 transition-transform duration-300">
@@ -92,7 +81,8 @@ function QuotesPageContent() {
 
                     <div className="mt-4 sm:mt-6 md:mt-8">
                         <QuoteList
-                            quotes={quotes}
+                            quotes={quotes || []}
+                            isLoading={isLoading}
                             onDeleteSuccess={handleDeleteSuccess}
                             searchQuery={searchQuery}
                             statusFilter={statusFilter}

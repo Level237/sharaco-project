@@ -159,8 +159,7 @@ async def complete_google_registration(
 @router.get("/google/login")
 async def google_login(request: Request):
     """Redirige l'utilisateur vers la page de connexion Google."""
-    redirect_uri = "http://localhost:8000/api/v1/auth/google/callback"
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    return await oauth.google.authorize_redirect(request, settings.GOOGLE_REDIRECT_URI)
 
 
 @router.post("/oauth/exchange", response_model=Token)

@@ -193,3 +193,15 @@ async def get_activity_feed(
     # 4. Limiter le résultat
     # ═══════════════════════════════════════════════
     return activities[:limit]
+
+
+@router.get("/debug-db")
+async def debug_db():
+    import os, socket
+    host = os.environ.get("DB_HOST", "UNKNOWN")
+    port = int(os.environ.get("DB_PORT", "5432"))
+    try:
+        socket.create_connection((host, port), timeout=5)
+        return {"status": "ok", "host": host, "port": port}
+    except Exception as e:
+        return {"status": "fail", "host": host, "port": port, "error": str(e)}

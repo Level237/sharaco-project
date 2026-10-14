@@ -27,7 +27,7 @@ import {
 import { Label } from '@/components/ui/label';
 import Logo from '@/components/ui/logo';
 import { useRegister, useVerifyIfEmailExist } from '../hooks/useAuth';
-import { api } from '@/lib/api';
+import { API_URL, api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 
 // ✅ Schéma avec validation libphonenumber
@@ -179,7 +179,7 @@ export function RegisterForm() {
                             variant="outline"
                             className="w-full cursor-pointer h-12 bg-zinc-900/50 border-zinc-800 text-white hover:bg-zinc-800/50 hover:text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
                             onClick={() => {
-                                window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/auth/google/login`;
+                                window.location.href = `${API_URL}/api/v1/auth/google/login`;
                             }}
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

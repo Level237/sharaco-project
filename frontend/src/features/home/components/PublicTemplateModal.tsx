@@ -6,6 +6,7 @@ import { X, Check, ArrowRight, Layout as LayoutIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useLayouts } from "@/features/templates/hooks/useTemplates"
+import { API_URL } from "@/lib/api"
 
 interface PublicTemplateModalProps {
     isOpen: boolean
@@ -84,7 +85,7 @@ export function PublicTemplateModal({ isOpen, onClose }: PublicTemplateModalProp
                                             {/* Preview Image */}
                                             <div className="aspect-[3/4] bg-slate-100 dark:bg-black/20 w-full relative">
                                                 <img 
-                                                    src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/templates/${layout.id}/preview.png`}
+                                                    src={`${API_URL}/api/v1/templates/${layout.id}/preview.png`}
                                                     alt={layout.name}
                                                     className="w-full h-full object-cover"
                                                     loading="lazy"

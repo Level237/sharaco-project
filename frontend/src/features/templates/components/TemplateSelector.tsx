@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLayouts } from "@/features/templates/hooks/useTemplates"
+import { API_URL } from "@/lib/api"
 
 import { useRouter } from "next/navigation"
 
@@ -62,7 +63,7 @@ const TemplateCard = React.memo(({
 
                 <div className="absolute inset-2 sm:inset-3 md:inset-4 overflow-hidden border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20">
     <img
-        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/templates/${layout.id}/preview.png`}
+        src={`${API_URL}/api/v1/templates/${layout.id}/preview.png`}
         alt={`Template ${layout.name}`}
         className="w-full h-full object-cover"
         sizes="(max-width: 640px) 90vw, (max-width: 768px) 45vw, (max-width: 1200px) 30vw, 22vw"

@@ -1,7 +1,5 @@
-import { api } from '@/lib/api';
+import { API_URL, api } from '@/lib/api';
 import type { Document, DocumentCreate, DocumentStatus } from '@/features/quotes/types';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export const invoicesApi = {
     getAll: async (): Promise<Document[]> => {
@@ -20,7 +18,7 @@ export const invoicesApi = {
     }> => {
         const token = localStorage.getItem('sharaco_token');
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents/invoices/${invoiceId}/mark-paid`,
+            `${API_URL}/api/v1/documents/invoices/${invoiceId}/mark-paid`,
             {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },

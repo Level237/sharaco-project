@@ -1,8 +1,6 @@
 // features/quotes/api/quotesApi.ts
-import { api } from '@/lib/api';
+import { API_URL, api } from '@/lib/api';
 import type { Document, DocumentCreate, DocumentStatus, DocumentPreviewRequest } from '../types';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export const quotesApi = {
     getAll: async (params?: {
@@ -27,7 +25,7 @@ export const quotesApi = {
     }> => {
         const token = localStorage.getItem('sharaco_token');
         const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/documents/${quoteId}/next-invoice`,
+            `${API_URL}/api/v1/documents/${quoteId}/next-invoice`,
             {
                 method: 'POST',
                 headers: {

@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { API_URL, api } from '@/lib/api';
 import type { DocumentPreviewRequest, DocumentTemplate, Layout, TemplateCreate, TemplateUpdate } from '../types';
 
 export const templatesApi = {
@@ -23,7 +23,7 @@ export const templatesApi = {
     previewDocument: async (data: DocumentPreviewRequest): Promise<string> => {
         const token = localStorage.getItem('sharaco_token');
         const res = await fetch(
-            `http://localhost:8000/api/v1/documents/preview`,
+            `${API_URL}/api/v1/documents/preview`,
             {
                 method: 'POST',
                 headers: {
@@ -39,7 +39,7 @@ export const templatesApi = {
 
     previewDocumentByClientToken: async (clientToken: string): Promise<string> => {
         const res = await fetch(
-            `http://localhost:8000/api/v1/documents/client/${clientToken}/preview`,
+            `${API_URL}/api/v1/documents/client/${clientToken}/preview`,
             {
                 method: 'GET',
                 headers: {
@@ -57,7 +57,7 @@ export const templatesApi = {
 
     previewDocumentByShareToken: async (shareToken: string): Promise<string> => {
         const res = await fetch(
-            `http://localhost:8000/api/v1/documents/shared/${shareToken}/preview`,
+            `${API_URL}/api/v1/documents/shared/${shareToken}/preview`,
             {
                 method: 'GET',
                 headers: {
@@ -77,7 +77,7 @@ export const templatesApi = {
 getLayoutPreview: async (layoutId: string): Promise<string> => {
     const token = localStorage.getItem('sharaco_token');
     const res = await fetch(
-        `http://localhost:8000/api/v1/templates/layouts/${layoutId}/preview`,
+        `${API_URL}/api/v1/templates/layouts/${layoutId}/preview`,
         {
             headers: {
                 Authorization: `Bearer ${token}`,

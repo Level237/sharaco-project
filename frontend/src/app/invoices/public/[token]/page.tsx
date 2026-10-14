@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { PaymentScheduleTracker } from "@/features/invoices/components/PaymentScheduleTracker";
+import { API_URL } from "@/lib/api";
 
 export default function PublicInvoicePage() {
     const params = useParams();
@@ -13,8 +14,7 @@ export default function PublicInvoicePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        fetch(`${apiUrl}/api/v1/documents/invoices/public/${token}`)
+        fetch(`${API_URL}/api/v1/documents/invoices/public/${token}`)
             .then((r) => r.json())
             .then(setData)
             .finally(() => setLoading(false));

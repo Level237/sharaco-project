@@ -11,7 +11,7 @@ export const quotesApi = {
         query.set('type', params?.type || 'DEVIS');
         if (params?.project_id) query.set('project_id', params.project_id);
 
-        return api.get<Document[]>(`/api/v1/documents?${query.toString()}`);
+        return api.get<Document[]>(`/api/v1/documents/?${query.toString()}`);
     },
 
     generateNextInvoice: async (quoteId: string): Promise<{
@@ -45,7 +45,7 @@ export const quotesApi = {
     },
 
     create: async (data: DocumentCreate): Promise<Document> => {
-        return api.post<Document>('/api/v1/documents', data);
+        return api.post<Document>('/api/v1/documents/', data);
     },
 
     update: async (id: string, data: unknown): Promise<Document> => {

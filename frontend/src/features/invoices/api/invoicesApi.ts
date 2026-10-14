@@ -3,7 +3,7 @@ import type { Document, DocumentCreate, DocumentStatus } from '@/features/quotes
 
 export const invoicesApi = {
     getAll: async (): Promise<Document[]> => {
-        return api.get<Document[]>('/api/v1/documents?type=FACTURE');
+        return api.get<Document[]>('/api/v1/documents/?type=FACTURE');
     },
 
     getById: async (id: string): Promise<Document> => {
@@ -31,7 +31,7 @@ export const invoicesApi = {
         return res.json();
     },
     create: async (data: DocumentCreate): Promise<Document> => {
-        return api.post<Document>('/api/v1/documents', data);
+        return api.post<Document>('/api/v1/documents/', data);
     },
 
     update: async (id: string, data: unknown): Promise<Document> => {

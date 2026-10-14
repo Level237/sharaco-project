@@ -3,7 +3,7 @@ import type { DocumentPreviewRequest, DocumentTemplate, Layout, TemplateCreate, 
 
 export const templatesApi = {
     getAll: async (): Promise<DocumentTemplate[]> => {
-        return api.get<DocumentTemplate[]>('/api/v1/templates');
+        return api.get<DocumentTemplate[]>('/api/v1/templates/');
     },
 
 
@@ -91,7 +91,7 @@ getLayoutPreview: async (layoutId: string): Promise<string> => {
         return api.get<Layout[]>('/api/v1/templates/layouts');
     },
     create: async (data: TemplateCreate): Promise<DocumentTemplate> => {
-        return api.post<DocumentTemplate>('/api/v1/templates', data);
+        return api.post<DocumentTemplate>('/api/v1/templates/', data);
     },
 
     update: async (id: string, data: TemplateUpdate): Promise<DocumentTemplate> => {

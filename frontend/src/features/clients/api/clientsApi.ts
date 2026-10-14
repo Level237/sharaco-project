@@ -4,7 +4,7 @@ import { Client, ClientCreate, ClientUpdate } from '../types';
 
 export const clientsApi = {
     getAll: async (skip = 0, limit = 50): Promise<Client[]> => {
-        return api.get<Client[]>(`/api/v1/clients?skip=${skip}&limit=${limit}`);
+        return api.get<Client[]>(`/api/v1/clients/?skip=${skip}&limit=${limit}`);
     },
 
     getById: async (id: string): Promise<Client> => {
@@ -12,7 +12,7 @@ export const clientsApi = {
     },
 
     create: async (data: ClientCreate): Promise<Client> => {
-        return api.post<Client>('/api/v1/clients', data);
+        return api.post<Client>('/api/v1/clients/', data);
     },
 
     update: async (id: string, data: ClientUpdate): Promise<Client> => {

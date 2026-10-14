@@ -25,7 +25,7 @@ export const projectsApi = {
         if (params?.limit !== undefined) query.set('limit', params.limit.toString());
 
         const queryString = query.toString();
-        return api.get<Project[]>(`/api/v1/projects${queryString ? `?${queryString}` : ''}`);
+        return api.get<Project[]>(`/api/v1/projects/${queryString ? `?${queryString}` : ''}`);
     },
 
         
@@ -59,7 +59,7 @@ export const projectsApi = {
      * Crée un nouveau projet
      */
     create: async (data: ProjectCreate): Promise<Project> => {
-        return api.post<Project>('/api/v1/projects', data);
+        return api.post<Project>('/api/v1/projects/', data);
     },
 
     /**

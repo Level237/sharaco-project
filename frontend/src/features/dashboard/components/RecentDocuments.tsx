@@ -34,7 +34,7 @@ export function RecentDocuments() {
         const fetchDocs = async () => {
             try {
                 // Fetch latest quotes to simulate unified documents endpoint for now, or use real endpoint if available
-                const reqDocs = await api.get<{ data: Document[] }>('/api/v1/documents?limit=5')
+                const reqDocs = await api.get<{ data: Document[] }>('/api/v1/documents/?limit=5')
                 // Assuming it returns an object with a data array or just the array
                 setDocuments(Array.isArray(reqDocs) ? reqDocs as any as Document[] : (reqDocs.data || []))
             } catch (err) {

@@ -20,7 +20,9 @@ class Settings(BaseSettings):
 
     GOOGLE_CLIENT_ID: str =""
     GOOGLE_CLIENT_SECRET: str=""
-    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/google/callback"
+    # Conservé pour les installs existantes. Le callback envoyé à Google est
+    # toujours {FRONTEND_URL}/api/v1/auth/google/callback, pour ne pas afficher l'API.
+    GOOGLE_REDIRECT_URI: str = "http://localhost:3000/api/v1/auth/google/callback"
     FRONTEND_URL: str = "http://localhost:3000"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

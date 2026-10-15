@@ -160,10 +160,15 @@ async def complete_google_registration(
         logger.error(f"❌ Erreur finalisation Google: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Erreur interne lors de la création du compte")
 
+def _google_browser_redirect_uri() -> str:
+    """Callback vu par Google et par le navigateur : le domaine du site, pas celui de l'API."""
+    return f"{settings.FRONTEND_URL.rstrip('/')}/api/v1/auth/google/callback"
+
+
 @router.get("/google/login")
 async def google_login(request: Request):
     """Redirige l'utilisateur vers la page de connexion Google."""
-    return await oauth.google.authorize_redirect(request, settings.GOOGLE_REDIRECT_URI)
+    return await oauth.google.authorize_redirect(request, _google_browser_redirect_uri())
 
 
 @router.post("/oauth/exchange", response_model=Token)

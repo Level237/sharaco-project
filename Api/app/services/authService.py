@@ -77,31 +77,67 @@ class AuthService:
     _exchange_codes: dict = {}
 
     @classmethod
-    def create_oauth_exchange_code(cls, access_token: str) -> str:
-        """Génère un code d'échange OAuth à usage unique éphémère (60 secondes) pour éviter d'exposer le JWT dans l'URL."""
+    def _purge_exchange_codes(cls, now: float) -> None:
+        cls._exchange_codes = {
+            key: value
+            for key, value in cls._exchange_codes.items()
+            if value["expires_at"] > now
+        }
+
+    @classmethod
+    def _issue_exchange_code(cls, payload: dict) -> str:
         import secrets
         import time
+
         now = time.time()
-        # Purge des codes expirés
-        cls._exchange_codes = {k: v for k, v in cls._exchange_codes.items() if v["expires_at"] > now}
+        cls._purge_exchange_codes(now)
         code = secrets.token_urlsafe(32)
-        cls._exchange_codes[code] = {
-            "access_token": access_token,
-            "expires_at": now + 60,
-        }
+        cls._exchange_codes[code] = {**payload, "expires_at": now + 60}
         return code
 
     @classmethod
+    def create_oauth_exchange_code(cls, access_token: str) -> str:
+        """Code à usage unique (60 s) pour ne pas mettre le JWT dans l'URL."""
+        return cls._issue_exchange_code({"access_token": access_token})
+
+    @classmethod
+    def create_oauth_registration_code(cls, temp_token: str, email: str, name: str) -> str:
+        """Code à usage unique (60 s) pour finaliser une inscription Google hors de l'URL."""
+        return cls._issue_exchange_code(
+            {"temp_token": temp_token, "email": email, "name": name}
+        )
+
+    @classmethod
     def consume_oauth_exchange_code(cls, code: str) -> str:
-        """Consomme un code d'échange (usage unique). Lève HTTPException 400 si invalide ou expiré."""
+        """Consomme un code de connexion. Lève HTTPException 400 si invalide ou expiré."""
         import time
+
         now = time.time()
-        cls._exchange_codes = {k: v for k, v in cls._exchange_codes.items() if v["expires_at"] > now}
+        cls._purge_exchange_codes(now)
         data = cls._exchange_codes.pop(code, None)
-        if not data or data["expires_at"] < now:
+        if not data or data["expires_at"] < now or "access_token" not in data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Code d'échange OAuth invalide ou expiré"
+                detail="Code d'échange OAuth invalide ou expiré",
             )
         return data["access_token"]
+
+    @classmethod
+    def consume_oauth_registration_code(cls, code: str) -> dict:
+        """Consomme un code d'inscription Google. Lève HTTPException 400 si invalide ou expiré."""
+        import time
+
+        now = time.time()
+        cls._purge_exchange_codes(now)
+        data = cls._exchange_codes.pop(code, None)
+        if not data or data["expires_at"] < now or "temp_token" not in data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Code d'inscription Google invalide ou expiré",
+            )
+        return {
+            "temp_token": data["temp_token"],
+            "email": data["email"],
+            "name": data.get("name") or "",
+        }
         

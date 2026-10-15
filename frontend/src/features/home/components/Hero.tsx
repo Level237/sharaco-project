@@ -104,7 +104,7 @@ export default function Hero() {
 
           {/* Mobile Menu Button */}*
           <div className="lg:hidden flex items-center gap-4">
-            <SwitchTheme />
+            
             <button
               type="button"
               className="p-2 text-slate-900 dark:text-white"
@@ -190,20 +190,20 @@ export default function Hero() {
                 qui vous fait gagner <span className="text-transparent bg-clip-text bg-[#2563EB] ">du temps</span>.
               </h1>
 
-              <p className="mt-8 text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-3xl font-medium leading-relaxed">
+              <p className="mt-8 text-md sm:text-xl text-slate-600 dark:text-slate-400 max-w-3xl font-medium leading-relaxed">
                 Créez, envoyez et suivez vos devis depuis une seule plateforme. Fini Word, Excel et les devis perdus dans les mails.
               </p>
           <BackgroundRippleEffect />
 
               <div className="mt-12 flex z-10  sm:flex-row items-center justify-center gap-5 max-sm:gap-0">
                 <Link href="/register">
-                  <button className="bg-[#2563EB] max-sm:text-sm text-white  px-8 py-4 rounded-full text-lg font-bold cursor-pointer shadow-xl shadow-black/10 dark:shadow-white/10 flex items-center justify-center">
+                  <button className="bg-[#2563EB] max-sm:text-xs text-white  px-8 py-4 rounded-full text-lg font-bold cursor-pointer shadow-xl shadow-black/10 dark:shadow-white/10 flex items-center justify-center">
                     Créer mon compte
                   </button>
                 </Link>
-                <button onClick={() => setShowTemplates(true)} className="px-8 z-10 py-4 max-sm:text-sm rounded-full text-lg font-bold text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center group">
+                <button onClick={() => setShowTemplates(true)} className="px-8 z-10 py-4 max-sm:text-xs rounded-full text-lg font-bold text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center group">
                     modeles
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 h-5 w-5 max-sm:text-w-4 max-sm:h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>

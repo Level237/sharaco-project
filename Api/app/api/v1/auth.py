@@ -16,13 +16,10 @@ from app.schemas.user import UserCreate, UserRead, Token,UserUpdate,PasswordUpda
 from app.core.security import verify_password, create_access_token
 import logging
 from app.schemas.auth import RegisterRequest, RegisterResponse
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from authlib.integrations.starlette_client import OAuth
 from pydantic import BaseModel
 from app.core.oauth import oauth
+from app.core.limiter import limiter
 from app.utils.emails import normalize_email
-limiter = Limiter(key_func=get_remote_address)
 
 
 
@@ -43,6 +40,11 @@ class CompleteGoogleRegistrationRequest(BaseModel):
 
 class OAuthExchangeRequest(BaseModel):
     code: str
+
+class OAuthRegistrationExchangeResponse(BaseModel):
+    temp_token: str
+    email: str
+    name: str
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +100,9 @@ async def login(
     )
 
 @router.post("/complete-google-registration", response_model=RegisterResponse)
+@limiter.limit("5/minute")
 async def complete_google_registration(
+    request: Request,
     data: CompleteGoogleRegistrationRequest,
     db: AsyncSession = Depends(get_db),
 ):
@@ -163,10 +167,18 @@ async def google_login(request: Request):
 
 
 @router.post("/oauth/exchange", response_model=Token)
-async def exchange_oauth_code(payload: OAuthExchangeRequest):
+@limiter.limit("10/minute")
+async def exchange_oauth_code(request: Request, payload: OAuthExchangeRequest):
     """Échange le code OAuth à usage unique (60s) contre le JWT d'accès."""
     access_token = AuthService.consume_oauth_exchange_code(payload.code)
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/oauth/registration-exchange", response_model=OAuthRegistrationExchangeResponse)
+@limiter.limit("10/minute")
+async def exchange_oauth_registration_code(request: Request, payload: OAuthExchangeRequest):
+    """Échange le code d'inscription Google (60s, usage unique) contre le jeton temporaire."""
+    return AuthService.consume_oauth_registration_code(payload.code)
 
 
 @router.get("/google/callback")
@@ -180,9 +192,13 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
                 url=f"{settings.FRONTEND_URL}/auth/callback?code={code}"
             )
 
-        # Nouvel utilisateur : utilise la même route que ton frontend
+        code = AuthService.create_oauth_registration_code(
+            temp_token=result["temp_token"],
+            email=result["email"],
+            name=result["name"],
+        )
         return RedirectResponse(
-            url=f"{settings.FRONTEND_URL}/register?oauth_token={result['temp_token']}&email={result['email']}&name={result['name']}"
+            url=f"{settings.FRONTEND_URL}/register?code={code}"
         )
 
     except Exception as e:

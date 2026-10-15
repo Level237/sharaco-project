@@ -10,6 +10,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.core.config import settings
+from app.core.limiter import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from app.db.engine import async_session  # ⚠️ adapte selon ton chemin
 from app.services.overdueService import OverdueService
 from app.services.pdfRenderer import pdf_renderer
@@ -81,11 +84,17 @@ async def lifespan(app: FastAPI):
 # ═══════════════════════════════════════════════════════════════
 # App FastAPI
 # ═══════════════════════════════════════════════════════════════
+_expose_docs = settings.EXPOSE_API_DOCS
 app = FastAPI(
-    title="Sharaco API", 
+    title="Sharaco API",
     version="0.1.0",
-    lifespan=lifespan,  # ← important
+    lifespan=lifespan,
+    docs_url="/docs" if _expose_docs else None,
+    redoc_url="/redoc" if _expose_docs else None,
+    openapi_url="/openapi.json" if _expose_docs else None,
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ═══════════════════════════════════════════════════════════════
 # Middlewares
@@ -93,7 +102,7 @@ app = FastAPI(
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.EFFECTIVE_SESSION_SECRET_KEY,
-    https_only=False,
+    https_only=settings.FRONTEND_URL.lower().startswith("https://"),
     max_age=3600,
     same_site="lax",
 )

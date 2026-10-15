@@ -52,6 +52,13 @@ class Settings(BaseSettings):
     # === Cron / Automation ===
     CRON_SECRET: str = Field(default="", env="CRON_SECRET")
 
+    # Docs Swagger/ReDoc. Fermées par défaut : les ouvrir seulement en local.
+    EXPOSE_API_DOCS: bool = False
+
+    # IPs (ou *) autorisées à faire confiance à X-Forwarded-For.
+    # Vide : on ne lit l'en-tête que si le pair direct est une IP privée ou loopback.
+    FORWARDED_ALLOW_IPS: str = ""
+
     # === Session / Cryptographie (INFO-002) ===
     SESSION_SECRET_KEY: str = Field(default="", env="SESSION_SECRET_KEY")
 

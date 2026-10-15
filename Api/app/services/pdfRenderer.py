@@ -69,6 +69,7 @@ class PDFRenderer:
         self._browser_lock = asyncio.Lock()
         self._render_semaphore = asyncio.Semaphore(4)
         self._inflight_renders: dict[str, asyncio.Future] = {}
+        self._template_preview_inflight: dict[str, asyncio.Future] = {}
 
     async def _ensure_browser(self):
         """Initialise ou retourne l'instance Chromium persistante."""
@@ -663,6 +664,14 @@ class PDFRenderer:
             logger.info(f"Preview template {layout_style} servi depuis le cache")
             return self._preview_cache[layout_style]
 
+        if layout_style in self._template_preview_inflight:
+            logger.info(f"Preview template {layout_style} en attente du rendu en cours")
+            return await self._template_preview_inflight[layout_style]
+
+        loop = asyncio.get_running_loop()
+        future = loop.create_future()
+        self._template_preview_inflight[layout_style] = future
+
         try:
             mock_template = DocumentTemplate(
                 id=uuid4(),
@@ -684,12 +693,18 @@ class PDFRenderer:
 
             screenshot = await self.render_png_from_html(html_string)
             self._preview_cache[layout_style] = screenshot
+            if not future.done():
+                future.set_result(screenshot)
             logger.info(f"Preview template {layout_style} généré et mis en cache")
             return screenshot
 
         except Exception as e:
+            if not future.done():
+                future.set_exception(e)
             logger.error(f"Erreur génération preview template PNG: {e}", exc_info=True)
             raise
+        finally:
+            self._template_preview_inflight.pop(layout_style, None)
 
     # ═══════════════════════════════════════════════════════════
     # ANTI-SSRF : Interception & filtrage réseau Playwright (INFO-001)

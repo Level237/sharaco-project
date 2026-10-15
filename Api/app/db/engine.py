@@ -10,12 +10,12 @@ from uuid import uuid4
 logger = logging.getLogger(__name__)
 
 # Engine synchrone (pour Alembic et les scripts CLI)
-engine = create_engine(settings.SYNC_DATABASE_URL, echo=True)
+engine = create_engine(settings.SYNC_DATABASE_URL, echo=False)
 
 # Engine asynchrone (pour FastAPI)
 async_engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=True,
+    echo=False,
     poolclass=NullPool,
     connect_args={
         "statement_cache_size": 0,

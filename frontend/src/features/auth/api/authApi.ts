@@ -26,4 +26,8 @@ export const authApi = {
     exchangeOAuthCode: async (code: string): Promise<AuthResponse> => {
         return api.post<AuthResponse>('/api/v1/auth/oauth/exchange', { code });
     },
+
+    exchangeOAuthRegistrationCode: async (code: string): Promise<{ temp_token: string; email: string; name: string }> => {
+        return api.post('/api/v1/auth/oauth/registration-exchange', { code });
+    },
 };

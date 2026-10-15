@@ -6,9 +6,31 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi import HTTPException
 from jose import jwt
+from starlette.requests import Request
 from app.services.authService import AuthService
 from app.core.deps import get_current_user
 from app.core.config import settings
+from app.core.limiter import client_ip
+
+
+def _request(peer: str, forwarded_for: str | None = None) -> Request:
+    headers = []
+    if forwarded_for is not None:
+        headers.append((b"x-forwarded-for", forwarded_for.encode()))
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": "/",
+        "raw_path": b"/",
+        "query_string": b"",
+        "headers": headers,
+        "client": (peer, 12345),
+        "server": ("test", 80),
+    }
+    return Request(scope)
 
 
 class TestSecurityOAuthAndTokenProtection(unittest.TestCase):
@@ -49,6 +71,29 @@ class TestSecurityOAuthAndTokenProtection(unittest.TestCase):
         with self.assertRaises(HTTPException) as cm:
             AuthService.consume_oauth_exchange_code("totally_fake_oauth_exchange_code")
         self.assertEqual(cm.exception.status_code, 400)
+
+    def test_registration_code_is_one_time_and_not_a_login_code(self):
+        """Le code d'inscription Google ne contient pas le JWT et ne sert qu'une fois."""
+        code = AuthService.create_oauth_registration_code(
+            "temp-jwt", "new@sharaco.com", "Ada Lovelace"
+        )
+        self.assertNotIn("temp-jwt", code)
+        self.assertNotIn("oauth_token", code)
+
+        payload = AuthService.consume_oauth_registration_code(code)
+        self.assertEqual(payload["temp_token"], "temp-jwt")
+        self.assertEqual(payload["email"], "new@sharaco.com")
+        self.assertEqual(payload["name"], "Ada Lovelace")
+
+        with self.assertRaises(HTTPException) as cm:
+            AuthService.consume_oauth_registration_code(code)
+        self.assertEqual(cm.exception.status_code, 400)
+
+        login_code = AuthService.create_oauth_registration_code(
+            "temp-jwt", "new@sharaco.com", "Ada Lovelace"
+        )
+        with self.assertRaises(HTTPException):
+            AuthService.consume_oauth_exchange_code(login_code)
 
     def test_oauth_code_expired_rejected(self):
         """Un code dont la validité (60s) est dépassée est rejeté avec 400."""
@@ -97,6 +142,18 @@ class TestSecurityOAuthAndTokenProtection(unittest.TestCase):
             self.assertEqual(cm.exception.detail, "Not authenticated")
 
         asyncio.run(run())
+
+
+class TestClientIpBehindProxy(unittest.TestCase):
+    def test_public_peer_cannot_spoof_forwarded_for(self):
+        request = _request("8.8.8.8", "198.51.100.20")
+        with patch.object(settings, "FORWARDED_ALLOW_IPS", ""):
+            self.assertEqual(client_ip(request), "8.8.8.8")
+
+    def test_private_proxy_uses_leftmost_forwarded_ip(self):
+        request = _request("10.0.0.8", "198.51.100.20, 10.0.0.8")
+        with patch.object(settings, "FORWARDED_ALLOW_IPS", ""):
+            self.assertEqual(client_ip(request), "198.51.100.20")
 
 
 if __name__ == "__main__":

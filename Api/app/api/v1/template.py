@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID, uuid4
 from app.db.engine import get_db
 from app.core.deps import get_current_user
+from app.core.limiter import limiter
 from app.models.user import User
 from app.models.document_template import DocumentTemplate
 from app.services.templateService import TemplateService
@@ -103,7 +104,9 @@ async def get_available_layouts():
 
 
 @router.get("/{layout_id}/preview.png")
+@limiter.shared_limit("60/minute", scope="layout-preview-png")
 async def get_layout_preview_png(
+    request: Request,
     layout_id: str,
 ):
     """Génère une image PNG de preview d'un layout (PUBLIC)."""
@@ -132,7 +135,7 @@ async def get_layout_preview_png(
         logger.error(f"Erreur preview layout {layout_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erreur de génération: {str(e)}"
+            detail="Erreur de génération de l'aperçu",
         )
     
 

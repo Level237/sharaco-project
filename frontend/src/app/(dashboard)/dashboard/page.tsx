@@ -27,17 +27,21 @@ function DashboardContent() {
     useEffect(() => {
         const run = async () => {
             const urlCode = searchParams.get('code');
-            const urlToken = searchParams.get('token'); // Fallback de compatibilité
 
-            if ((urlCode || urlToken) && !hasProcessedOAuth.current) {
+            if (searchParams.get('token')) {
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete('token');
+                const next = params.toString();
+                router.replace(next ? `/dashboard?${next}` : '/dashboard');
+                return;
+            }
+
+            if (urlCode && !hasProcessedOAuth.current) {
                 hasProcessedOAuth.current = true;
 
                 try {
-                    let activeToken = urlToken;
-                    if (urlCode) {
-                        const res = await authApi.exchangeOAuthCode(urlCode);
-                        activeToken = res.access_token;
-                    }
+                    const res = await authApi.exchangeOAuthCode(urlCode);
+                    const activeToken = res.access_token;
 
                     if (activeToken) {
                         setToken(activeToken);
@@ -65,7 +69,7 @@ function DashboardContent() {
                 return;
             }
 
-            if (!urlCode && !urlToken) {
+            if (!urlCode) {
                 const storedToken = typeof window !== 'undefined' ? localStorage.getItem('sharaco_token') : null;
 
                 if (!storedToken && !token && !isAuthenticated) {

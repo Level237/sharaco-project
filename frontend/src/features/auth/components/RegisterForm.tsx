@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -50,24 +50,25 @@ export function RegisterForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const oauthToken = searchParams.get('oauth_token');
-    const oauthEmail = searchParams.get('email');
-    const oauthName = searchParams.get('name');
+    const oauthCode = searchParams.get('code');
 
     const { setToken, setUser } = useAuthStore();
     const registerMutation = useRegister();
     const verifyIfEmailExistMutation = useVerifyIfEmailExist();
 
-    const [email, setEmail] = useState(oauthEmail || '');
-    const [step, setStep] = useState<'email' | 'details'>(oauthToken ? 'details' : 'email');
+    const [oauthToken, setOauthToken] = useState<string | null>(null);
+    const [oauthLoading, setOauthLoading] = useState(Boolean(oauthCode));
+    const [email, setEmail] = useState('');
+    const [step, setStep] = useState<'email' | 'details'>('email');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const registrationExchanged = useRef(false);
 
     const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
-            full_name: oauthName || '',
+            full_name: '',
             password: '',
             phone: '',
             company_name: '',
@@ -75,12 +76,28 @@ export function RegisterForm() {
     });
 
     useEffect(() => {
-        if (oauthToken && oauthEmail) {
-            setEmail(oauthEmail);
-            if (oauthName) form.setValue('full_name', oauthName);
-            setStep('details');
-        }
-    }, [oauthToken, oauthEmail, oauthName, form]);
+        if (!oauthCode || registrationExchanged.current) return;
+        registrationExchanged.current = true;
+
+        const exchange = async () => {
+            try {
+                const data = await authApi.exchangeOAuthRegistrationCode(oauthCode);
+                setOauthToken(data.temp_token);
+                setEmail(data.email);
+                if (data.name) form.setValue('full_name', data.name);
+                setStep('details');
+                router.replace('/register');
+            } catch (err) {
+                console.error(err);
+                setError("Le lien Google a expiré. Recommence la connexion.");
+                setStep('email');
+            } finally {
+                setOauthLoading(false);
+            }
+        };
+
+        void exchange();
+    }, [oauthCode, form, router]);
 
     const onStepNext = async () => {
         setError('');
@@ -156,6 +173,14 @@ export function RegisterForm() {
     };
 
     const isPending = isSubmitting || registerMutation.isPending;
+
+    if (oauthLoading) {
+        return (
+            <div className="flex min-h-[240px] items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+            </div>
+        );
+    }
 
     return (
         <div className="w-full max-w-[400px] space-y-8 text-center overflow-hidden">

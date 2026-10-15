@@ -71,7 +71,7 @@ export default function HowItWorksSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6"
+            className="mb-6 text-3xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl"
           >
             Comment ça marche
           </motion.h2>
@@ -80,9 +80,9 @@ export default function HowItWorksSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-slate-600 dark:text-slate-400"
+            className="text-lg text-slate-300 md:text-xl"
           >
-            Du projet à l'encaissement, <span className="text-blue-600 dark:text-blue-500 font-semibold">en 6 étapes </span>
+            Du projet à l'encaissement, <span className="font-semibold text-blue-400">en 6 étapes </span>
              Un workflow complet qui s'adapte à votre façon de travailler.
           </motion.p>
         </div>
@@ -102,7 +102,7 @@ export default function HowItWorksSection() {
               >
                 {/* Vertical Separator */}
                 {idx !== steps.length - 1 && (
-                  <div className="hidden md:block absolute right-4 md:right-8 top-6 bottom-4 w-px bg-slate-200 dark:bg-slate-800 transition-colors" />
+                  <div className="absolute bottom-4 right-4 top-6 hidden w-px bg-slate-800 md:right-8 md:block" />
                 )}
 
                 {/* Big Number */}
@@ -111,12 +111,12 @@ export default function HowItWorksSection() {
                 </div>
                 
                 {/* Title */}
-                <h3 className="text-xl md:text-xl font-bold text-[#0B172E] dark:text-white mb-4">
+                <h3 className="mb-4 text-xl font-bold text-white">
                   {step.title}
                 </h3>
                 
                 {/* Description */}
-                <p className="text-slate-600 dark:text-slate-400 text-base md:text-md leading-relaxed flex-grow">
+                <p className="flex-grow text-base leading-relaxed text-slate-300 md:text-md">
                   {step.description}
                 </p>
               </div>
@@ -127,14 +127,14 @@ export default function HowItWorksSection() {
           <div className="flex items-center justify-end gap-3 mt-8">
             <button 
               onClick={() => scroll('left')}
-              className="p-3 rounded-full border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800 transition-all"
+              className="rounded-full border border-slate-700 p-3 text-blue-400 transition-all hover:border-blue-800 hover:bg-blue-900/20"
               aria-label="Précédent"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <button 
               onClick={() => scroll('right')}
-              className="p-3 rounded-full border border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800 transition-all"
+              className="rounded-full border border-slate-700 p-3 text-blue-400 transition-all hover:border-blue-800 hover:bg-blue-900/20"
               aria-label="Suivant"
             >
               <ArrowRight className="w-5 h-5" />

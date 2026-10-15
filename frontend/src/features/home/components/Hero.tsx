@@ -82,7 +82,7 @@ export default function Hero() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="text-sm font-semibold text-slate-300 transition-colors hover:text-white"
               >
                 {item.label}
               </Link>
@@ -91,7 +91,7 @@ export default function Hero() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-6">
-            <Link href="/login" className="text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+            <Link href="/login" className="text-sm font-semibold text-slate-300 transition-colors hover:text-white">
               Connexion
             </Link>
             <Link href="/register">
@@ -107,7 +107,7 @@ export default function Hero() {
             
             <button
               type="button"
-              className="p-2 text-slate-900 dark:text-white"
+              className="p-2 text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -126,7 +126,7 @@ export default function Hero() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block rounded-lg px-4 py-3 text-base font-semibold text-gray-900 dark:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                  className="block rounded-lg px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-white/5"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -136,7 +136,7 @@ export default function Hero() {
 
             <div className="mt-6 flex flex-col gap-3">
               <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                <Button variant="outline" className="w-full h-11 rounded-lg text-base font-bold border-slate-200 dark:border-slate-700">
+                <Button variant="outline" className="h-11 w-full rounded-lg border-slate-700 bg-transparent text-base font-bold text-white hover:bg-white/5">
                   Connexion
                 </Button>
               </Link>
@@ -185,12 +185,12 @@ export default function Hero() {
               </div>
 
               {/* Hero content */}
-              <h1 className="text-5xl max-sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-6xl lg:text-7xl max-w-5xl leading-[1.1] sm:leading-[1.1] lg:leading-[1.1]">
+              <h1 className="max-w-5xl text-5xl font-extrabold tracking-tight text-white max-sm:text-4xl sm:text-6xl lg:text-7xl leading-[1.1]">
                 Le logiciel de devis <br className="hidden md:block" />
                 qui vous fait gagner <span className="text-transparent bg-clip-text bg-[#2563EB] ">du temps</span>.
               </h1>
 
-              <p className="mt-8 text-md sm:text-xl text-slate-600 dark:text-slate-400 max-w-3xl font-medium leading-relaxed">
+              <p className="mt-8 max-w-3xl text-md font-medium leading-relaxed text-slate-300 sm:text-xl">
                 Créez, envoyez et suivez vos devis depuis une seule plateforme. Fini Word, Excel et les devis perdus dans les mails.
               </p>
           <BackgroundRippleEffect />
@@ -201,7 +201,7 @@ export default function Hero() {
                     Créer mon compte
                   </button>
                 </Link>
-                <button onClick={() => setShowTemplates(true)} className="px-8 z-10 py-4 max-sm:text-xs rounded-full text-lg font-bold text-slate-700 dark:text-slate-300 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center group">
+                <button onClick={() => setShowTemplates(true)} className="z-10 flex items-center justify-center rounded-full px-8 py-4 text-lg font-bold text-slate-300 transition-all hover:bg-slate-800 max-sm:text-xs group">
                     modeles
                     <ArrowRight className="ml-2 h-5 w-5 max-sm:text-w-4 max-sm:h-4 group-hover:translate-x-1 transition-transform" />
                 </button>

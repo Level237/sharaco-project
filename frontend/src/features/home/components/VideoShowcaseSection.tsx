@@ -43,7 +43,7 @@ export default function VideoShowcaseSection() {
               <div className="absolute -top-12 -left-12 w-40 h-40 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
 
               {/* Video Wrapper */}
-              <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 dark:border-white/10 bg-slate-900 aspect-[4/3] sm:aspect-[16/11] flex items-center justify-center">
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-lg sm:aspect-[16/11]">
                 <video 
                   src="/video/video.mp4"
                   autoPlay 
@@ -68,13 +68,13 @@ export default function VideoShowcaseSection() {
             className="w-full flex flex-col justify-center py-2"
           >
             {/* Top Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-100/70 dark:bg-blue-500/15 border border-blue-200/50 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase tracking-wider mb-5 self-start">
+            <div className="mb-5 inline-flex items-center gap-2 self-start rounded-full border border-blue-500/20 bg-blue-500/15 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-blue-400">
               
               Génération Intelligente
             </div>
 
             {/* Headline */}
-            <h2 className="text-3xl md:text-4xl lg:text-[2.5rem] font-extrabold text-[#0B172E] dark:text-white leading-[1.18] mb-4 tracking-tight">
+            <h2 className="mb-4 text-3xl font-extrabold leading-[1.18] tracking-tight text-white md:text-4xl lg:text-[2.5rem]">
               Passez de l&apos;idée au devis parfait en un instant.
             </h2>
             <div className="relative flex bg-slate-900/80 p-4 sm:p-6 md:p-7 rounded-xl border border-slate-800 shadow-2xl shadow-blue-500/5 group h-full flex-col justify-center sm:hidden">
@@ -82,7 +82,7 @@ export default function VideoShowcaseSection() {
               <div className="absolute -top-12 -left-12 w-40 h-40 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
 
               {/* Video Wrapper */}
-              <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200/60 dark:border-white/10 bg-slate-900 aspect-[4/3] sm:aspect-[16/11] flex items-center justify-center">
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-lg sm:aspect-[16/11]">
                 <video 
                   src="/video/video.mp4"
                   autoPlay 
@@ -97,7 +97,7 @@ export default function VideoShowcaseSection() {
               </div>
             </div>
             {/* Subtext */}
-            <p className="text-base text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+            <p className="mb-6 text-base leading-relaxed text-slate-300">
               Transformez vos devis et factures en une expérience visuelle captivante. Donnez confiance à vos clients dès la première seconde.
             </p>
 

@@ -44,21 +44,21 @@ export function PublicTemplateModal({ isOpen, onClose }: PublicTemplateModalProp
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-5xl overflow-hidden rounded-xl bg-white dark:bg-[#111113] shadow-2xl flex flex-col max-h-[90vh]"
+                        className="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-[#111113] shadow-2xl"
                     >
                         {/* Header */}
                         <div className="relative z-10 px-6 sm:px-10 pt-8 pb-4 flex items-start justify-between shrink-0">
                             <div>
-                                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                                <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
                                     Choisissez votre point de départ
                                 </h2>
-                                <p className="mt-2 text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
+                                <p className="mt-2 text-sm font-medium text-slate-400 sm:text-base">
                                     Sélectionnez un modèle pour votre premier devis. Vous pourrez changer plus tard.
                                 </p>
                             </div>
                             <button 
                                 onClick={onClose}
-                                className="h-10 w-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-slate-400 transition-colors hover:text-white"
                             >
                                 <X className="h-5 w-5" />
                             </button>
@@ -79,7 +79,7 @@ export function PublicTemplateModal({ isOpen, onClose }: PublicTemplateModalProp
                                             className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                                                 selectedId === layout.id 
                                                     ? "border-[#2563EB]" 
-                                                    : "border-slate-200 dark:border-white/5 hover:border-[#2563EB]/50"
+                                                    : "border-white/5 hover:border-[#2563EB]/50"
                                             }`}
                                         >
                                             {/* Preview Image */}
@@ -96,12 +96,12 @@ export function PublicTemplateModal({ isOpen, onClose }: PublicTemplateModalProp
                                             <div className={`absolute bottom-0 inset-x-0 p-4 backdrop-blur-md border-t transition-colors ${
                                                 selectedId === layout.id 
                                                     ? "bg-[#2563EB] border-[#2563EB] text-white" 
-                                                    : "bg-white/80 dark:bg-black/60 border-slate-200/50 dark:border-white/10 text-slate-900 dark:text-white"
+                                                    : "border-white/10 bg-black/60 text-white"
                                             }`}>
                                                 <div className="flex items-center justify-between">
                                                     <div>
                                                         <h3 className="font-bold text-sm sm:text-base">{layout.name}</h3>
-                                                        <p className={`text-xs mt-0.5 line-clamp-1 ${selectedId === layout.id ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                        <p className={`mt-0.5 line-clamp-1 text-xs ${selectedId === layout.id ? 'text-blue-100' : 'text-slate-400'}`}>
                                                             {layout.description}
                                                         </p>
                                                     </div>
@@ -119,8 +119,8 @@ export function PublicTemplateModal({ isOpen, onClose }: PublicTemplateModalProp
                         </div>
 
                         {/* Footer Actions */}
-                        <div className="relative z-10 px-6 sm:px-10 py-5 bg-slate-50 dark:bg-black/20 border-t border-slate-200 dark:border-white/5 flex items-center justify-between shrink-0">
-                            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 hidden sm:block">
+                        <div className="relative z-10 flex shrink-0 items-center justify-between border-t border-white/5 bg-black/20 px-6 py-5 sm:px-10">
+                            <p className="hidden text-sm font-medium text-slate-400 sm:block">
                                 {selectedId ? "Excellent choix ! Passons à la suite." : "Sélectionnez un modèle pour continuer"}
                             </p>
                             <Button 
@@ -129,7 +129,7 @@ export function PublicTemplateModal({ isOpen, onClose }: PublicTemplateModalProp
                                 className={`w-full sm:w-auto h-12 px-8 rounded-xl font-bold text-base transition-all ${
                                     selectedId 
                                         ? "bg-[#2563EB] hover:bg-blue-700 text-white" 
-                                        : "bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                                        : "cursor-not-allowed bg-white/5 text-slate-500"
                                 }`}
                             >
                                 Continuer avec ce modèle

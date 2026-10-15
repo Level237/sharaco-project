@@ -1,29 +1,35 @@
 'use client';
 
-import { Suspense, useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { authApi } from '@/features/auth/api/authApi';
 import { API_URL } from '@/lib/api';
+import { OAuthHandshake } from '@/features/auth/components/OAuthHandshake';
 
 function OAuthCallbackInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { setToken, setUser } = useAuthStore();
-
-    // Le code est à usage unique : React StrictMode (dev) exécute
-    // les effets deux fois, le second appel échouerait sans cette garde.
     const processed = useRef(false);
+    const initialCode = searchParams.get('code');
+    const [status, setStatus] = useState<'linking' | 'error'>(initialCode ? 'linking' : 'error');
+    const [detail, setDetail] = useState(
+        initialCode
+            ? 'Google confirme votre identité auprès de Sharaco.'
+            : 'Aucun code de connexion. Reprenez depuis la page de connexion.'
+    );
 
     useEffect(() => {
         if (processed.current) return;
         processed.current = true;
 
         const code = searchParams.get('code');
-        if (!code) {
-            router.replace('/login?error=oauth_missing_code');
-            return;
-        }
+        if (!code) return;
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('code');
+        window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}`);
 
         const finishLogin = async () => {
             try {
@@ -38,8 +44,6 @@ function OAuthCallbackInner() {
                 }
 
                 const { access_token } = await res.json();
-
-                // Pose le cookie/store utilisé par la protection de /dashboard
                 setToken(access_token);
 
                 try {
@@ -52,27 +56,25 @@ function OAuthCallbackInner() {
                 router.replace('/dashboard');
             } catch (err) {
                 console.error(err);
-                router.replace('/login?error=oauth_failed');
+                setStatus('error');
+                setDetail('La liaison n’a pas abouti. Le code a expiré ou a déjà été utilisé.');
             }
         };
 
-        finishLogin();
+        void finishLogin();
     }, [searchParams, router, setToken, setUser]);
 
-    return (
-        <div className="flex min-h-screen items-center justify-center">
-            <p className="text-sm text-zinc-500">Connexion en cours...</p>
-        </div>
-    );
+    return <OAuthHandshake status={status} detail={detail} />;
 }
 
 export default function OAuthCallbackPage() {
     return (
         <Suspense
             fallback={
-                <div className="flex min-h-screen items-center justify-center">
-                    <p className="text-sm text-zinc-500">Connexion en cours...</p>
-                </div>
+                <OAuthHandshake
+                    status="linking"
+                    detail="Google confirme votre identité auprès de Sharaco."
+                />
             }
         >
             <OAuthCallbackInner />

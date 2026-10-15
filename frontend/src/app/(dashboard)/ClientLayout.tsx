@@ -8,6 +8,18 @@ import { Toaster } from "@/components/ui/toaster"
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
 
+    // Le thème clair du téléphone ne doit pas repeindre le tableau de bord.
+    React.useEffect(() => {
+        const root = document.documentElement
+        const keepDark = () => {
+            if (!root.classList.contains("dark")) root.classList.add("dark")
+        }
+        keepDark()
+        const observer = new MutationObserver(keepDark)
+        observer.observe(root, { attributes: true, attributeFilter: ["class"] })
+        return () => observer.disconnect()
+    }, [])
+
     // Fermer le sidebar sur mobile au démarrage et au resize
     React.useEffect(() => {
         const handleResize = () => {
@@ -23,7 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, [])
 
     return (
-        <div className="flex bg-background mesh-gradient min-h-[100dvh] overflow-x-hidden">
+        <div className="dark flex min-h-[100dvh] overflow-x-hidden bg-slate-950 text-slate-50">
             {/* Sidebar (fixed position, n'affecte pas le flow) */}
             <Sidebar setIsSidebarOpen={setIsSidebarOpen} isSidebarOpen={isSidebarOpen} />
 

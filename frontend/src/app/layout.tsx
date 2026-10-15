@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="fr" className="dark" suppressHydrationWarning data-scroll-behavior="smooth">
       <body
         className={`${inter.className} antialiased bg-[#0a0a0a] text-slate-50`}
       >

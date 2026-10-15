@@ -3,8 +3,19 @@ import * as React from "react"
 import { Toaster } from "@/components/ui/toaster"
 
 export default function QuoteCreateLayout({ children }: { children: React.ReactNode }) {
+    React.useEffect(() => {
+        const root = document.documentElement
+        const keepDark = () => {
+            if (!root.classList.contains("dark")) root.classList.add("dark")
+        }
+        keepDark()
+        const observer = new MutationObserver(keepDark)
+        observer.observe(root, { attributes: true, attributeFilter: ["class"] })
+        return () => observer.disconnect()
+    }, [])
+
     return (
-        <div className="flex bg-background dark:bg-slate-900 h-screen overflow-hidden">
+        <div className="dark flex h-[100dvh] overflow-hidden bg-slate-950 text-slate-50">
             {/* Page Content - Full screen, no sidebar padding */}
             <main className="flex-1 w-full h-full relative">
                 {children}

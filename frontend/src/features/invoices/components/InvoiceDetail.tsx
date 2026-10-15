@@ -45,7 +45,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                 <h2 className="mb-2 text-lg font-medium text-slate-100">Facture introuvable</h2>
                 <p className="mb-6 text-sm text-slate-400">Le document demandé n'est pas disponible.</p>
                 <Link href="/dashboard/invoices">
-                    <Button variant="outline" className="rounded-xl border-white/10">Retour aux factures</Button>
+                    <Button variant="outline" className="rounded-none border-white/10">Retour aux factures</Button>
                 </Link>
             </div>
         )
@@ -131,7 +131,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                         <Link
                             href="/dashboard/invoices"
                             aria-label="Retour aux factures"
-                            className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 text-slate-300 transition-transform duration-200 ease-out hover:bg-white/5 active:scale-[0.96]"
+                            className="mt-0.5 shrink-0 text-slate-400 transition-colors duration-200 hover:text-slate-100"
                         >
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
@@ -160,7 +160,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                             onClick={handleOpenEmailModal}
                             disabled={isPaid}
                             className={cn(
-                                "h-11 w-full rounded-xl font-medium active:scale-[0.98]",
+                                "h-11 w-full rounded-none font-medium",
                                 isPaid
                                     ? "bg-slate-800 text-slate-500"
                                     : "bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
@@ -175,7 +175,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                                 onClick={handleMarkAsPaid}
                                 disabled={isMarkingPaid}
                                 variant="outline"
-                                className="h-11 w-full rounded-xl border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5 active:scale-[0.98]"
+                                className="h-11 w-full rounded-none border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5"
                             >
                                 {isMarkingPaid ? (
                                     <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
@@ -189,7 +189,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                             onClick={handleDownload}
                             disabled={isDownloading}
                             className={cn(
-                                "h-11 w-full rounded-xl border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5 active:scale-[0.98]",
+                                "h-11 w-full rounded-none border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5",
                                 !isPaid && "sm:col-span-2 lg:col-span-1"
                             )}
                         >
@@ -205,7 +205,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
 
                 <div className="mt-6 grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10">
                     <div className="min-w-0">
-                        <div className="mx-auto w-full max-w-[650px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-2">
+                        <div className="mx-auto w-full max-w-[650px] overflow-hidden border border-white/10 bg-slate-900 p-1.5 sm:p-2">
                             <DocumentPreview
                                 documentId={invoiceId}
                                 layoutStyle={invoice.layout_style || "modern"}
@@ -240,7 +240,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                             </div>
 
                             {invoice.due_date && (
-                                <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                                <div className="mt-4 border border-white/10 bg-white/[0.03] p-3">
                                     <div className="mb-1 text-xs text-slate-500">Échéance</div>
                                     <div
                                         suppressHydrationWarning
@@ -266,7 +266,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                             <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                 Client
                             </h2>
-                            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                            <div className="border border-white/10 bg-white/[0.03] p-4">
                                 <div className="mb-1 truncate text-sm font-semibold">
                                     {invoice.client?.name || "Client"}
                                 </div>

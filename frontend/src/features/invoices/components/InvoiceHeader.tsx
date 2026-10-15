@@ -34,7 +34,7 @@ export function InvoiceHeader({ searchQuery, onSearchChange, statusFilter, onSta
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="text-3xl max-sm:text-3xl md:text-5xl font-black tracking-tight text-white mb-10"
+                    className="text-2xl max-sm:text-3xl md:text-5xl font-black tracking-tight text-white mb-10"
                 >
                     Toutes vos Factures
                 </motion.h2>

@@ -163,53 +163,30 @@ async def google_login(request: Request):
 
 
 @router.post("/oauth/exchange", response_model=Token)
-async def exchange_oauth_code(
-    payload: OAuthExchangeRequest,
-    response: Response,
-):
-    """Échange un code d'autorisation temporaire à usage unique (60s) contre le JWT d'accès réel sans exposer le JWT dans l'URL."""
+async def exchange_oauth_code(payload: OAuthExchangeRequest):
+    """Échange le code OAuth à usage unique (60s) contre le JWT d'accès."""
     access_token = AuthService.consume_oauth_exchange_code(payload.code)
-    
-    response.set_cookie(
-        key="sharaco_token",
-        value=access_token,
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        path="/",
-        samesite="lax",
-    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.get("/google/callback")
 async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
-    """Reçoit le callback de Google et redirige vers le frontend de manière sécurisée."""
     try:
         result = await AuthService.handle_google_callback(request, db)
-        
+
         if result["action"] == "login":
-            # ✅ Sécurité OAuth (VULN-002) : Code à usage unique éphémère au lieu du master JWT dans l'URL
             code = AuthService.create_oauth_exchange_code(result["access_token"])
-            response = RedirectResponse(
-                url=f"{settings.FRONTEND_URL}/dashboard?code={code}"
+            return RedirectResponse(
+                url=f"{settings.FRONTEND_URL}/auth/callback?code={code}"
             )
-            response.set_cookie(
-                key="sharaco_token",
-                value=result["access_token"],
-                max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-                path="/",
-                samesite="lax",
-            )
-            return response
-        else:
-            temp_token = result.get("temp_token")
-            email = result.get("email")
-            name = result.get("name", "")
-            
-            redirect_url = f"{settings.FRONTEND_URL}/signup?oauth_token={temp_token}&email={email}&name={name}"
-            return RedirectResponse(url=redirect_url)
-            
+
+        # Nouvel utilisateur : utilise la même route que ton frontend
+        return RedirectResponse(
+            url=f"{settings.FRONTEND_URL}/register?oauth_token={result['temp_token']}&email={result['email']}&name={result['name']}"
+        )
+
     except Exception as e:
-        logger.error(f"Erreur callback Google: {e}")
+        logger.error(f"Erreur callback Google: {e}", exc_info=True)
         return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error=google_auth_failed")
 
 

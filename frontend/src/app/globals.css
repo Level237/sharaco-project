@@ -4,6 +4,8 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #020617;
+  color-scheme: dark;
 }
 
 :root {

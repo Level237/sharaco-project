@@ -11,7 +11,12 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+export const viewport = {
+  themeColor: "#020617",
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sharaco.vercel.app"),
   title: "Logiciel de Devis et Facturation en Ligne | Sharaco",
   description: "Créez vos devis et factures professionnels en 2 minutes. La plateforme IA tout-en-un pour freelances, artisans et PME. Fini Word et Excel, gagnez 2h par jour.",
   keywords: ["logiciel devis", "facturation en ligne", "modèle de devis", "outil freelance", "créer un devis"],

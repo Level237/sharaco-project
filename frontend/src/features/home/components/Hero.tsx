@@ -69,7 +69,7 @@ export default function Hero() {
   return (
     <div className="relative ">
       {/* Navigation */}
-      <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-sm py-4 border-b border-slate-200 dark:border-slate-800' : 'bg-transparent py-6'}`}>
+      <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-950/80 backdrop-blur-md shadow-sm py-4 border-b border-slate-800' : 'bg-transparent py-6'}`}>
         <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center scale-90 origin-left">
@@ -102,7 +102,7 @@ export default function Hero() {
             
           </div>
 
-          {/* Mobile Menu Button */}*
+          {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center gap-4">
             
             <button
@@ -117,7 +117,7 @@ export default function Hero() {
 
         {/* Mobile Menu */}
         <div
-          className={`absolute top-full left-0 right-0 mt-2 mx-4 bg-white dark:bg-slate-900 border border-slate-800 rounded-xl shadow-lg transform transition-all duration-200 ease-in-out lg:hidden z-40 origin-top ${isMobileMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'
+          className={`absolute top-full left-0 right-0 mt-2 mx-4 bg-slate-950 border border-slate-800 rounded-xl shadow-lg transform transition-all duration-200 ease-in-out lg:hidden z-40 origin-top ${isMobileMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-95 opacity-0 pointer-events-none'
             }`}
         >
           <div className="p-5">

@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import Image from "next/image";
-import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
+import Image from "next/image"
+import { useRef, useState } from "react"
+
 const features = [
   {
     title: "Devis en quelques minutes",
@@ -39,74 +39,109 @@ const features = [
     description:
       "CA encaissé, encours, taux de conversion : pilotez votre trésorerie projet par projet.",
     image: "/img/illustration1.png",
-  }
-];
+  },
+]
 
 export default function FeaturesGrid() {
+  const scroller = useRef<HTMLDivElement>(null)
+  const frame = useRef(0)
+  const [active, setActive] = useState(0)
+
+  const syncActive = () => {
+    const el = scroller.current
+    if (!el || el.clientWidth >= el.scrollWidth - 8) return
+    const cards = el.querySelectorAll<HTMLElement>("[data-feature]")
+    const center = el.scrollLeft + el.clientWidth / 2
+    let next = 0
+    let best = Number.POSITIVE_INFINITY
+    cards.forEach((card, index) => {
+      const mid = card.offsetLeft + card.offsetWidth / 2
+      const distance = Math.abs(mid - center)
+      if (distance < best) {
+        best = distance
+        next = index
+      }
+    })
+    setActive(next)
+  }
+
+  const onScroll = () => {
+    cancelAnimationFrame(frame.current)
+    frame.current = requestAnimationFrame(syncActive)
+  }
+
+  const goTo = (index: number) => {
+    const el = scroller.current
+    const card = el?.querySelectorAll<HTMLElement>("[data-feature]")[index]
+    if (!el || !card) return
+    const left = card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2
+    el.scrollTo({ left, behavior: "smooth" })
+  }
+
   return (
-    <section id="fonctionnalites" className="relative py-24 mt-24 sm:py-32 bg-slate-50 dark:bg-[#0c0c0f] overflow-hidden transition-colors duration-300">
-      {/* Gradient bleed top: blend from Hero (white) into this section */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white dark:from-[#0a0a0a] to-transparent pointer-events-none" />
-      {/* Gradient bleed bottom: blend into HowItWorks (white) */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-slate-950 to-transparent pointer-events-none" />
+    <section id="fonctionnalites" className="relative overflow-hidden bg-[#0c0c0f] py-16 sm:py-24">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#0a0a0a] to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950 to-transparent" />
 
-
-      <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Section Header */}
-        <div className="mb-12 lg:mb-16 text-center max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Tout ce qu'il vous faut pour facturer sereinement
+      <div className="relative z-10 mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto mb-8 max-w-2xl text-center sm:mb-12">
+          <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+            Tout ce qu&apos;il vous faut pour facturer sereinement
           </h2>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-            De la création du devis jusqu'au paiement final, on s'occupe de la paperasse.
+          <p className="mt-3 text-sm leading-relaxed text-slate-400 sm:text-base">
+            De la création du devis jusqu&apos;au paiement final, on s&apos;occupe de la paperasse.
           </p>
         </div>
 
-        {/* 6 Cards Grid / Carousel */}
-        <div className="flex lg:grid lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 overflow-x-auto lg:overflow-visible pb-8 lg:pb-0 snap-x snap-mandatory hide-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
-          {features.map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ 
-                duration: 0.6, 
-                delay: index * 0.1, 
-                type: "spring", 
-                stiffness: 80, 
-                damping: 20 
-              }}
-              className="w-[85vw] sm:w-[60vw] lg:w-auto flex-shrink-0 snap-center group relative flex flex-col sm:flex-row items-center gap-8 p-8 sm:p-10 bg-white dark:bg-[#111113] rounded-xl border border-slate-100 dark:border-white/5 transition-colors duration-300"
+        <div
+          ref={scroller}
+          onScroll={onScroll}
+          className="hide-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 sm:gap-4 lg:mx-0 lg:grid lg:grid-cols-2 lg:gap-5 lg:overflow-visible lg:px-0 lg:pb-0"
+        >
+          {features.map((feature) => (
+            <article
+              key={feature.title}
+              data-feature
+              className="flex w-[min(78vw,300px)] shrink-0 snap-center flex-col border border-white/10 bg-[#111113] sm:w-[320px] lg:w-auto lg:flex-row lg:items-center"
             >
-              {/* Liquid Glass Refraction Effect (Dark Mode only) */}
-              <div className="absolute inset-0 rounded-xl border border-white/5 opacity-0 dark:opacity-100 pointer-events-none shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]" />
-
-              {/* Image Container */}
-              <div className="w-full sm:w-[45%] flex-shrink-0 relative aspect-[4/3] rounded-xl overflow-hidden  border border-slate-100 dark:border-white/5 flex items-center justify-center shadow-inner">
+              <div className="relative aspect-[16/9] shrink-0 overflow-hidden border-b border-white/5 bg-black/30 lg:aspect-[5/4] lg:w-[42%] lg:border-b-0 lg:border-r">
                 <Image
                   src={feature.image}
                   alt={feature.title}
                   fill
-                  className="object-cover sm:object-contain p-2  transition-transform duration-700 ease-out"
+                  sizes="(min-width: 1024px) 280px, 78vw"
+                  className="object-contain p-3"
                 />
               </div>
 
-              {/* Text Content */}
-              <div className="w-full sm:w-[55%] flex flex-col justify-center text-center sm:text-left relative z-10">
-                <h3 className="text-[1.35rem] font-extrabold text-[#051945] dark:text-white tracking-tight">
+              <div className="flex min-w-0 flex-1 flex-col justify-center px-4 py-3.5 text-left lg:px-5 lg:py-5">
+                <h3 className="line-clamp-2 text-base font-semibold leading-snug tracking-tight text-white">
                   {feature.title}
                 </h3>
-                <p className="mt-3 text-[1rem] leading-relaxed text-slate-600 dark:text-[#A1A1AA]">
+                <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-slate-400 lg:line-clamp-4">
                   {feature.description}
                 </p>
               </div>
-            </motion.div>
+            </article>
           ))}
-          
+        </div>
+
+        <div className="mt-4 flex items-center justify-center gap-1.5 lg:hidden" role="tablist" aria-label="Fonctionnalités">
+          {features.map((feature, index) => (
+            <button
+              key={feature.title}
+              type="button"
+              role="tab"
+              aria-selected={index === active}
+              aria-label={feature.title}
+              onClick={() => goTo(index)}
+              className={`h-1 transition-[width,background-color] duration-200 ease-out ${
+                index === active ? "w-6 bg-[#2563EB]" : "w-1.5 bg-white/25"
+              }`}
+            />
+          ))}
         </div>
       </div>
     </section>
-  );
+  )
 }

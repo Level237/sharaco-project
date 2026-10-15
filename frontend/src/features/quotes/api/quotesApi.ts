@@ -1,5 +1,6 @@
 // features/quotes/api/quotesApi.ts
 import { API_URL, api } from '@/lib/api';
+import { readAuthToken } from '@/lib/storage';
 import type { Document, DocumentCreate, DocumentStatus, DocumentPreviewRequest } from '../types';
 
 export const quotesApi = {
@@ -23,7 +24,7 @@ export const quotesApi = {
         milestone_amount_cents: number;
         remaining_milestones: number;
     }> => {
-        const token = localStorage.getItem('sharaco_token');
+        const token = readAuthToken();
         const res = await fetch(
             `${API_URL}/api/v1/documents/${quoteId}/next-invoice`,
             {
@@ -84,7 +85,7 @@ export const quotesApi = {
      * ⚠️ IMPORTANT : L'appelant doit appeler URL.revokeObjectURL() pour libérer la mémoire.
      */
     getPreviewPngBlob: async (id: string): Promise<string> => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('sharaco_token') : null;
+    const token = readAuthToken();
     const headers: Record<string, string> = {};
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -111,7 +112,7 @@ export const quotesApi = {
     },
 
     downloadPdf: async (id: string, filename?: string): Promise<void> => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('sharaco_token') : null;
+        const token = readAuthToken();
         const headers: Record<string, string> = {};
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
@@ -135,7 +136,7 @@ export const quotesApi = {
     },
 
     downloadPreviewPdf: async (previewData: DocumentPreviewRequest): Promise<Blob> => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('sharaco_token') : null;
+        const token = readAuthToken();
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
         };

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { User } from '@/features/auth/types';
+import { deleteCookie, readAuthToken, removeStorage, writeCookie, writeStorage } from '@/lib/storage';
 
 interface AuthState {
     token: string | null;
@@ -12,31 +13,15 @@ interface AuthState {
     logout: () => void;
 }
 
-const getInitialToken = (): string | null => {
-    if (typeof window !== 'undefined') {
-        return localStorage.getItem('sharaco_token');
-    }
-    return null;
-};
-
-const setCookie = (name: string, value: string, days: number = 30) => {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; expires=${expires}; SameSite=Lax`;
-};
-
-const deleteCookie = (name: string) => {
-    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-};
-
-export const useAuthStore = create<AuthState>((set, get) => ({
-    token: getInitialToken(),
+export const useAuthStore = create<AuthState>((set) => ({
+    token: readAuthToken(),
     user: null,
-    isAuthenticated: !!getInitialToken(),
+    isAuthenticated: !!readAuthToken(),
     currency: "XOF",
     setCurrency: (currency) => set({ currency }),
     setToken: (token: string) => {
-        localStorage.setItem('sharaco_token', token);
-        setCookie('sharaco_token', token);
+        writeStorage('sharaco_token', token);
+        writeCookie('sharaco_token', token);
         set({ token, isAuthenticated: true });
     },
 
@@ -45,7 +30,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     },
 
     logout: () => {
-        localStorage.removeItem('sharaco_token');
+        removeStorage('sharaco_token');
         deleteCookie('sharaco_token');
         set({ token: null, user: null, isAuthenticated: false });
         if (typeof window !== 'undefined') {

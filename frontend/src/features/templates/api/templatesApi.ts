@@ -1,4 +1,5 @@
 import { API_URL, api } from '@/lib/api';
+import { readAuthToken } from '@/lib/storage';
 import type { DocumentPreviewRequest, DocumentTemplate, Layout, TemplateCreate, TemplateUpdate } from '../types';
 
 export const templatesApi = {
@@ -21,7 +22,7 @@ export const templatesApi = {
     },
 
     previewDocument: async (data: DocumentPreviewRequest): Promise<string> => {
-        const token = localStorage.getItem('sharaco_token');
+        const token = readAuthToken();
         const res = await fetch(
             `${API_URL}/api/v1/documents/preview`,
             {
@@ -75,7 +76,7 @@ export const templatesApi = {
 
 
 getLayoutPreview: async (layoutId: string): Promise<string> => {
-    const token = localStorage.getItem('sharaco_token');
+    const token = readAuthToken();
     const res = await fetch(
         `${API_URL}/api/v1/templates/layouts/${layoutId}/preview`,
         {

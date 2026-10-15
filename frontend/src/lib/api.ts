@@ -1,3 +1,5 @@
+import { deleteCookie, readAuthToken, removeStorage } from '@/lib/storage';
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 class ApiError extends Error {
@@ -39,11 +41,9 @@ async function apiFetch<T>(
     }
 
     // 2. Injecter le token JWT automatiquement
-    if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('sharaco_token');
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
+    const token = readAuthToken();
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
     }
 
     // 3. Faire la requête
@@ -55,9 +55,8 @@ async function apiFetch<T>(
     // 4. Intercepter les erreurs 401
     if (res.status === 401) {
         if (typeof window !== 'undefined') {
-            localStorage.removeItem('sharaco_token');
-            document.cookie =
-                'sharaco_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            removeStorage('sharaco_token');
+            deleteCookie('sharaco_token');
             const currentPath = window.location.pathname;
             if (currentPath !== '/login' && currentPath !== '/register') {
                 window.location.href = '/login';

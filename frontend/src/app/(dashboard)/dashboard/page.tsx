@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
+import { readAuthToken } from '@/lib/storage';
 import { authApi } from '@/features/auth/api/authApi';
 
 import { toast } from 'sonner';
@@ -70,7 +71,7 @@ function DashboardContent() {
             }
 
             if (!urlCode) {
-                const storedToken = typeof window !== 'undefined' ? localStorage.getItem('sharaco_token') : null;
+                const storedToken = readAuthToken();
 
                 if (!storedToken && !token && !isAuthenticated) {
                     router.replace('/login');

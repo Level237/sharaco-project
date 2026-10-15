@@ -1,4 +1,5 @@
 import { API_URL, api } from '@/lib/api';
+import { readAuthToken } from '@/lib/storage';
 import type { Document, DocumentCreate, DocumentStatus } from '@/features/quotes/types';
 
 export const invoicesApi = {
@@ -16,7 +17,7 @@ export const invoicesApi = {
         milestone_updated: boolean;
         already_paid: boolean;
     }> => {
-        const token = localStorage.getItem('sharaco_token');
+        const token = readAuthToken();
         const res = await fetch(
             `${API_URL}/api/v1/documents/invoices/${invoiceId}/mark-paid`,
             {
@@ -55,7 +56,7 @@ export const invoicesApi = {
     },
 
     downloadPdf: async (id: string, filename?: string): Promise<void> => {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('sharaco_token') : null;
+        const token = readAuthToken();
         const headers: Record<string, string> = {};
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;

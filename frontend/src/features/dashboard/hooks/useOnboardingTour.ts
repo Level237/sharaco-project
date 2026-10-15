@@ -1,5 +1,6 @@
 // hooks/useOnboardingTour.ts
 import { useCallback } from 'react';
+import { readStorage, writeStorage } from '@/lib/storage';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
@@ -19,7 +20,7 @@ export function useOnboardingTour() {
             doneBtnText: 'Fait 🎉',
             progressText: '{{current}} sur {{total}}',
             onDestroyed: () => {
-                localStorage.setItem(TOUR_STORAGE_KEY, 'true');
+                writeStorage(TOUR_STORAGE_KEY, 'true');
             },
             steps: window.innerWidth < 768 ? [
                 {
@@ -115,7 +116,7 @@ export function useOnboardingTour() {
     }, []);
 
     const autoStartTour = useCallback(() => {
-        const hasSeenTour = localStorage.getItem(TOUR_STORAGE_KEY);
+        const hasSeenTour = readStorage(TOUR_STORAGE_KEY);
         if (hasSeenTour) return () => { };
 
         // Vérifie si les conditions sont réunies pour lancer le guide

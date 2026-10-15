@@ -106,7 +106,7 @@ function DashboardContent() {
                 {/* ═══════════ EN-TÊTE / ACTION BAR ═══════════ */}
                 <div className="flex items-center justify-between gap-4" data-tour="dashboard-title">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                        <h1 className="text-xl sm:text-3xl font-black tracking-tight text-white">
                             Tableau de bord
                         </h1>
                         <p className="text-xs sm:text-sm text-zinc-400 mt-1">

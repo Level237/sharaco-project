@@ -1,13 +1,12 @@
 "use client"
 
-import { useInvoice, useUpdateInvoiceStatus } from "../hooks/useInvoices"
+import { useInvoice } from "../hooks/useInvoices"
 import { DocumentPreview } from "@/features/quotes/components/DocumentPreview"
 import { Button } from "@/components/ui/button"
 import { invoicesApi } from "../api/invoicesApi"
 import { formatCurrency } from "@/features/quotes/lib/formatCurrency"
-import { 
-    Mail, Check, Download, Bell, ArrowLeft, Loader2, 
-    FileText, CheckCircle2, Send, Copy, CheckCheck
+import {
+    Mail, Download, ArrowLeft, Loader2, FileText,
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
@@ -19,14 +18,9 @@ import { SendEmailModal } from "@/features/quotes/components/sendEmailModal"
 export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
     const [isMounted, setIsMounted] = useState(false)
     const { data: invoice, isLoading, error, refetch } = useInvoice(invoiceId)
-    const updateStatus = useUpdateInvoiceStatus()
     const { toast } = useToast()
-    
-    // États locaux
-    const [isSending, setIsSending] = useState(false)
-    const [isReminding, setIsReminding] = useState(false)
+
     const [isMarkingPaid, setIsMarkingPaid] = useState(false)
-    const [copied, setCopied] = useState(false)
     
     // ✅ NOUVEAU : Modal d'envoi
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
@@ -38,7 +32,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
 
     if (!isMounted || isLoading) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[100dvh]">
+            <div className="flex min-h-[50dvh] items-center justify-center">
                 <Loader2 className="h-5 w-5 animate-spin text-[#2563EB]" />
             </div>
         )
@@ -46,12 +40,12 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
 
     if (error || !invoice) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[100dvh]">
-                <FileText className="h-8 w-8 text-slate-300 mb-4" />
-                <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">Facture introuvable</h2>
-                <p className="text-sm text-slate-500 mb-6">Le document demandé n'est pas disponible.</p>
+            <div className="flex min-h-[50dvh] flex-col items-center justify-center px-4 text-center">
+                <FileText className="mb-4 h-8 w-8 text-slate-500" />
+                <h2 className="mb-2 text-lg font-medium text-slate-100">Facture introuvable</h2>
+                <p className="mb-6 text-sm text-slate-400">Le document demandé n'est pas disponible.</p>
                 <Link href="/dashboard/invoices">
-                    <Button variant="outline" className="rounded-md">Retour aux factures</Button>
+                    <Button variant="outline" className="rounded-xl border-white/10">Retour aux factures</Button>
                 </Link>
             </div>
         )
@@ -72,7 +66,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
         try {
             const result = await invoicesApi.markAsPaid(invoiceId);
             toast({
-                title: "✅ Facture payée",
+                title: "Facture payée",
                 description: result.message + (result.milestone_updated ? " (milestone mise à jour)" : ""),
             });
             refetch();
@@ -116,36 +110,6 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
         refetch() // Recharger pour voir le nouveau statut SENT
     }
 
-    const handleRemind = async () => {
-        setIsReminding(true)
-        setTimeout(() => {
-            setIsReminding(false)
-            toast({
-                title: "Relance effectuée",
-                description: "Le client a été notifié.",
-            })
-        }, 800)
-    }
-
-    const handleCopyLink = async () => {
-        if (!invoice.client_token && !invoice.share_token) {
-            toast({
-                title: "Lien non disponible",
-                description: "Envoyez d'abord la facture pour générer le lien.",
-                variant: "destructive",
-            })
-            return
-        }
-        const url = `${window.location.origin}/view/${invoice.share_token}`
-        await navigator.clipboard.writeText(url)
-        setCopied(true)
-        toast({
-            title: "Lien copié !",
-            description: "Le lien partageable est dans votre presse-papiers.",
-        })
-        setTimeout(() => setCopied(false), 2000)
-    }
-
     // ═══════════════════════════════════════════════════════════════
     // Statut d'affichage
     // ═══════════════════════════════════════════════════════════════
@@ -161,132 +125,128 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
 
     return (
         <>
-            <div className="min-h-[100dvh] bg-[#FAFAFA] dark:bg-[#0A0A0A] text-slate-900 dark:text-slate-100 flex flex-col font-sans">
-                <header className="sticky top-0 z-30 w-full bg-[#FAFAFA]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-                    <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Link href="/dashboard/invoices" className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200">
-                                <ArrowLeft className="h-4 w-4" />
-                            </Link>
-                            <div className="flex items-baseline gap-3">
-                                <h1 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <div className="min-w-0 text-slate-100">
+                <header className="flex flex-col gap-4 border-b border-white/10 pb-5">
+                    <div className="flex items-start gap-3">
+                        <Link
+                            href="/dashboard/invoices"
+                            aria-label="Retour aux factures"
+                            className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 text-slate-300 transition-transform duration-200 ease-out hover:bg-white/5 active:scale-[0.96]"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                        </Link>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <h1 className="min-w-0 truncate text-base font-semibold tracking-tight sm:text-lg">
                                     Facture {invoice.number || "Sans numéro"}
                                 </h1>
-                                <span className="text-sm text-slate-500">
-                                    {invoice.client?.name || "Client inconnu"}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <div className={cn("flex items-center gap-2 text-xs font-medium", statusConfig.color)}>
-                                <span className="relative flex h-2 w-2">
+                                <span className={cn("inline-flex shrink-0 items-center gap-2 text-xs font-medium", statusConfig.color)}>
                                     <span className={cn(
-                                        "relative inline-flex rounded-full h-2 w-2",
+                                        "inline-flex h-2 w-2 rounded-full",
                                         statusConfig.dot,
                                         (invoice.status === "SENT" || invoice.status === "OVERDUE") && "animate-pulse"
-                                    )}></span>
+                                    )} />
+                                    {statusConfig.label}
                                 </span>
-                                {statusConfig.label}
                             </div>
-                            
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={handleDownload}
-                                disabled={isDownloading}
-                                className="h-8 gap-1.5 text-xs rounded-md border-slate-200 dark:border-slate-800"
-                            >
-                                {isDownloading ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#2563EB]" />
-                                ) : (
-                                    <Download className="h-3.5 w-3.5" />
-                                )}
-                                <span>PDF</span>
-                            </Button>
+                            <p className="mt-0.5 truncate text-sm text-slate-400">
+                                {invoice.client?.name || "Client inconnu"}
+                            </p>
                         </div>
+                    </div>
+
+                    <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2", !isPaid && "lg:grid-cols-3")}>
+                        <Button
+                            onClick={handleOpenEmailModal}
+                            disabled={isPaid}
+                            className={cn(
+                                "h-11 w-full rounded-xl font-medium active:scale-[0.98]",
+                                isPaid
+                                    ? "bg-slate-800 text-slate-500"
+                                    : "bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
+                            )}
+                        >
+                            <Mail className="h-4 w-4" />
+                            {isSent ? "Renvoyer par email" : "Envoyer une relance"}
+                        </Button>
+
+                        {!isPaid && (
+                            <Button
+                                onClick={handleMarkAsPaid}
+                                disabled={isMarkingPaid}
+                                variant="outline"
+                                className="h-11 w-full rounded-xl border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5 active:scale-[0.98]"
+                            >
+                                {isMarkingPaid ? (
+                                    <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
+                                ) : null}
+                                Marquer comme payée
+                            </Button>
+                        )}
+
+                        <Button
+                            variant="outline"
+                            onClick={handleDownload}
+                            disabled={isDownloading}
+                            className={cn(
+                                "h-11 w-full rounded-xl border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5 active:scale-[0.98]",
+                                !isPaid && "sm:col-span-2 lg:col-span-1"
+                            )}
+                        >
+                            {isDownloading ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
+                            ) : (
+                                <Download className="h-4 w-4" />
+                            )}
+                            Télécharger le PDF
+                        </Button>
                     </div>
                 </header>
 
-                <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-12 flex flex-col lg:flex-row gap-12 lg:gap-24">
-                    
-                    {/* Left Column: Preview */}
-                    <div className="flex-1 w-full flex items-start justify-center lg:justify-end">
-                        <div className="w-full max-w-[650px] bg-white dark:bg-[#111111] border border-slate-200 dark:border-slate-800 p-2 shadow-sm">
-                            <DocumentPreview 
-                                documentId={invoiceId} 
-                                layoutStyle={invoice.layout_style || "modern"} 
+                <div className="mt-6 grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10">
+                    <div className="min-w-0">
+                        <div className="mx-auto w-full max-w-[650px] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 p-1.5 sm:p-2">
+                            <DocumentPreview
+                                documentId={invoiceId}
+                                layoutStyle={invoice.layout_style || "modern"}
                             />
                         </div>
                     </div>
 
-                    {/* Right Column: Details & Actions */}
-                    <div className="w-full lg:w-[320px] flex flex-col shrink-0 lg:pt-2">
-
-                        <div className="flex items-center gap-5 mb-8 justify-center">
-                                        <Button 
-                                    onClick={handleOpenEmailModal} 
-                                    disabled={isPaid}
-                                    variant="default"
-                                    className={cn(
-                                        "w-full  rounded-md font-medium justify-between px-4 transition-colors duration-200",
-                                        isPaid 
-                                            ? "bg-[#2563EB] text-slate-500 cursor-not-allowed dark:bg-slate-800 "
-                                            : "bg-[#2563EB] cursor-pointer  text-white "
-                                    )}
-                                >
-                                    <span>{isSent ? "Renvoyer par email" : "Envoyer une relance"}</span>
-                                    
-                                </Button>
-
-                                 {!isPaid && (
-                                    <Button 
-                                        onClick={handleMarkAsPaid}
-                                        disabled={isMarkingPaid}
-                                        variant="outline"
-                                        className="w-full h-10 cursor-pointer rounded-md border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-900 dark:text-slate-100 font-medium justify-between px-4 transition-colors duration-200"
-                                    >
-                                        <span>Marquer comme payée</span>
-                                        
-                                    </Button>
-                                )}
-                        </div>
-                        
-                        {/* Montants */}
-                        <div className="mb-12">
-                            <h3 className="text-xs font-semibold text-slate-400 tracking-widest uppercase mb-6">
+                    <aside className="flex min-w-0 flex-col gap-8">
+                        <section>
+                            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                 Montants
-                            </h3>
-                            
-                            <div className="space-y-0 text-sm">
-                                <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 py-3">
-                                    <span className="text-slate-500">Sous-total</span>
-                                    <span suppressHydrationWarning className="font-medium text-slate-900 dark:text-slate-100">
+                            </h2>
+                            <div className="text-sm">
+                                <div className="flex items-baseline justify-between gap-4 border-b border-white/10 py-3">
+                                    <span className="text-slate-400">Sous-total</span>
+                                    <span suppressHydrationWarning className="shrink-0 tabular-nums font-medium">
                                         {formatCurrency(invoice.subtotal_cents || 0)}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 py-3">
-                                    <span className="text-slate-500">TVA</span>
-                                    <span suppressHydrationWarning className="font-medium text-slate-900 dark:text-slate-100">
+                                <div className="flex items-baseline justify-between gap-4 border-b border-white/10 py-3">
+                                    <span className="text-slate-400">TVA</span>
+                                    <span suppressHydrationWarning className="shrink-0 tabular-nums font-medium">
                                         {formatCurrency(invoice.tax_total_cents || 0)}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center pt-4">
-                                    <span className="font-semibold text-slate-900 dark:text-slate-100">Total</span>
-                                    <span suppressHydrationWarning className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                                <div className="flex items-baseline justify-between gap-4 pt-4">
+                                    <span className="font-semibold">Total</span>
+                                    <span suppressHydrationWarning className="shrink-0 text-lg font-semibold tabular-nums tracking-tight">
                                         {formatCurrency(invoice.total_cents || invoice.grand_total_cents || 0)}
                                     </span>
                                 </div>
                             </div>
 
                             {invoice.due_date && (
-                                <div className="mt-4 p-3 rounded-md bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-                                    <div className="text-xs text-slate-500 mb-1">Échéance</div>
-                                    <div 
+                                <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                                    <div className="mb-1 text-xs text-slate-500">Échéance</div>
+                                    <div
                                         suppressHydrationWarning
                                         className={cn(
                                             "text-sm font-semibold",
-                                            isOverdue ? "text-rose-500" : "text-slate-900 dark:text-slate-100"
+                                            isOverdue ? "text-rose-400" : "text-slate-100"
                                         )}
                                     >
                                         {new Date(invoice.due_date).toLocaleDateString('fr-FR', {
@@ -294,39 +254,37 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                                             month: 'long',
                                             year: 'numeric'
                                         })}
-                                        {isOverdue && " ⚠️"}
+                                        {isOverdue && (
+                                            <span className="mt-1 block text-xs font-medium text-rose-400">En retard</span>
+                                        )}
                                     </div>
                                 </div>
                             )}
-                        </div>
+                        </section>
 
-                      
-
-                        {/* Infos client */}
-                        <div>
-                            <h3 className="text-xs font-semibold text-slate-400 tracking-widest uppercase mb-4">
+                        <section>
+                            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                 Client
-                            </h3>
-                            <div className="p-4 rounded-md bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-                                <div className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-1">
+                            </h2>
+                            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                                <div className="mb-1 truncate text-sm font-semibold">
                                     {invoice.client?.name || "Client"}
                                 </div>
-                                <div className="text-xs text-slate-500 space-y-1">
+                                <div className="space-y-1.5 text-xs text-slate-400">
                                     {invoice.client?.email && (
-                                        <div className="flex items-center gap-1.5">
-                                            <Mail className="h-3 w-3" />
-                                            <span>{invoice.client.email}</span>
+                                        <div className="flex min-w-0 items-start gap-2">
+                                            <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                            <span className="min-w-0 break-all">{invoice.client.email}</span>
                                         </div>
                                     )}
                                     {invoice.client?.phone && (
-                                        <div>{invoice.client.phone}</div>
+                                        <div className="break-all">{invoice.client.phone}</div>
                                     )}
                                 </div>
                             </div>
-                        </div>
-
-                    </div>
-                </main>
+                        </section>
+                    </aside>
+                </div>
             </div>
 
             {/* ✅ MODAL D'ENVOI */}

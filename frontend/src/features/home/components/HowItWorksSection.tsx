@@ -71,7 +71,7 @@ export default function HowItWorksSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-6 text-3xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl"
+            className="mb-6 text-2xl font-extrabold tracking-tight text-white md:text-5xl lg:text-6xl"
           >
             Comment ça marche
           </motion.h2>

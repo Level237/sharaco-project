@@ -74,7 +74,7 @@ export default function VideoShowcaseSection() {
             </div>
 
             {/* Headline */}
-            <h2 className="mb-4 text-3xl font-extrabold leading-[1.18] tracking-tight text-white md:text-4xl lg:text-[2.5rem]">
+            <h2 className="mb-4 text-2xl font-extrabold leading-[1.18] tracking-tight text-white md:text-4xl lg:text-[2.5rem]">
               Passez de l&apos;idée au devis parfait en un instant.
             </h2>
             <div className="relative flex bg-slate-900/80 p-4 sm:p-6 md:p-7 rounded-xl border border-slate-800 shadow-2xl shadow-blue-500/5 group h-full flex-col justify-center sm:hidden">

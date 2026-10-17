@@ -14,14 +14,12 @@ class ClientService:
         email: Optional[str] = None,
         address: Optional[str] = None,
         phone: Optional[str] = None,
-        avatar: Optional[str] = None,
     ) -> Client:
         client = Client(
             name=name,
             email=email,
             address=address,
             phone=phone,
-            avatar=avatar,
             user_id=user_id,
         )
         db.add(client)

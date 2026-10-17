@@ -40,6 +40,7 @@ interface ClientDocument {
     subtotal_cents: number;
     tax_total_cents: number;
     grand_total_cents: number;
+    currency?: string;
     primary_color: string;
     background_color?: string;
     text_color?: string;
@@ -491,7 +492,7 @@ useEffect(() => {
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-bold text-zinc-400">Montant total TTC</span>
                                         <span className="text-2xl font-black text-emerald-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">
-                                            {formatCurrency(document.grand_total_cents)}
+                                            {formatCurrency(document.grand_total_cents, document.currency)}
                                         </span>
                                     </div>
                                 </div>

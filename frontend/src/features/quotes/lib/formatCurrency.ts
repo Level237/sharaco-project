@@ -1,3 +1,4 @@
+import { resolveCurrency } from "@/lib/currency";
 import { useAuthStore } from "@/store/auth-store";
 
 /**
@@ -18,7 +19,18 @@ export function formatCurrency(
     currency?: string,
     locale: string = 'fr-FR'
 ): string {
-    const cur = currency || useAuthStore.getState().currency || "XOF";
+    const state = useAuthStore.getState();
+    const cur = resolveCurrency(
+        currency || state.currency || "XOF",
+        currency ? undefined : state.user?.country,
+    );
+
+    const formatCfa = (value: number) =>
+        `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value)} F CFA`;
+
+    if (cur === "XOF" || cur === "XAF") {
+        return formatCfa(amount == null || isNaN(amount) ? 0 : amount);
+    }
 
     if (amount == null || isNaN(amount)) {
         return new Intl.NumberFormat(locale, {

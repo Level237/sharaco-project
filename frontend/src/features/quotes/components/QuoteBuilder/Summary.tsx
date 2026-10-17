@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "../../lib/formatCurrency";
 import { useQuoteTotal } from "../../hooks/useQuoteTotal";
 import { QuoteLineItem } from "../../types/QuoteBuilder";
 import { Button } from "@/components/ui/button";
@@ -12,9 +13,6 @@ interface SummaryProps {
 
 export function Summary({ items }: SummaryProps) {
     const { subTotal, totalTax, grandTotal } = useQuoteTotal(items);
-
-    const formatCurrency = (amount: number) =>
-        new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
 
     return (
         <motion.div

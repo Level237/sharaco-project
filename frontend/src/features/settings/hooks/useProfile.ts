@@ -12,6 +12,8 @@ export interface ProfileUpdateData {
     address?: string;
     tax_id?: string;
     payment_info?: string;
+    country?: string;
+    currency?: string;
 }
 
 export function useUpdateProfile() {

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import Response
-from app.core.currency import get_currency_symbol
+from app.core.currency import get_currency_symbol, resolve_currency
 from app.models.payment_schedule import PaymentSchedule, MilestoneStatus
 from sqlalchemy import func, distinct
 from app.services.pdfRenderer import pdf_renderer
@@ -346,7 +346,10 @@ async def send_document_email(
 
     totals = DocumentService.calculate_totals(document.items)
 
-    currency_symbol = get_currency_symbol(current_user.currency or "XOF")
+    currency_symbol = get_currency_symbol(
+        current_user.currency,
+        getattr(current_user, "country", None),
+    )
     grand_total = totals['grand_total_cents']
     total_amount = f"{grand_total:,} {currency_symbol}"
 
@@ -795,6 +798,10 @@ async def get_shared_document_public(
         "subtotal_cents": totals["subtotal_cents"],
         "tax_total_cents": totals["tax_total_cents"],
         "grand_total_cents": totals["grand_total_cents"],
+        "currency": resolve_currency(
+            getattr(document.owner, "currency", None) if document.owner else None,
+            getattr(document.owner, "country", None) if document.owner else None,
+        ),
         "primary_color": document.primary_color,
         "secondary_color": document.secondary_color,
         "accent_color": document.accent_color,
@@ -877,6 +884,10 @@ async def get_document_for_client(
         "subtotal_cents": totals["subtotal_cents"],
         "tax_total_cents": totals["tax_total_cents"],
         "grand_total_cents": totals["grand_total_cents"],
+        "currency": resolve_currency(
+            getattr(document.owner, "currency", None) if document.owner else None,
+            getattr(document.owner, "country", None) if document.owner else None,
+        ),
         "primary_color": document.primary_color,
         "secondary_color": document.secondary_color,
         "accent_color": document.accent_color,
@@ -1021,7 +1032,10 @@ async def get_public_invoice(
         "background_color": document.background_color or "#FFFFFF",
         "text_color": document.text_color or "#1F2937",
         "font_family": document.font_family or "Inter",
-        "currency": getattr(document.owner, "currency", "XOF") if document.owner else "XOF",
+        "currency": resolve_currency(
+            getattr(document.owner, "currency", None) if document.owner else None,
+            getattr(document.owner, "country", None) if document.owner else None,
+        ),
         # ─── Échéancier ───
         **schedule_context,
     }

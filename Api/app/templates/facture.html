@@ -433,8 +433,12 @@
         {% if user.tax_id %} — SIRET {{ user.tax_id }}{% endif %}
         {% if user.vat_number %} — TVA {{ user.vat_number }}{% endif %}
         <br>
+        {% if currency_code == "EUR" %}
         En cas de retard de paiement, pénalités égales à 3 fois le taux d'intérêt légal ainsi qu'une indemnité
         forfaitaire pour frais de recouvrement de 40 € (art. L441-10 du Code de commerce).
+        {% else %}
+        En cas de retard de paiement, des pénalités peuvent être appliquées selon les conditions convenues.
+        {% endif %}
         Pas d'escompte pour paiement anticipé.
     </div>
 

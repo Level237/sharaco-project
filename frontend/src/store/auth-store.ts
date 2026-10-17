@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { User } from '@/features/auth/types';
+import { locationCurrencyUpdate, resolveCurrency } from '@/lib/currency';
 import { deleteCookie, readAuthToken, removeStorage, writeCookie, writeStorage } from '@/lib/storage';
 
 interface AuthState {
@@ -26,7 +27,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     setUser: (user: User) => {
-        set({ user });
+        const next = locationCurrencyUpdate(user);
+        const stored = next
+            ? { ...user, country: next.country, currency: next.currency }
+            : user;
+        set({
+            user: stored,
+            currency: resolveCurrency(stored.currency, stored.country),
+        });
     },
 
     logout: () => {

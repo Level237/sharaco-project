@@ -3,10 +3,15 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import Sidebar from "@/features/navigation/components/Sidebar"
+import { syncCurrencyWithLocation } from "@/features/auth/lib/syncCurrency"
 import { Toaster } from "@/components/ui/toaster"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
+
+    React.useEffect(() => {
+        syncCurrencyWithLocation().catch(() => {})
+    }, [])
 
     // Le thème clair du téléphone ne doit pas repeindre le tableau de bord.
     React.useEffect(() => {

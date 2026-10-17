@@ -18,6 +18,6 @@ class User(SQLModel, table=True):
     templates: List["DocumentTemplate"] = Relationship(back_populates="owner")
     reminder_configs: List["ReminderConfig"] = Relationship(back_populates="owner")
     country: Optional[str] = None
-    currency: str = Field(default="USD") 
+    currency: str = Field(default="XOF") 
 
     projects: List["Project"] = Relationship(back_populates="owner")

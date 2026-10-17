@@ -15,9 +15,9 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/features/quotes/lib/formatCurrency";
 import {
-    COUNTRY_CURRENCY,
     CURRENCY_LABELS,
-    detectCurrency,
+    locationCurrencyUpdate,
+    resolveCurrency,
 } from "@/lib/currency";
 
 export default function SettingsPage() {
@@ -42,12 +42,9 @@ export default function SettingsPage() {
     // Pré-remplir quand le user charge
     useEffect(() => {
         if (user) {
-            // ✅ Détection auto au premier chargement si pas de pays
-            const detectedCountry =
-                user.country ||
-                (typeof navigator !== "undefined"
-                    ? (navigator.language || "").split("-")[1]?.toUpperCase() || ""
-                    : "");
+            const next = locationCurrencyUpdate(user);
+            const country = next?.country || user.country || "";
+            const currency = next?.currency || resolveCurrency(user.currency, country);
 
             setForm({
                 full_name: user.full_name || "",
@@ -56,11 +53,8 @@ export default function SettingsPage() {
                 address: user.address || "",
                 tax_id: user.tax_id || "",
                 payment_info: user.payment_info || "",
-                country: detectedCountry || "SN",
-                currency:
-                    user.currency ||
-                    COUNTRY_CURRENCY[detectedCountry] ||
-                    detectCurrency("XOF"),
+                country,
+                currency,
             });
         }
     }, [user]);

@@ -1,3 +1,4 @@
+import { syncCurrencyWithLocation } from '@/features/auth/lib/syncCurrency';
 import { API_URL, api } from '@/lib/api';
 import { readAuthToken } from '@/lib/storage';
 import type { Document, DocumentCreate, DocumentStatus } from '@/features/quotes/types';
@@ -56,6 +57,9 @@ export const invoicesApi = {
     },
 
     downloadPdf: async (id: string, filename?: string): Promise<void> => {
+        if (readAuthToken()) {
+            await syncCurrencyWithLocation().catch(() => {});
+        }
         const token = readAuthToken();
         const headers: Record<string, string> = {};
         if (token) {

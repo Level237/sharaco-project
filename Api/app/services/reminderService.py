@@ -19,6 +19,7 @@ from app.services.pdfRenderer import pdf_renderer
 from app.services.templateService import TemplateService
 from app.services.documentService import DocumentService
 from app.core.config import settings
+from app.core.currency import get_currency_symbol
 from app.utils.datetime import to_naive_utc
 
 logger = logging.getLogger(__name__)
@@ -467,10 +468,15 @@ class ReminderService:
     def _calculate_totals_simple(self, document: Document) -> dict:
         subtotal = sum(i.quantity * i.unit_price_cents for i in document.items)
         tax = sum(int(i.quantity * i.unit_price_cents * i.tax_rate / 100) for i in document.items)
+        owner = getattr(document, "owner", None)
+        symbol = get_currency_symbol(
+            getattr(owner, "currency", None) if owner else None,
+            getattr(owner, "country", None) if owner else None,
+        )
         return {
             "subtotal": f"{subtotal / 100:.2f}",
             "tax": f"{tax / 100:.2f}",
-            "grand_total": f"{(subtotal + tax) / 100:,.2f} FCFA",
+            "grand_total": f"{(subtotal + tax) / 100:,.2f} {symbol}",
         }
 
     def _render_email(self, document, user, client, totals, document_link, is_reminder):

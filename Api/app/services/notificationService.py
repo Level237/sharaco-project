@@ -1,7 +1,7 @@
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
-from app.core.currency import get_currency_symbol, format_amount
+from app.core.currency import format_amount, resolve_currency
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,7 +45,10 @@ class NotificationService:
 
             # ✅ Calcul du montant avec la devise de l'utilisateur propriétaire
             totals = DocumentService.calculate_totals(document.items)
-            user_currency = getattr(document.owner, "currency", None) or "XOF"
+            user_currency = resolve_currency(
+                getattr(document.owner, "currency", None),
+                getattr(document.owner, "country", None),
+            )
             amount = format_amount(totals["grand_total_cents"], user_currency)
 
             # ✅ Nom de l'utilisateur
@@ -108,7 +111,10 @@ class NotificationService:
 
             # ✅ Calcul du montant avec la devise de l'utilisateur propriétaire
             totals = DocumentService.calculate_totals(document.items)
-            user_currency = getattr(document.owner, "currency", None) or "XOF"
+            user_currency = resolve_currency(
+                getattr(document.owner, "currency", None),
+                getattr(document.owner, "country", None),
+            )
             amount = format_amount(totals["grand_total_cents"], user_currency)
 
             # ✅ Nom de l'utilisateur
@@ -164,7 +170,10 @@ class NotificationService:
                 return
 
             totals = DocumentService.calculate_totals(document.items)
-            user_currency = getattr(document.owner, "currency", None) or "XOF"
+            user_currency = resolve_currency(
+                getattr(document.owner, "currency", None),
+                getattr(document.owner, "country", None),
+            )
             amount = format_amount(totals["grand_total_cents"], user_currency)
 
             user_name = (

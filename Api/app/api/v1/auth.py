@@ -19,6 +19,7 @@ from app.schemas.auth import RegisterRequest, RegisterResponse
 from pydantic import BaseModel
 from app.core.oauth import oauth
 from app.core.limiter import limiter
+from app.core.currency import resolve_currency
 from app.utils.emails import normalize_email
 
 
@@ -236,6 +237,11 @@ async def update_profile(
         )
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Cet email est déjà utilisé")
+
+    if "country" in update_data or "currency" in update_data:
+        country = update_data.get("country", current_user.country)
+        currency = update_data.get("currency", current_user.currency)
+        update_data["currency"] = resolve_currency(currency, country)
 
     # Appliquer les champs fournis
     for field, value in update_data.items():

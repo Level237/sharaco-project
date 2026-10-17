@@ -46,6 +46,11 @@ async function apiFetch<T>(
         headers['Authorization'] = `Bearer ${token}`;
     }
 
+    if (token && typeof window !== "undefined" && !endpoint.startsWith("/api/v1/auth/")) {
+        const { syncCurrencyWithLocation } = await import("@/features/auth/lib/syncCurrency");
+        await syncCurrencyWithLocation().catch(() => {});
+    }
+
     // 3. Faire la requête
     const res = await fetch(url, {
         ...options,

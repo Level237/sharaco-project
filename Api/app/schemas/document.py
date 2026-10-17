@@ -108,6 +108,7 @@ class SharedDocumentRead(BaseModel):
     subtotal_cents: Optional[int] = None
     tax_total_cents: Optional[int] = None
     grand_total_cents: Optional[int] = None
+    currency: Optional[str] = None
 
     accepted_at: Optional[datetime] = None
     refused_at: Optional[datetime] = None

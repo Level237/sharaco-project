@@ -26,6 +26,7 @@ class UserService:
             address=address,
             tax_id=tax_id,
             payment_info=payment_info,
+            currency="XOF",
         )
         db.add(db_user)
         await db.commit()
@@ -51,6 +52,7 @@ class UserService:
             phone=data.phone.strip() if data.phone else None,
             is_active=True,
             is_verified=False,  # Pour plus tard (vérification email)
+            currency="XOF",
         )
         
         db.add(user)

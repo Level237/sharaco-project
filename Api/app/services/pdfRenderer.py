@@ -13,7 +13,7 @@ from jinja2 import Environment, FileSystemLoader
 from PIL import Image
 from playwright.async_api import async_playwright
 from sqlmodel import select
-from app.core.currency import get_currency_symbol
+from app.core.currency import currency_label, resolve_currency
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.document import Document, DocumentItem
 from app.models.document_template import DocumentTemplate
@@ -508,6 +508,10 @@ class PDFRenderer:
         source_quote_number: str | None = None,
     ) -> dict:
         totals = self._calculate_totals(document.items)
+        currency_code = resolve_currency(
+            getattr(user, "currency", None) if user else None,
+            getattr(user, "country", None) if user else None,
+        )
 
         context = {
             "document": document,
@@ -516,7 +520,8 @@ class PDFRenderer:
             "client": client,
             "items": document.items,
             "totals": totals,
-            "currency": get_currency_symbol(user.currency or "XOF"),
+            "currency": currency_label(currency_code),
+            "currency_code": currency_code,
             "source_quote_number": source_quote_number,
         }
         return context

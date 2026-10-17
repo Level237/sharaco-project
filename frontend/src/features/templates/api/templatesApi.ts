@@ -1,3 +1,4 @@
+import { syncCurrencyWithLocation } from '@/features/auth/lib/syncCurrency';
 import { API_URL, api } from '@/lib/api';
 import { readAuthToken } from '@/lib/storage';
 import type { DocumentPreviewRequest, DocumentTemplate, Layout, TemplateCreate, TemplateUpdate } from '../types';
@@ -22,6 +23,9 @@ export const templatesApi = {
     },
 
     previewDocument: async (data: DocumentPreviewRequest): Promise<string> => {
+        if (readAuthToken()) {
+            await syncCurrencyWithLocation().catch(() => {});
+        }
         const token = readAuthToken();
         const res = await fetch(
             `${API_URL}/api/v1/documents/preview`,

@@ -12,7 +12,7 @@ export default function ClientsPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     return (
-        <div className="flex-1 min-w-0 w-full space-y-8 p-4 md:p-8 pt-6">
+        <div className="flex-1 min-w-0 w-full space-y-6 md:space-y-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                 <div>
                     <h1 className="text-3xl max-sm:text-2xl font-black tracking-tight text-white flex items-center gap-3">
@@ -27,9 +27,9 @@ export default function ClientsPage() {
                 </div>
                 <Button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="bg-[#2563EB] hover:bg-[#2563EB]/70 cursor-pointer text-white rounded-lg shadow-[0_8px_20px_rgba(99,102,241,0.25)] transition-all hover:-translate-y-0.5 h-12 px-6 font-bold"
+                    className="bg-[#2563EB] max-sm:text-sm hover:bg-[#2563EB]/70 cursor-pointer text-white rounded-lg shadow-[0_8px_20px_rgba(99,102,241,0.25)] transition-all hover:-translate-y-0.5 py-5 max-sm:px-4 px-6 font-bold"
                 >
-                    <Plus className="w-5 h-5 mr-2" />
+                    <Plus className="w-5 h-5 mr-2 max-sm:mr-0" />
                     Nouveau Client
                 </Button>
             </div>

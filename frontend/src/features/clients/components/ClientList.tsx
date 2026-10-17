@@ -60,7 +60,7 @@ export function ClientList({ searchQuery }: ClientListProps) {
 
     return (
         <>
-            <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-7 sm:grid-cols-3 sm:gap-x-6 sm:gap-y-8 lg:grid-cols-4 xl:grid-cols-6">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6 xl:grid-cols-6">
                 {filteredClients.map((client) => (
                     <ContextMenu key={client.id}>
                         <ContextMenuTrigger asChild>
@@ -74,15 +74,15 @@ export function ClientList({ searchQuery }: ClientListProps) {
                                         openClient(client.id);
                                     }
                                 }}
-                                className="group flex w-full cursor-pointer flex-col rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+                                className="group flex w-full min-w-0 cursor-pointer flex-col rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]"
                             >
-                                <div className="relative w-full pt-2">
-                                    <div className="absolute left-0 top-0 h-5 w-[42%] rounded-t-md bg-[#1e293b] transition-colors duration-200 group-hover:bg-[#334155]" />
-                                    <div className="relative z-10 flex aspect-[5/4] w-full items-center justify-center rounded-lg border border-white/10 bg-[#14161c] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:border-[#2563EB]/40">
-                                        <ClientCharacter className="aspect-square w-[58%] min-w-14 max-w-24 sm:w-[62%]" />
+                                <div className="relative w-full min-w-0 pt-1.5 sm:pt-2">
+                                    <div className="absolute left-0 top-0 h-4 w-[38%] rounded-t-md bg-[#1e293b] transition-colors duration-200 group-hover:bg-[#334155] sm:h-5 sm:w-[42%]" />
+                                    <div className="relative z-10 flex aspect-square w-full min-w-0 items-center justify-center overflow-hidden rounded-md border border-white/10 bg-[#14161c] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:border-[#2563EB]/40 sm:aspect-[5/4] sm:rounded-lg">
+                                        <ClientCharacter className="aspect-square w-[70%] max-w-14 sm:w-[44%] sm:max-w-16 lg:max-w-[4.5rem]" />
                                     </div>
                                 </div>
-                                <span className="mt-2 line-clamp-1 px-0.5 text-sm font-semibold text-white">
+                                <span className="mt-1.5 line-clamp-2 px-0.5 text-xs font-semibold leading-tight text-white sm:mt-2 sm:text-sm">
                                     {client.name}
                                 </span>
                             </div>

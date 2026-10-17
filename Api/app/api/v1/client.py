@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.db.engine import get_db
@@ -101,4 +102,11 @@ async def delete_client(
             detail="Client introuvable",
         )
 
-    await ClientService.delete_client(db, client)
+    try:
+        await ClientService.delete_client(db, client)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ce client a encore des projets ou des documents. Retirez-les avant de le supprimer.",
+        )

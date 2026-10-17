@@ -72,6 +72,7 @@ export interface Project {
     user_id: string;
     client_id: string;
     client_name?: string;
+    client?: { id: string; name: string; email?: string | null } | null;
     documents_count?: number;
     total_invoiced_cents?: number;
     attachments?: ProjectAttachment[];

@@ -9,6 +9,7 @@ export interface User {
     country?: string;
     currency?: string;
     phone?: string;
+    avatar?: string | null;
 }
 
 export interface LoginRequest {

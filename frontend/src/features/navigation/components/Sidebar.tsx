@@ -5,7 +5,7 @@ import { useState } from "react"  // ✅ AJOUTÉ
 import { cn } from "@/lib/utils"
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { navItems } from '../data/navItemsData'
-import { Plus, Bell, X, User, LogOut, HelpCircle, Menu, Home, Folder, FileText, CreditCard } from 'lucide-react'
+import { Plus, Bell, X, User, LogOut, HelpCircle, Menu, Home, Users, FileText, CreditCard } from 'lucide-react'
 import Link from "next/link"
 import Logo from "@/components/ui/logo"
 import { motion, AnimatePresence } from "framer-motion"
@@ -36,7 +36,7 @@ export default function Sidebar({ setIsSidebarOpen, isSidebarOpen }: { setIsSide
 
     const mobileTabs = [
         { title: "Accueil", icon: Home, href: "/dashboard" },
-        { title: "Projets", icon: Folder, href: "/dashboard/projects" },
+        { title: "Clients", icon: Users, href: "/dashboard/clients" },
         { title: "Devis", icon: FileText, href: "/dashboard/quotes" },
         { title: "Factures", icon: CreditCard, href: "/dashboard/invoices" },
     ];
@@ -80,7 +80,11 @@ export default function Sidebar({ setIsSidebarOpen, isSidebarOpen }: { setIsSide
           <ScrollArea className="flex-1 w-full hide-scrollbar relative z-10">
             <nav className="flex flex-col items-center gap-1 px-2 pb-4">
               {mainNavItems.map((item, index) => {
-                const isActive = item.href ? pathname === item.href : false;
+                const isActive = item.href
+                    ? item.href === "/dashboard"
+                        ? pathname === "/dashboard"
+                        : pathname === item.href || pathname.startsWith(`${item.href}/`)
+                    : false;
                 const tourId = `sidebar-${item.title.toLowerCase()}`;
                 return (
                   <Link
@@ -151,11 +155,13 @@ export default function Sidebar({ setIsSidebarOpen, isSidebarOpen }: { setIsSide
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{user?.email || "Chargement..."}</p>
                 </div>
                 <DropdownMenuSeparator className="bg-slate-100 dark:bg-white/5 mb-1.5" />
-                <DropdownMenuItem className="gap-3 cursor-pointer rounded-xl font-bold focus:bg-slate-100 dark:focus:bg-white/5 py-2.5 transition-colors">
-                  <div className="p-1.5 bg-slate-100 dark:bg-white/5 rounded-lg text-slate-500 dark:text-slate-400">
-                    <User className="h-4 w-4" />
-                  </div>
-                  Profil
+                <DropdownMenuItem asChild className="gap-3 cursor-pointer rounded-xl font-bold focus:bg-slate-100 dark:focus:bg-white/5 py-2.5 transition-colors">
+                  <Link href="/dashboard/settings">
+                    <div className="p-1.5 bg-slate-100 dark:bg-white/5 rounded-lg text-slate-500 dark:text-slate-400">
+                      <User className="h-4 w-4" />
+                    </div>
+                    Profil
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => logout()}
@@ -177,7 +183,9 @@ export default function Sidebar({ setIsSidebarOpen, isSidebarOpen }: { setIsSide
             <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-2xl border-t border-white/10 px-2 pb-[env(safe-area-inset-bottom)]">
                 <nav className="flex items-center justify-around h-16">
                     {mobileTabs.map((tab, index) => {
-                        const isActive = pathname === tab.href;
+                        const isActive = tab.href === "/dashboard"
+                            ? pathname === "/dashboard"
+                            : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
                         const Icon = tab.icon;
 
                         return (

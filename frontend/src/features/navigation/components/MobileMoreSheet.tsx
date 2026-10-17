@@ -21,7 +21,7 @@ interface MobileMoreSheetProps {
 // Routes déjà dans la bottom bar → exclues du menu "Plus"
 const BOTTOM_TAB_HREFS = [
     "/dashboard",
-    "/dashboard/projects",
+    "/dashboard/clients",
     "/dashboard/quotes",
     "/dashboard/invoices",
 ]

@@ -8,19 +8,21 @@ import { Project } from "../types"
 import { useState } from "react"
 import { CreateProjectModal } from "./CreateProjectModal"
 import { cn } from "@/lib/utils"
+import { projectHref } from "../lib/paths"
 
 
 interface ProjectFolderProps {
     project: Project;
     onDelete?: (id: string) => void;
+    showClient?: boolean;
 }
 
-export function ProjectFolder({ project, onDelete }: ProjectFolderProps) {
+export function ProjectFolder({ project, onDelete, showClient = true }: ProjectFolderProps) {
     const router = useRouter();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const handleOpen = () => {
-        router.push(`/dashboard/projects/${project.id}`);
+        router.push(projectHref(project.client_id, project.id));
     };
 
     const handleEdit = () => {
@@ -80,7 +82,7 @@ export function ProjectFolder({ project, onDelete }: ProjectFolderProps) {
                             </span>
 
                             <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
-                                {project.client_name && (
+                                {showClient && project.client_name && (
                                     <span className="line-clamp-1 flex-1 min-w-0">{project.client_name}</span>
                                 )}
                                 {project.documents_count !== undefined && project.documents_count > 0 && (

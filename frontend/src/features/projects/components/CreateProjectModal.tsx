@@ -12,14 +12,17 @@ import { clientsApi } from "@/features/clients/api/clientsApi"
 import { useRouter } from "next/navigation"
 import { useCreateProject, useUpdateProject } from "../hooks/useProject"
 import { Project } from "../types"
+import { projectHref } from "../lib/paths"
 
 interface CreateProjectModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     project?: Project
+    lockedClientId?: string
+    lockedClientName?: string
 }
 
-export function CreateProjectModal({ open, onOpenChange, project }: CreateProjectModalProps) {
+export function CreateProjectModal({ open, onOpenChange, project, lockedClientId, lockedClientName }: CreateProjectModalProps) {
     const router = useRouter()
     const createMutation = useCreateProject()
     const updateMutation = useUpdateProject()
@@ -43,7 +46,7 @@ export function CreateProjectModal({ open, onOpenChange, project }: CreateProjec
         if (open) {
             setName(project?.name || "")
             setDescription(project?.description || "")
-            setClientId(project?.client_id || "")
+            setClientId(project?.client_id || lockedClientId || "")
             setBudget(project?.budget_cents ? (project.budget_cents / 100).toString() : "")
         } else {
             setName("")
@@ -51,7 +54,7 @@ export function CreateProjectModal({ open, onOpenChange, project }: CreateProjec
             setClientId("")
             setBudget("")
         }
-    }, [open, project])
+    }, [open, project, lockedClientId])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -72,7 +75,7 @@ export function CreateProjectModal({ open, onOpenChange, project }: CreateProjec
             } else {
                 const newProject = await createMutation.mutateAsync(data)
                 onOpenChange(false)
-                router.push(`/dashboard/projects/${newProject.id}`)
+                router.push(projectHref(clientId, newProject.id))
             }
         } catch (error) {
             console.error("Erreur:", error)
@@ -115,6 +118,11 @@ export function CreateProjectModal({ open, onOpenChange, project }: CreateProjec
                                 <Label className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 sm:w-24 sm:shrink-0">
                                     Client
                                 </Label>
+                                {lockedClientId && !project ? (
+                                    <p className="text-sm font-medium text-slate-900 dark:text-white sm:text-right">
+                                        {lockedClientName || "Ce client"}
+                                    </p>
+                                ) : (
                                 <Select value={clientId} onValueChange={setClientId} required>
                                     <SelectTrigger className="h-8 sm:h-9 border-none bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 shadow-none focus:ring-0 text-left sm:text-right font-medium w-full">
                                         <SelectValue placeholder="Sélectionner un client..." />
@@ -137,6 +145,7 @@ export function CreateProjectModal({ open, onOpenChange, project }: CreateProjec
                                         )}
                                     </SelectContent>
                                 </Select>
+                                )}
                             </div>
 
                             <div className="h-px bg-slate-200/50 dark:bg-white/5 w-full my-1" />

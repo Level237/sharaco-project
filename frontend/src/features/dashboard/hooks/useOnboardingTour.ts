@@ -33,10 +33,10 @@ export function useOnboardingTour() {
                     },
                 },
                 {
-                    element: '[data-tour="mobile-tab-projets"]',
+                    element: '[data-tour="mobile-tab-clients"]',
                     popover: {
-                        title: '📁 Projets',
-                        description: 'Gérez et suivez l\'avancement de tous vos projets en cours.',
+                        title: 'Clients',
+                        description: 'Ouvrez un client pour créer ses projets, puis ses devis et factures.',
                         side: 'top',
                         align: 'center'
                     },
@@ -63,7 +63,7 @@ export function useOnboardingTour() {
                     element: '[data-tour="mobile-tab-plus"]',
                     popover: {
                         title: '✨ Et plus encore',
-                        description: 'Accédez à vos clients, vos paramètres et vos alertes depuis ce menu.',
+                        description: 'Accédez à vos paramètres et à vos alertes depuis ce menu.',
                         side: 'top',
                         align: 'center'
                     },
@@ -78,10 +78,10 @@ export function useOnboardingTour() {
                     },
                 },
                 {
-                    element: '[data-tour="sidebar-projets"]',
+                    element: '[data-tour="sidebar-clients"]',
                     popover: {
-                        title: '📁 Projets',
-                        description: 'Gérez et suivez l\'avancement de tous vos projets en cours.',
+                        title: 'Clients',
+                        description: 'Ouvrez un client pour créer ses projets, puis ses devis et factures.',
                         side: 'right',
                     },
                 },
@@ -98,14 +98,6 @@ export function useOnboardingTour() {
                     popover: {
                         title: '💳 Factures',
                         description: 'Suivez vos paiements, relancez vos clients et gérez votre trésorerie.',
-                        side: 'right',
-                    },
-                },
-                {
-                    element: '[data-tour="sidebar-clients"]',
-                    popover: {
-                        title: '🤝 Clients',
-                        description: 'Gérez votre base de contacts et l\'historique de vos relations.',
                         side: 'right',
                     },
                 },

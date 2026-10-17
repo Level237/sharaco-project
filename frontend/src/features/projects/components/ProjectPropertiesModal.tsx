@@ -48,12 +48,12 @@ export function ProjectPropertiesModal({ project, open, onOpenChange }: ProjectP
                         </div>
                         <div className="flex">
                             <span className="w-28 text-slate-500 dark:text-slate-400">Emplacement :</span>
-                            <span>Mes Projets\{project.name}</span>
+                            <span>Clients\{project.client?.name || project.client_name || "Client"}\{project.name}</span>
                         </div>
                         <div className="flex">
                             <span className="w-28 text-slate-500 dark:text-slate-400">Client :</span>
                             <span className="flex items-center gap-1">
-                                <User className="w-4 h-4 text-slate-400" /> {project.client_name || "Non assigné"}
+                                <User className="w-4 h-4 text-slate-400" /> {project.client?.name || project.client_name || "Non assigné"}
                             </span>
                         </div>
                         

@@ -2,8 +2,9 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import type { User } from "@/features/auth/types";
 
 export interface ProfileUpdateData {
     full_name?: string;
@@ -22,9 +23,9 @@ export function useUpdateProfile() {
 
     return useMutation({
         mutationFn: (data: ProfileUpdateData) =>
-            api.put("/api/v1/auth/me", data),
-        onSuccess: () => {
-            // ⚠️ Adapte la key selon ton useCurrentUser
+            api.put<User>("/api/v1/auth/me", data),
+        onSuccess: (updated) => {
+            queryClient.setQueryData(["currentUser"], updated);
             queryClient.invalidateQueries({ queryKey: ["currentUser"] });
             queryClient.invalidateQueries({ queryKey: ["user"] });
             toast({
@@ -32,10 +33,13 @@ export function useUpdateProfile() {
                 description: "Vos informations ont été enregistrées.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+            const detail = error instanceof ApiError
+                ? error.detail
+                : "Impossible de mettre à jour le profil.";
             toast({
                 title: "Erreur",
-                description: error.response?.data?.detail || "Impossible de mettre à jour le profil.",
+                description: detail,
                 variant: "destructive",
             });
         },

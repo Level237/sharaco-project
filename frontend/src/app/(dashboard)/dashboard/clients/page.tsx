@@ -22,7 +22,7 @@ export default function ClientsPage() {
                         Mes Clients
                     </h1>
                     <p className="text-slate-400 max-sm:text-sm mt-2">
-                        Gérez votre répertoire client et leurs coordonnées.
+                        Ouvrez un client pour créer ses projets, puis ses devis et factures.
                     </p>
                 </div>
                 <Button

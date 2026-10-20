@@ -54,6 +54,13 @@ class TestDocumentCalculations(unittest.TestCase):
         self.assertIn(DocumentStatus.PAID, valid_transitions[DocumentStatus.VIEWED])
         self.assertEqual(len(valid_transitions[DocumentStatus.PAID]), 0)
 
+    def test_clients_match_rejects_other_client_project(self):
+        client_x = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        client_y = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        self.assertTrue(DocumentService.clients_match(None, client_y))
+        self.assertTrue(DocumentService.clients_match(client_x, client_x))
+        self.assertFalse(DocumentService.clients_match(client_x, client_y))
+
     def test_document_schemas_project_id(self):
         """Vérifie la présence et validation du project_id dans DocumentCreate et DocumentUpdate."""
         import uuid

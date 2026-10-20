@@ -103,7 +103,13 @@ export function QuoteList({ quotes, isLoading = false, onDeleteSuccess, projectI
         queryFn: () => projectsApi.getAll(),
     });
 
-    const handleLinkToProject = async (documentId: string, projectId: string) => {
+    const handleLinkToProject = async (documentId: string, projectId: string, clientId?: string | null) => {
+        if (projectId !== "none") {
+            const project = projects.find((row) => row.id === projectId);
+            if (!project || !clientId || project.client_id !== clientId) {
+                return;
+            }
+        }
         try {
             await linkToProjectMutation.mutateAsync({
                 documentId,
@@ -187,6 +193,8 @@ export function QuoteList({ quotes, isLoading = false, onDeleteSuccess, projectI
                         const config = statusConfig[quote.status] || statusConfig.DRAFT
                         const StatusIcon = config.icon
                         const isBeingDeleted = deletingId === quote.id
+                        const quoteClientId = quote.client_id || quote.client?.id || ""
+                        const clientProjects = projects.filter((project) => project.client_id === quoteClientId)
 
                         return (
                             <motion.div
@@ -241,19 +249,22 @@ export function QuoteList({ quotes, isLoading = false, onDeleteSuccess, projectI
                                                 <DropdownMenuItem className="cursor-pointer rounded-lg p-2 focus:bg-white/5" onSelect={(e) => e.preventDefault()}>
                                                     <div className="flex flex-col w-full gap-2">
                                                         <span className="text-sm font-medium text-slate-300">Associer à un projet</span>
-                                                        <Select onValueChange={(value) => handleLinkToProject(quote.id, value)}>
+                                                        <Select onValueChange={(value) => handleLinkToProject(quote.id, value, quoteClientId)}>
                                                             <SelectTrigger className="h-9 rounded-lg bg-black/20 border-white/10">
                                                                 <SelectValue placeholder="Choisir un projet" />
                                                             </SelectTrigger>
                                                             <SelectContent className="rounded-lg bg-[#111113] border-white/10 shadow-xl">
                                                                 <SelectItem value="none" className="rounded-lg cursor-pointer">Aucun projet</SelectItem>
-                                                                {projects.map((project) => (
+                                                                {clientProjects.map((project) => (
                                                                     <SelectItem key={project.id} value={project.id} className="rounded-lg cursor-pointer">
                                                                         {project.name}
                                                                     </SelectItem>
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
+                                                        {quoteClientId && clientProjects.length === 0 && (
+                                                            <p className="text-[11px] text-slate-500">Aucun projet pour ce client.</p>
+                                                        )}
                                                     </div>
                                                 </DropdownMenuItem>
 

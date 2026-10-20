@@ -113,6 +113,19 @@ function QuoteBuilderContent() {
                 finalClientId = clientResponse.id;
             }
 
+            if (selectedProjectId) {
+                const project = projects.find((row) => row.id === selectedProjectId);
+                if (project && project.client_id !== finalClientId) {
+                    toast({
+                        title: "Projet incompatible",
+                        description: "Ce projet appartient à un autre client.",
+                        variant: "destructive",
+                    });
+                    setIsCreating(false);
+                    return;
+                }
+            }
+
             const document = await quotesApi.create({
                 type: "DEVIS",
                 layout_style: selectedLayoutStyle,

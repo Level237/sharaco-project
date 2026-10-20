@@ -25,6 +25,36 @@ logger = logging.getLogger(__name__)
 class DocumentService:
 
     @staticmethod
+    def clients_match(document_client_id: Optional[UUID], project_client_id: Optional[UUID]) -> bool:
+        if not document_client_id or not project_client_id:
+            return True
+        return str(document_client_id) == str(project_client_id)
+
+    @staticmethod
+    async def ensure_project_belongs_to_client(
+        db: AsyncSession,
+        project_id: UUID,
+        user_id: UUID,
+        client_id: Optional[UUID],
+    ):
+        from app.models.projet import Project
+
+        result = await db.execute(
+            select(Project).where(
+                Project.id == project_id,
+                Project.user_id == user_id,
+            )
+        )
+        project = result.scalar_one_or_none()
+        if not project:
+            raise LookupError("Projet introuvable ou n'appartient pas à cet utilisateur")
+        if not DocumentService.clients_match(client_id, project.client_id):
+            raise ValueError(
+                "Ce projet appartient à un autre client. Un devis ne peut être associé qu'à un projet du même client."
+            )
+        return project
+
+    @staticmethod
     async def create_from_quote(
         db: AsyncSession,
         quote: Document,

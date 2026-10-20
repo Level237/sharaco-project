@@ -1382,16 +1382,20 @@ async def update_document(
         if not client:
             raise HTTPException(status_code=404, detail="Client introuvable")
 
-    if document_data.project_id is not None:
-        from app.models.projet import Project
-        project_result = await db.execute(
-            select(Project).where(
-                Project.id == document_data.project_id,
-                Project.user_id == current_user.id
+    effective_client_id = document_data.client_id if document_data.client_id is not None else document.client_id
+    try:
+        if document_data.project_id is not None:
+            await DocumentService.ensure_project_belongs_to_client(
+                db, document_data.project_id, current_user.id, effective_client_id
             )
-        )
-        if not project_result.scalar_one_or_none():
-            raise HTTPException(status_code=404, detail="Projet introuvable ou n'appartient pas à cet utilisateur")
+        elif document_data.client_id is not None and document.project_id:
+            await DocumentService.ensure_project_belongs_to_client(
+                db, document.project_id, current_user.id, document_data.client_id
+            )
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     try:
         updated = await DocumentService.update_document(
@@ -1485,18 +1489,16 @@ async def link_document_to_project(
         raise HTTPException(status_code=404, detail="Document introuvable")
 
     if link_data.project_id:
-        from app.models.projet import Project
-        project_result = await db.execute(
-            select(Project).where(
-                Project.id == link_data.project_id,
-                Project.user_id == current_user.id
+        try:
+            project = await DocumentService.ensure_project_belongs_to_client(
+                db, link_data.project_id, current_user.id, document.client_id
             )
-        )
-        if not project_result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=404,
-                detail="Projet introuvable ou n'appartient pas à cet utilisateur"
-            )
+        except LookupError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        if not document.client_id:
+            document.client_id = project.client_id
 
     document.project_id = link_data.project_id
     db.add(document)
@@ -1859,17 +1861,14 @@ async def create_document(
             )
 
     if document_data.project_id:
-        project_result = await db.execute(
-            select(Project).where(
-                Project.id == document_data.project_id,
-                Project.user_id == current_user.id
+        try:
+            await DocumentService.ensure_project_belongs_to_client(
+                db, document_data.project_id, current_user.id, client_id
             )
-        )
-        if not project_result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Projet introuvable ou n'appartient pas à cet utilisateur"
-            )
+        except LookupError as e:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     try:
         document = await DocumentService.create_document(

@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus } from "lucide-react"
-import Link from "next/link"
 import { ProjectTreeResponse } from "../types"
 import { QuoteCardWithInvoices } from "./QuoteCardWithInvoices"
 import { FolderCard } from "./FolderCard"
 import { InvoiceGrid } from "./InvoiceGrid"
+import { NewDocumentMenu } from "./NewDocumentMenu"
+import { ContractCard } from "./ContractCard"
 
 interface ProjectQuoteGridProps {
     tree: ProjectTreeResponse;
@@ -61,23 +61,8 @@ export function ProjectQuoteGrid({ tree, projectId, onRefresh }: ProjectQuoteGri
                 animate="show"
                 className="grid grid-cols-2 min-[500px]:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3 sm:gap-4 md:gap-6"
             >
-                {/* ═══════════ Nouveau Devis Card ═══════════ */}
                 <motion.div variants={cardVariants} className="h-full">
-                    <Link
-                        href={`/dashboard/quotes/create?project_id=${projectId}`}
-                        className="group flex flex-col h-full w-full outline-none"
-                    >
-                        <div className="w-full aspect-[4/5] rounded-lg bg-white/40 dark:bg-transparent border border-dashed border-slate-300 dark:border-white/20 flex flex-col items-center justify-center transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:bg-white dark:group-hover:bg-white/5 group-hover:border-solid group-hover:border-slate-400 dark:group-hover:border-white/30 ">
-                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-500 dark:text-slate-300 mb-3 transition-transform duration-500 group-hover:scale-110 group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-slate-900">
-                                <Plus  className="w-4 h-4" />
-                            </div>
-                        </div>
-                        {/* Invisible alignment text to match other cards structure */}
-                        <div className="mt-4 px-1 opacity-0 pointer-events-none select-none">
-                            <h4 className="text-[13px] font-semibold">X</h4>
-                            <div className="text-[11px] mt-1">X</div>
-                        </div>
-                    </Link>
+                    <NewDocumentMenu projectId={projectId} variant="card" />
                 </motion.div>
 
                 {/* ═══════════ Devis + Dossiers Factures ═══════════ */}
@@ -94,6 +79,7 @@ export function ProjectQuoteGrid({ tree, projectId, onRefresh }: ProjectQuoteGri
                                     quote={quote}
                                     variants={cardVariants}
                                     onExpand={() => setExpandedQuoteId(quote.id)}
+                                    onRefresh={onRefresh}
                                 />
 
                                 {quote.invoices.length > 0 && (
@@ -110,6 +96,19 @@ export function ProjectQuoteGrid({ tree, projectId, onRefresh }: ProjectQuoteGri
                             </div>
                         );
                     })}
+                </AnimatePresence>
+
+                <AnimatePresence mode="popLayout">
+                    {(tree.contracts || []).map((contract) => (
+                        <ContractCard
+                            key={contract.id}
+                            contract={contract}
+                            variants={cardVariants}
+                            onRefresh={onRefresh}
+                            clientEmail={tree.client_email}
+                            clientName={tree.client_name}
+                        />
+                    ))}
                 </AnimatePresence>
             </motion.div>
 

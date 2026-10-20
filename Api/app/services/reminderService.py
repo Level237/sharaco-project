@@ -248,28 +248,22 @@ class ReminderService:
         subject = f"{document.type.value} {document.number} - {user.company_name or 'Sharaco'}"
 
         # ✅ Utilise la bonne méthode EmailService selon le type
+        email_payload = dict(
+            to_email=client.email,
+            client_name=client.name,
+            document_number=document.number or "",
+            total_amount=totals["grand_total"],
+            client_url=document_link,
+            due_date=document.due_date.strftime("%d/%m/%Y") if document.due_date else None,
+            user_name=getattr(user, 'full_name', '') or user.email,
+            user_company=user.company_name or "Sharaco",
+        )
         if document.type == DocumentType.DEVIS:
-            result = await EmailService.send_devis(
-                to_email=client.email,
-                client_name=client.name,
-                document_number=document.number or "",
-                total_amount=totals["grand_total"],
-                client_url=document_link,
-                due_date=document.due_date.strftime("%d/%m/%Y") if document.due_date else None,
-                user_name=getattr(user, 'full_name', '') or user.email,
-                user_company=user.company_name or "Sharaco",
-            )
+            result = await EmailService.send_devis(**email_payload)
+        elif document.type == DocumentType.CONTRAT:
+            result = await EmailService.send_contrat(**email_payload)
         else:
-            result = await EmailService.send_facture(
-                to_email=client.email,
-                client_name=client.name,
-                document_number=document.number or "",
-                total_amount=totals["grand_total"],
-                client_url=document_link,
-                due_date=document.due_date.strftime("%d/%m/%Y") if document.due_date else None,
-                user_name=getattr(user, 'full_name', '') or user.email,
-                user_company=user.company_name or "Sharaco",
-            )
+            result = await EmailService.send_facture(**email_payload)
 
         # Mettre à jour le document
         if result.get("success"):

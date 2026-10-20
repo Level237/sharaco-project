@@ -230,7 +230,10 @@ async def preview_document_live(
         show_bank_details=preview_data.show_bank_details,
         show_tax_id=preview_data.show_tax_id,
         reference=preview_data.reference,
-        payment_schedule=[m.model_dump() for m in preview_data.payment_schedule] if preview_data.payment_schedule else None
+        payment_schedule=[m.model_dump() for m in preview_data.payment_schedule] if preview_data.payment_schedule else None,
+        due_date=preview_data.due_date,
+        rules=[r.model_dump() for r in preview_data.rules] if preview_data.rules else None,
+        notes=preview_data.notes,
     )
     return HTMLResponse(content=html_content)
 
@@ -277,11 +280,14 @@ async def preview_document_pdf(
         show_tax_id=preview_data.show_tax_id,
         payment_schedule=[m.model_dump() for m in preview_data.payment_schedule] if preview_data.payment_schedule else None,
         reference=preview_data.reference,
+        due_date=preview_data.due_date,
+        rules=[r.model_dump() for r in preview_data.rules] if preview_data.rules else None,
+        notes=preview_data.notes,
     )
 
     pdf_buffer = await pdf_renderer.render_pdf_from_html(html_content)
 
-    prefix = "DEV" if doc_type == DocumentType.DEVIS else "FACT"
+    prefix = DocumentService.number_prefix(doc_type)
     filename = f"{preview_data.reference or prefix + '-Brouillon'}.pdf"
 
     return StreamingResponse(
@@ -385,30 +391,23 @@ async def send_document_email(
             pdf_bytes = None
 
     try:
+        email_payload = dict(
+            to_email=to_email,
+            client_name=client.name,
+            document_number=document.number or str(document_id),
+            total_amount=total_amount if grand_total else "",
+            client_url=client_url,
+            due_date=due_date_str,
+            user_name=user_name,
+            user_company=user_company,
+            custom_message=email_data.custom_message or "",
+        )
         if document.type == DocumentType.DEVIS:
-            result = await EmailService.send_devis(
-                to_email=to_email,
-                client_name=client.name,
-                document_number=document.number or str(document_id),
-                total_amount=total_amount,
-                client_url=client_url,
-                due_date=due_date_str,
-                user_name=user_name,
-                user_company=user_company,
-                custom_message=email_data.custom_message or "",
-            )
+            result = await EmailService.send_devis(**email_payload)
+        elif document.type == DocumentType.CONTRAT:
+            result = await EmailService.send_contrat(**email_payload)
         else:
-            result = await EmailService.send_facture(
-                to_email=to_email,
-                client_name=client.name,
-                document_number=document.number or str(document_id),
-                total_amount=total_amount,
-                client_url=client_url,
-                due_date=due_date_str,
-                user_name=user_name,
-                user_company=user_company,
-                custom_message=email_data.custom_message or "",
-            )
+            result = await EmailService.send_facture(**email_payload)
     except Exception as e:
         logger.error(f"❌ Erreur envoi email: {e}", exc_info=True)
         err_str = str(e).lower()
@@ -567,8 +566,8 @@ async def accept_document_as_client(
         if now > document.share_expires_at:
             raise HTTPException(status_code=410, detail="Lien expiré")
 
-    if document.type != DocumentType.DEVIS:
-        raise HTTPException(status_code=400, detail="Seuls les devis peuvent être acceptés")
+    if document.type not in (DocumentType.DEVIS, DocumentType.CONTRAT):
+        raise HTTPException(status_code=400, detail="Seuls les devis et les contrats peuvent être acceptés")
 
     if document.status not in [DocumentStatus.SENT, DocumentStatus.VIEWED]:
         raise HTTPException(
@@ -579,7 +578,7 @@ async def accept_document_as_client(
     if document.status == DocumentStatus.ACCEPTED:
         logger.info(f"ℹ️ Document {document.id} déjà accepté")
         return {
-            "message": "Devis déjà accepté",
+            "message": "Document déjà accepté",
             "status": document.status,
             "accepted_at": document.accepted_at,
             "signature_name": document.signature_name,
@@ -593,12 +592,18 @@ async def accept_document_as_client(
     logger.info(f"✍️ Signature enregistrée: '{data.signature_name}'")
 
     try:
-        acceptance_result = await DocumentService.handle_quote_acceptance(
-            db=db,
-            quote=document,
-        )
+        if document.type == DocumentType.CONTRAT:
+            acceptance_result = await DocumentService.handle_contract_acceptance(
+                db=db,
+                contract=document,
+            )
+        else:
+            acceptance_result = await DocumentService.handle_quote_acceptance(
+                db=db,
+                quote=document,
+            )
     except Exception as e:
-        logger.error(f"❌ Erreur handle_quote_acceptance: {e}", exc_info=True)
+        logger.error(f"❌ Erreur acceptation document: {e}", exc_info=True)
         document.signature_name = data.signature_name
         document.status = DocumentStatus.ACCEPTED
         document.accepted_at = to_naive_utc(datetime.now(timezone.utc))
@@ -615,13 +620,14 @@ async def accept_document_as_client(
     invoice = acceptance_result.get("invoice")
 
     logger.info(
-        f"✅ Devis {document.id} accepté par '{data.signature_name}'"
+        f"✅ {document.type.value} {document.id} accepté par '{data.signature_name}'"
         + (f" → facture {invoice.number} créée" if invoice else " (pas de facture auto)")
     )
 
+    accepted_label = "Contrat signé" if document.type == DocumentType.CONTRAT else "Devis accepté avec succès"
     return {
         "message": (
-            f"Devis accepté avec succès"
+            accepted_label
             + (f". Facture {invoice.number} créée automatiquement." if invoice else ".")
         ),
         "status": document.status,
@@ -660,9 +666,12 @@ async def refuse_document_as_client(
         if now > document.share_expires_at:
             raise HTTPException(status_code=410, detail="Lien expiré")
 
+    if document.type not in (DocumentType.DEVIS, DocumentType.CONTRAT):
+        raise HTTPException(status_code=400, detail="Seuls les devis et les contrats peuvent être refusés")
+
     if document.status == DocumentStatus.REFUSED:
         return {
-            "message": "Devis déjà refusé",
+            "message": "Document déjà refusé",
             "status": document.status,
             "refused_at": document.refused_at,
             "already_refused": True,
@@ -681,7 +690,7 @@ async def refuse_document_as_client(
     db.add(document)
     await db.commit()
 
-    logger.info(f"❌ Devis {document.id} refusé")
+    logger.info(f"❌ {document.type.value} {document.id} refusé")
 
     try:
         await NotificationService.notify_document_refused(document.id, db)
@@ -689,7 +698,7 @@ async def refuse_document_as_client(
         logger.error(f"❌ Erreur lors de la notification: {e}", exc_info=True)
 
     return {
-        "message": "Devis refusé",
+        "message": "Document refusé",
         "status": document.status,
         "refused_at": document.refused_at,
         "already_refused": False,
@@ -866,7 +875,7 @@ async def get_document_for_client(
 
     totals = DocumentService.calculate_totals(document.items)
 
-    can_validate = document.type == DocumentType.DEVIS and document.status in [
+    can_validate = document.type in (DocumentType.DEVIS, DocumentType.CONTRAT) and document.status in [
         DocumentStatus.SENT,
         DocumentStatus.VIEWED
     ]
@@ -899,7 +908,7 @@ async def get_document_for_client(
         "company_phone": getattr(document.owner, 'phone', None) if document.owner else None,
         "client_name": document.client.name if document.client else None,
         "client_email": document.client.email if document.client else None,
-        "can_validate": True,
+        "can_validate": can_validate,
         "payment_schedule": [
             {
                 "id": str(ms.id),
@@ -1393,6 +1402,29 @@ async def update_document(
         if not project_result.scalar_one_or_none():
             raise HTTPException(status_code=404, detail="Projet introuvable ou n'appartient pas à cet utilisateur")
 
+    link_contract_id = None
+    clear_contract_link = False
+    if "source_document_id" in document_data.model_fields_set:
+        if document.type != DocumentType.DEVIS:
+            raise HTTPException(
+                status_code=400,
+                detail="Seul un devis peut être lié à un contrat.",
+            )
+        if document_data.source_document_id is None:
+            clear_contract_link = True
+        else:
+            try:
+                await DocumentService.resolve_quote_contract_link(
+                    db=db,
+                    user_id=current_user.id,
+                    contract_id=document_data.source_document_id,
+                    client_id=document_data.client_id or document.client_id,
+                    project_id=document_data.project_id or document.project_id,
+                )
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            link_contract_id = document_data.source_document_id
+
     try:
         updated = await DocumentService.update_document(
             db=db,
@@ -1402,8 +1434,9 @@ async def update_document(
             template_id=document_data.template_id,
             layout_style=document_data.layout_style,
             due_date=document_data.due_date,
-            items=[item.model_dump() for item in document_data.items] if document_data.items else None,
+            items=[item.model_dump() for item in document_data.items] if document_data.items is not None else None,
             notes=document_data.notes,
+            rules=[r.model_dump() for r in document_data.rules] if document_data.rules is not None else None,
             primary_color=document_data.primary_color,
             secondary_color=document_data.secondary_color,
             accent_color=document_data.accent_color,
@@ -1412,6 +1445,8 @@ async def update_document(
             font_family=document_data.font_family,
             show_bank_details=document_data.show_bank_details,
             show_tax_id=document_data.show_tax_id,
+            source_document_id=link_contract_id,
+            clear_source_document_id=clear_contract_link,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -1819,6 +1854,20 @@ async def create_document(
     from app.models.client import Client
     from app.models.projet import Project
 
+    is_contract = document_data.type == DocumentType.CONTRAT
+
+    if is_contract and not document_data.project_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Un contrat doit être lié à un projet.",
+        )
+
+    if is_contract and document_data.payment_schedule:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Un contrat n'a pas d'échéancier de paiement. Utilisez un devis.",
+        )
+
     client_id = document_data.client_id
 
     if not client_id:
@@ -1835,6 +1884,11 @@ async def create_document(
                 logger.info(f"📋 Client récupéré depuis le projet: {client_id}")
 
         if not client_id:
+            if is_contract:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Impossible de créer un contrat sans client. Liez-le à un projet.",
+                )
             result = await db.execute(
                 select(Client)
                 .where(Client.user_id == current_user.id)
@@ -1871,6 +1925,21 @@ async def create_document(
                 detail="Projet introuvable ou n'appartient pas à cet utilisateur"
             )
 
+    source_document_id = document_data.source_document_id
+    if is_contract:
+        source_document_id = None
+    elif document_data.type == DocumentType.DEVIS and source_document_id:
+        try:
+            await DocumentService.resolve_quote_contract_link(
+                db=db,
+                user_id=current_user.id,
+                contract_id=source_document_id,
+                client_id=client_id,
+                project_id=document_data.project_id,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
     try:
         document = await DocumentService.create_document(
             db=db,
@@ -1884,6 +1953,8 @@ async def create_document(
             notes=document_data.notes,
             document_id=document_data.id,
             project_id=document_data.project_id,
+            source_document_id=source_document_id,
+            rules=[r.model_dump() for r in document_data.rules] if document_data.rules else None,
         )
         if document_data.payment_schedule:
             try:
@@ -1932,8 +2003,10 @@ def _enrich_document(doc, totals: dict) -> dict:
         "template_id": doc.template_id,
         "layout_style": getattr(doc, 'layout_style', 'classic'),
         "notes": doc.notes,
+        "rules": DocumentService.decode_rules(getattr(doc, "rules", None)),
         "items": doc.items,
         "project_id": getattr(doc, 'project_id', None),
+        "source_document_id": getattr(doc, "source_document_id", None),
         "primary_color": getattr(doc, 'primary_color', '#2563EB'),
         "secondary_color": getattr(doc, 'secondary_color', '#1E40AF'),
         "accent_color": getattr(doc, 'accent_color', '#DBEAFE'),

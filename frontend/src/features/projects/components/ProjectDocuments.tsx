@@ -3,6 +3,7 @@
 
 import { useProjectTree } from "../hooks/useProjectTree"
 import { ProjectQuoteGrid } from "./ProjectQuoteGrid"
+import { NewDocumentMenu } from "./NewDocumentMenu"
 import { Loader2, Folder } from "lucide-react"
 
 interface ProjectDocumentsProps {
@@ -11,7 +12,6 @@ interface ProjectDocumentsProps {
 
 export function ProjectDocuments({ projectId }: ProjectDocumentsProps) {
     const { data: tree, isLoading, refetch } = useProjectTree(projectId);
-    console.log(tree)
     if (isLoading) {
         return (
             <div className="flex h-full items-center justify-center min-h-[300px]">
@@ -20,7 +20,7 @@ export function ProjectDocuments({ projectId }: ProjectDocumentsProps) {
         );
     }
 
-    if (!tree || (tree.quotes.length === 0 && tree.standalone_invoices.length === 0)) {
+    if (!tree || (tree.quotes.length === 0 && (tree.contracts || []).length === 0 && tree.standalone_invoices.length === 0)) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center h-full min-h-[400px] text-center p-6">
                 <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 border border-[#2563EB]/20 flex items-center justify-center mb-4">
@@ -30,15 +30,9 @@ export function ProjectDocuments({ projectId }: ProjectDocumentsProps) {
                     Le projet est vide
                 </h3>
                 <p className="text-sm text-slate-400 max-w-sm mb-6">
-                    Aucun devis ni facture n'est encore associé à ce projet. Créez votre premier devis pour démarrer.
+                    Aucun document n&apos;est encore associé à ce projet. Créez un devis ou un contrat.
                 </p>
-                <a
-                    href={`/dashboard/quotes/create?project_id=${projectId}`}
-                    className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#2563EB] hover:bg-[#2563EB]/90 text-white shadow-lg shadow-[#2563EB]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                >
-                    <Folder className="w-4 h-4 mr-2" />
-                    Créer un devis pour ce projet
-                </a>
+                <NewDocumentMenu projectId={projectId} variant="empty" />
             </div>
         );
     }

@@ -28,6 +28,22 @@ from app.models.payment_schedule import PaymentSchedule, MilestoneStatus
 logger = logging.getLogger(__name__)
 
 
+def _decode_contract_rules(raw: str | None) -> list[dict]:
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+    except (TypeError, json.JSONDecodeError):
+        return []
+    if not isinstance(data, list):
+        return []
+    return [
+        {"title": str(item.get("title") or ""), "body": str(item.get("body") or "")}
+        for item in data
+        if isinstance(item, dict)
+    ]
+
+
 class PDFRenderer:
     """Moteur de rendu HTML/PDF/PNG haute performance pour les devis et factures."""
 
@@ -51,6 +67,7 @@ class PDFRenderer:
     }
 
     INVOICE_TEMPLATE = "facture.html"
+    CONTRACT_TEMPLATE = "contrat.html"
     DEFAULT_CURRENCY = "FCFA"
 
     def __init__(self):
@@ -126,6 +143,8 @@ class PDFRenderer:
     def _get_layout_file(self, layout_style: str, doc_type: DocumentType) -> str:
         if doc_type == DocumentType.FACTURE:
             return self.INVOICE_TEMPLATE
+        if doc_type == DocumentType.CONTRAT:
+            return self.CONTRACT_TEMPLATE
         return self.QUOTE_LAYOUT_MAP.get(layout_style, "classic.html")
 
     @staticmethod
@@ -518,11 +537,12 @@ class PDFRenderer:
             "template": template,
             "user": user,
             "client": client,
-            "items": document.items,
+            "items": document.items or [],
             "totals": totals,
             "currency": currency_label(currency_code),
             "currency_code": currency_code,
             "source_quote_number": source_quote_number,
+            "reglement": _decode_contract_rules(getattr(document, "rules", None)),
         }
         return context
 
@@ -606,7 +626,11 @@ class PDFRenderer:
             id=uuid4(),
             type=doc_type,
             status=DocumentStatus.DRAFT if doc_type == DocumentType.DEVIS else DocumentStatus.SENT,
-            number="DEV-2026-001" if doc_type == DocumentType.DEVIS else "FACT-2026-001",
+            number=(
+                "DEV-2026-001" if doc_type == DocumentType.DEVIS
+                else "CTR-2026-001" if doc_type == DocumentType.CONTRAT
+                else "FACT-2026-001"
+            ),
             created_at=datetime.now(timezone.utc),
             due_date=datetime.now(timezone.utc),
             user_id=user.id,

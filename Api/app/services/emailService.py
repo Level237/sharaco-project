@@ -204,6 +204,37 @@ class EmailService:
             html_content=html,
         )
 
+    @staticmethod
+    async def send_contrat(
+        to_email: str,
+        client_name: str,
+        document_number: str,
+        total_amount: str,
+        client_url: str,
+        due_date: str = None,
+        user_name: str = "",
+        user_company: str = "",
+        custom_message: str = "",
+    ) -> dict:
+        """Envoie un contrat avec le lien privé client."""
+        template = email_env.get_template("contrat.html")
+        html = template.render(
+            to_name=client_name,
+            document_number=document_number,
+            total_amount=total_amount,
+            client_url=client_url,
+            due_date=due_date,
+            user_name=user_name,
+            user_company=user_company,
+            custom_message=custom_message,
+        )
+
+        return await EmailService._send_email(
+            to_email=to_email,
+            subject=f"Contrat {document_number} de {user_company}",
+            html_content=html,
+        )
+
     # ═══════════════════════════════════════════════════════════════
     # ✅ NOUVEAU : Email de prévention pour factures arrivant à échéance
     # ═══════════════════════════════════════════════════════════════

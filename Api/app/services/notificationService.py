@@ -39,8 +39,11 @@ class NotificationService:
                 logger.warning(f"⚠️ Document {document_id} sans owner")
                 return
 
+            is_contract = getattr(document.type, "value", document.type) == "CONTRAT"
+            document_kind = "Contrat" if is_contract else "Devis"
+            document_label = "contrat" if is_contract else "devis"
             logger.info(
-                f"🔔 Notification acceptation : Devis {document.number} accepté"
+                f"🔔 Notification acceptation : {document_kind} {document.number} accepté"
             )
 
             # ✅ Calcul du montant avec la devise de l'utilisateur propriétaire
@@ -61,10 +64,12 @@ class NotificationService:
             # Envoyer l'email
             result = await EmailService.send_notification(
                 to_email=document.owner.email,
-                subject=f"✅ Devis {document.number} accepté !",
+                subject=f"✅ {document_kind} {document.number} accepté",
                 template="document_accepted.html",
                 context={
                     "user_name": user_name,
+                    "document_kind": document_kind,
+                    "document_label": document_label,
                     "document_number": document.number or str(document_id),
                     "client_name": document.client.name if document.client else "Client",
                     "signature_name": document.signature_name or "Non précisé",
@@ -105,8 +110,11 @@ class NotificationService:
                 logger.warning(f"⚠️ Document {document_id} sans owner")
                 return
 
+            is_contract = getattr(document.type, "value", document.type) == "CONTRAT"
+            document_kind = "Contrat" if is_contract else "Devis"
+            document_label = "contrat" if is_contract else "devis"
             logger.info(
-                f"🔔 Notification refus : Devis {document.number} refusé"
+                f"🔔 Notification refus : {document_kind} {document.number} refusé"
             )
 
             # ✅ Calcul du montant avec la devise de l'utilisateur propriétaire
@@ -127,10 +135,12 @@ class NotificationService:
             # Envoyer l'email
             result = await EmailService.send_notification(
                 to_email=document.owner.email,
-                subject=f"❌ Devis {document.number} refusé",
+                subject=f"❌ {document_kind} {document.number} refusé",
                 template="document_refused.html",
                 context={
                     "user_name": user_name,
+                    "document_kind": document_kind,
+                    "document_label": document_label,
                     "document_number": document.number or str(document_id),
                     "client_name": document.client.name if document.client else "Client",
                     "amount": amount,

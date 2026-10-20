@@ -78,6 +78,15 @@ export interface Project {
     attachments?: ProjectAttachment[];
 }
 
+export interface ProjectTreeContract {
+    id: string;
+    number?: string | null;
+    status: string;
+    created_at: string;
+    amount_cents: number;
+    source_document_id?: string | null;
+}
+
 export interface ProjectTreeStandaloneInvoice {
     id: string;
     number?: string | null;
@@ -94,6 +103,7 @@ export interface ProjectTreeSummary {
     total_overdue: number;
     total_pending: number;
     quote_count: number;
+    contract_count?: number;
     invoice_count: number;
     paid_invoice_count: number;
     overdue_invoice_count: number;
@@ -106,7 +116,9 @@ export interface ProjectTreeResponse {
     project_name: string;
     client_id?: string | null;
     client_name?: string | null;
+    client_email?: string | null;
     quotes: ProjectTreeQuote[];
+    contracts?: ProjectTreeContract[];
     standalone_invoices: ProjectTreeStandaloneInvoice[];
     summary: ProjectTreeSummary;
 }

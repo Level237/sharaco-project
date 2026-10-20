@@ -13,6 +13,7 @@ def _utcnow_naive() -> datetime:
 class DocumentType(str, Enum):
     DEVIS = "DEVIS"
     FACTURE = "FACTURE"
+    CONTRAT = "CONTRAT"
 
 class InvoiceType(str, Enum):
     STANDARD = "STANDARD"   # montant total
@@ -74,6 +75,10 @@ class Document(SQLModel, table=True):
     sent_at: Optional[datetime] = None  # Date d'envoi par email
     viewed_at: Optional[datetime] = None  # Première visualisation
     notes: Optional[str] = Field(default=None, description="Notes/conditions visibles sur le document")
+    rules: Optional[str] = Field(
+        default=None,
+        description="Règlement intérieur du contrat, JSON [{title, body}]",
+    )
 
     accepted_at: Optional[datetime] = None
     refused_at: Optional[datetime] = None

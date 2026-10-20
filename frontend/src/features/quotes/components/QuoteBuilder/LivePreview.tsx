@@ -35,7 +35,7 @@ function draftToPreviewRequest(
         !(draft.paymentMilestones.length === 1 && draft.paymentMilestones[0].percent === 100);
 
     return {
-        type: "DEVIS",
+        type: draft.documentType || "DEVIS",
         client_name: draft.clientName || "Client Exemple",
         client_email: draft.clientEmail || "",
         client_address: draft.clientAddress || "",
@@ -59,6 +59,8 @@ function draftToPreviewRequest(
         show_bank_details: true,
         show_tax_id: true,
         notes: draft.notes || null,
+        rules: draft.rules || null,
+        due_date: draft.endDate ? `${draft.endDate}T12:00:00` : null,
         reference: draft.reference || null,
         payment_schedule: hasValidSchedule
             ? draft.paymentMilestones!.map((ms, idx) => ({

@@ -1,6 +1,6 @@
 # app/schemas/document.py
 
-from pydantic import BaseModel, field_validator,Field
+from pydantic import BaseModel, field_validator, model_validator, Field
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -51,6 +51,11 @@ class MilestoneRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ContractRule(BaseModel):
+    title: str = ""
+    body: str = ""
+
 
 class DocumentItemCreate(BaseModel):
     description: str
@@ -156,9 +161,14 @@ class DocumentCreate(BaseModel):
     template_id: Optional[UUID] = None
     due_date: Optional[datetime] = None
     payment_schedule: Optional[list[MilestoneInput]] = None
-    items: List[DocumentItemCreate]
+    items: List[DocumentItemCreate] = []
     notes: Optional[str] = None
+    rules: Optional[List[ContractRule]] = None
     project_id: Optional[UUID] = Field(None, description="ID du projet associé (optionnel)")
+    source_document_id: Optional[UUID] = Field(
+        None,
+        description="Devis : UUID du contrat lié. Facture : UUID du devis d'origine. Contrat : toujours vide.",
+    )
     # ✅ Champs de style
     primary_color: Optional[str] = "#2563EB"
     secondary_color: Optional[str] = "#1E40AF"
@@ -177,12 +187,11 @@ class DocumentCreate(BaseModel):
             raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
         return v or "classic"
 
-    @field_validator("items")
-    @classmethod
-    def items_must_not_be_empty(cls, v: list) -> list:
-        if not v:
+    @model_validator(mode="after")
+    def items_required_except_contract(self):
+        if self.type != DocumentType.CONTRAT and not self.items:
             raise ValueError("Un document doit contenir au moins une ligne")
-        return v
+        return self
 
 
 class DocumentRead(BaseModel):
@@ -201,7 +210,9 @@ class DocumentRead(BaseModel):
     layout_style: str = "classic"
     items: List[DocumentItemRead] = []
     notes: Optional[str] = None
+    rules: Optional[List[ContractRule]] = None
     project_id: Optional[UUID] = None
+    source_document_id: Optional[UUID] = None
     
     # ✅ Champs de style
     primary_color: Optional[str] = "#2563EB"
@@ -230,7 +241,12 @@ class DocumentUpdate(BaseModel):
     due_date: Optional[datetime] = None
     items: Optional[List[DocumentItemCreate]] = None
     notes: Optional[str] = None
-    
+    rules: Optional[List[ContractRule]] = None
+    source_document_id: Optional[UUID] = Field(
+        None,
+        description="Devis : UUID du contrat lié (null pour détacher)",
+    )
+
     # ✅ NOUVEAU : Champs de style/couleurs
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
@@ -295,6 +311,8 @@ class DocumentPreviewRequest(BaseModel):
     show_bank_details: bool = True
     show_tax_id: bool = True
     notes: Optional[str] = None
+    rules: Optional[List[ContractRule]] = None
+    due_date: Optional[datetime] = None
     reference: Optional[str] = None
     payment_schedule: Optional[List[MilestonePreviewInput]] = None
 

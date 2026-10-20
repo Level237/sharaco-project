@@ -44,6 +44,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
 
     const [draft, setDraft] = useState<QuoteDraft>({
         id: null,
+        documentType: "DEVIS",
         clientId: "",
         clientName: "",
         clientEmail: "",
@@ -176,6 +177,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
 
                 setDraft({
                     id: doc.id,
+                    documentType: doc.type || "DEVIS",
                     projectId: (doc as any).project_id || null,
                     clientId: doc.client_id,
                     clientName: clientData.name,
@@ -288,7 +290,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
             !(draft.paymentMilestones.length === 1 && draft.paymentMilestones[0].percent === 100);
 
         const previewRequest = {
-            type: "DEVIS",
+            type: draft.documentType || "DEVIS",
             client_name: draft.clientName || "Client Exemple",
             client_email: draft.clientEmail || "",
             client_address: draft.clientAddress || "",

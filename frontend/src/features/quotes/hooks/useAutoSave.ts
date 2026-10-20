@@ -53,7 +53,7 @@ export function useAutoSave({ draft, enabled = true }: UseAutoSaveProps) {
 
         try {
             const payload = {
-    type: 'DEVIS',
+    type: draftRef.current.documentType || 'DEVIS',
     client_id: draftRef.current.clientId,
     project_id: draftRef.current.projectId || undefined,
     items: draftRef.current.items.map((item: any) => ({

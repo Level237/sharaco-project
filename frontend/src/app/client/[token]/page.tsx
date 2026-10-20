@@ -29,7 +29,7 @@ import { MilestonePreview } from "@/features/quotes/types";
 
 interface ClientDocument {
     id: string;
-    type: "DEVIS" | "FACTURE";
+    type: "DEVIS" | "FACTURE" | "CONTRAT";
     status: string;
     number?: string;
     created_at: string;
@@ -154,6 +154,7 @@ useEffect(() => {
 
     const handleAccept = async () => {
         if (document?.type === "FACTURE") return;
+        const label = document?.type === "CONTRAT" ? "contrat" : "devis";
         if (!signatureName.trim()) {
             toast({
                 title: "Nom requis",
@@ -173,11 +174,11 @@ useEffect(() => {
             if (response.already_accepted) {
                 toast({
                     title: "ℹ️ Déjà accepté",
-                    description: "Ce devis a déjà été accepté.",
+                    description: `Ce ${label} a déjà été accepté.`,
                 });
             } else {
                 toast({
-                    title: "✅ Devis accepté !",
+                    title: document?.type === "CONTRAT" ? "Contrat signé" : "Devis accepté",
                     description: "Le prestataire a été notifié.",
                 });
             }
@@ -212,11 +213,11 @@ useEffect(() => {
             if (response.already_refused) {
                 toast({
                     title: "ℹ️ Déjà refusé",
-                    description: "Ce devis a déjà été refusé.",
+                    description: `Ce ${document?.type === "CONTRAT" ? "contrat" : "devis"} a déjà été refusé.`,
                 });
             } else {
                 toast({
-                    title: "Devis refusé",
+                    title: document?.type === "CONTRAT" ? "Contrat refusé" : "Devis refusé",
                     description: "Votre retour a été enregistré.",
                 });
             }
@@ -272,6 +273,8 @@ useEffect(() => {
 
 
     const showActions = document.can_validate && !actionCompleted;
+    const isSignable = document.type === "DEVIS" || document.type === "CONTRAT";
+    const docNoun = document.type === "CONTRAT" ? "contrat" : "devis";
     return (
         <div className="min-h-screen bg-black text-zinc-100 font-sans pb-32 selection:bg-violet-500/30">
             {/* Top Action Bar */}
@@ -290,7 +293,7 @@ useEffect(() => {
 
                     {/* Actions ou Indicateur de statut en haut à droite */}
                     <div className="flex items-center gap-3">
-                        {document.type === "DEVIS" ? (
+                        {isSignable ? (
                             document.can_validate && document.status !== "ACCEPTED" && document.status !== "REFUSED" ? (
                                 <>
                                     <Button
@@ -306,7 +309,7 @@ useEffect(() => {
                                         className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold h-10 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all"
                                     >
                                         <CheckCircle2 className="mr-2 h-4 w-4" />
-                                        Accepter le devis
+                                        {document.type === "CONTRAT" ? "Signer le contrat" : "Accepter le devis"}
                                     </Button>
                                 </>
                             ) : (
@@ -315,7 +318,7 @@ useEffect(() => {
                                         <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
                                             <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                                             <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
-                                                Devis Accepté
+                                                {document.type === "CONTRAT" ? "Contrat signé" : "Devis accepté"}
                                             </span>
                                         </div>
                                     )}
@@ -323,7 +326,7 @@ useEffect(() => {
                                         <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.1)]">
                                             <XCircle className="h-4 w-4 text-rose-400" />
                                             <span className="text-xs font-black uppercase tracking-wider text-rose-400">
-                                                Devis Refusé
+                                                {document.type === "CONTRAT" ? "Contrat refusé" : "Devis refusé"}
                                             </span>
                                         </div>
                                     )}
@@ -371,14 +374,16 @@ useEffect(() => {
             <div className="max-w-[1000px] w-full mx-auto mt-10 px-4 sm:px-6">
 
                 {/* Bandeau statut détaillé */}
-                {document.type === "DEVIS" && document.status === "ACCEPTED" && (
+                {isSignable && document.status === "ACCEPTED" && (
                     <div className="mb-10 relative overflow-hidden bg-emerald-950/20 border border-emerald-500/20 rounded-3xl p-8 text-center backdrop-blur-xl">
                         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent" />
                         <div className="relative z-10">
                             <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-emerald-500/10 mb-4 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
                                 <CheckCircle2 className="h-10 w-10 text-emerald-400" />
                             </div>
-                            <h2 className="text-3xl font-black text-white mb-2">Félicitations, devis accepté !</h2>
+                            <h2 className="text-3xl font-black text-white mb-2">
+                                {document.type === "CONTRAT" ? "Contrat signé" : "Félicitations, devis accepté"}
+                            </h2>
                             <p className="text-zinc-400 text-lg">
                                 Validé avec succès par <strong className="text-emerald-400">{document.signature_name}</strong>
                                 {document.accepted_at && (
@@ -389,14 +394,16 @@ useEffect(() => {
                     </div>
                 )}
 
-                {document.type === "DEVIS" && document.status === "REFUSED" && (
+                {isSignable && document.status === "REFUSED" && (
                     <div className="mb-10 relative overflow-hidden bg-rose-950/20 border border-rose-500/20 rounded-3xl p-8 text-center backdrop-blur-xl">
                         <div className="absolute inset-0 bg-gradient-to-b from-rose-500/5 to-transparent" />
                         <div className="relative z-10">
                             <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-rose-500/10 mb-4 shadow-[0_0_40px_rgba(244,63,94,0.2)]">
                                 <XCircle className="h-10 w-10 text-rose-400" />
                             </div>
-                            <h2 className="text-3xl font-black text-white mb-2">Devis refusé</h2>
+                            <h2 className="text-3xl font-black text-white mb-2">
+                                {document.type === "CONTRAT" ? "Contrat refusé" : "Devis refusé"}
+                            </h2>
                             {document.refusal_reason && (
                                 <p className="text-zinc-400 text-lg italic max-w-2xl mx-auto">
                                     "{document.refusal_reason}"
@@ -450,7 +457,7 @@ useEffect(() => {
                 {/* ✅ Actions de validation supprimées d'ici, déplacées dans le header */}
 
                 {/* Message si le devis est déjà traité */}
-                {document.type === "DEVIS" && (document.status === "ACCEPTED" || document.status === "REFUSED") && (
+                {isSignable && (document.status === "ACCEPTED" || document.status === "REFUSED") && (
                     <div className="bg-zinc-900/30 border border-white/5 rounded-3xl p-8 text-center mt-8">
                         <p className="text-zinc-500 text-base">
                             Ce document est verrouillé car il a déjà été traité.
@@ -464,7 +471,7 @@ useEffect(() => {
             {/* ═══════════════════════════════════════════════════════════════ */}
             {/* MODAL ACCEPTER (DEVIS UNIQUEMENT) */}
             {/* ═══════════════════════════════════════════════════════════════ */}
-            {document.type === "DEVIS" && (
+            {isSignable && (
                 <Dialog open={showAcceptModal} onOpenChange={setShowAcceptModal}>
                     <DialogContent className="sm:max-w-[500px] bg-zinc-950/90 backdrop-blur-3xl border-white/10 text-white shadow-[0_0_100px_rgba(16,185,129,0.15)] rounded-[2rem] p-0 overflow-hidden">
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400/0 via-emerald-400 to-emerald-400/0 opacity-50" />
@@ -480,7 +487,7 @@ useEffect(() => {
                                             Validation finale
                                         </DialogTitle>
                                         <DialogDescription className="text-zinc-400 mt-2 text-base">
-                                            Vous êtes sur le point d'accepter le devis <strong className="text-white">{document.number}</strong>
+                                            Vous êtes sur le point d&apos;accepter le {docNoun} <strong className="text-white">{document.number}</strong>
                                         </DialogDescription>
                                     </div>
                                 </div>
@@ -488,6 +495,7 @@ useEffect(() => {
 
                             <div className="space-y-6">
                                 {/* Résumé du devis */}
+                                {document.grand_total_cents > 0 && (
                                 <div className="p-5 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-bold text-zinc-400">Montant total TTC</span>
@@ -496,6 +504,7 @@ useEffect(() => {
                                         </span>
                                     </div>
                                 </div>
+                                )}
 
                                 {/* Signature */}
                                 <div className="space-y-3">
@@ -512,7 +521,7 @@ useEffect(() => {
                                         autoFocus
                                     />
                                     <p className="text-xs text-zinc-500">
-                                        En signant, vous acceptez les conditions de cette proposition commerciale.
+                                        En signant, vous acceptez les conditions de ce {docNoun}.
                                     </p>
                                 </div>
                             </div>
@@ -537,7 +546,7 @@ useEffect(() => {
                                             Signature...
                                         </>
                                     ) : (
-                                        <>Signer le devis</>
+                                        <>{document.type === "CONTRAT" ? "Signer le contrat" : "Signer le devis"}</>
                                     )}
                                 </Button>
                             </div>
@@ -549,7 +558,7 @@ useEffect(() => {
             {/* ═══════════════════════════════════════════════════════════════ */}
             {/* MODAL REFUSER (DEVIS UNIQUEMENT) */}
             {/* ═══════════════════════════════════════════════════════════════ */}
-            {document.type === "DEVIS" && (
+            {isSignable && (
                 <Dialog open={showRefuseModal} onOpenChange={setShowRefuseModal}>
                     <DialogContent className="sm:max-w-[500px] bg-zinc-950/90 backdrop-blur-3xl border-white/10 text-white shadow-[0_0_100px_rgba(244,63,94,0.15)] rounded-[2rem] p-0 overflow-hidden">
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500/0 via-rose-500 to-rose-500/0 opacity-50" />

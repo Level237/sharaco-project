@@ -1,7 +1,7 @@
 // app/dashboard/quotes/create/page.tsx
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { TemplateSelector } from "@/features/templates/components/TemplateSelector";
 import { quotesApi } from "@/features/quotes/api/quotesApi";
@@ -25,6 +25,7 @@ function QuoteBuilderContent() {
 
     const isChoosing = searchParams.has('choose-template');
     const queryProjectId = searchParams.get('project_id');
+    const queryType = searchParams.get('type');
     const [isCreating, setIsCreating] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<string>(queryProjectId || "");
 
@@ -38,11 +39,40 @@ function QuoteBuilderContent() {
 
     const [newClient, setNewClient] = useState({ name: "", email: "", phone: "", address: "" });
     const createClient = useCreateClient();
+    const contractStarted = useRef(false);
 
     const { data: projects = [] } = useQuery({
         queryKey: ['projects'],
         queryFn: () => projectsApi.getAll(),
     });
+
+    useEffect(() => {
+        if (queryType !== "CONTRAT" || !queryProjectId || contractStarted.current) return;
+        contractStarted.current = true;
+        setIsCreating(true);
+        quotesApi.create({
+            type: "CONTRAT",
+            layout_style: "classic",
+            project_id: queryProjectId,
+                    items: [],
+            notes: "",
+        }).then((document) => {
+            router.replace(`/dashboard/contracts/${document.id}`);
+        }).catch((error: unknown) => {
+            contractStarted.current = false;
+            const message = error instanceof Error ? error.message : "Impossible de créer le contrat.";
+            toast({ title: "Erreur", description: message, variant: "destructive" });
+            setIsCreating(false);
+        });
+    }, [queryType, queryProjectId, router, toast]);
+
+    if (queryType === "CONTRAT") {
+        return (
+            <div className="flex h-[100dvh] items-center justify-center">
+                <Loader2 className="h-10 w-10 animate-spin text-[#2563EB]" />
+            </div>
+        );
+    }
 
     if (!isChoosing) {
         return (

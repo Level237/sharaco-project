@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ProjectDocuments } from "@/features/projects/components/ProjectDocuments"
+import { NewDocumentMenu } from "@/features/projects/components/NewDocumentMenu"
 import { Loader2, ArrowLeft, Trash2, PlusCircle, Settings, RefreshCw } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useDeleteProject, useProject } from "@/features/projects/hooks/useProject"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu"
@@ -68,12 +68,9 @@ export default function ProjectDetailPage() {
                                     <span className="truncate px-2 py-1 text-slate-200">{project.name}</span>
                                 </div>
                             </div>
-                            <Link href={`/dashboard/quotes/create?project_id=${project.id}`} className="shrink-0">
-                                <Button size="sm" className="h-8 gap-1.5 bg-[#2563EB] px-3 text-xs text-white hover:bg-[#2563EB]/90">
-                                    <PlusCircle className="h-3.5 w-3.5" />
-                                    <span className="hidden sm:inline">Nouveau devis</span>
-                                </Button>
-                            </Link>
+                            <div className="shrink-0">
+                                <NewDocumentMenu projectId={project.id} />
+                            </div>
                         </div>
                         <div className="flex flex-1 flex-col py-4">
                             <ProjectDocuments projectId={project.id} />
@@ -85,6 +82,12 @@ export default function ProjectDetailPage() {
                         <Link href={`/dashboard/quotes/create?project_id=${project.id}`} className="flex w-full items-center">
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Nouveau devis
+                        </Link>
+                    </ContextMenuItem>
+                    <ContextMenuItem asChild className="cursor-pointer focus:bg-[#2563EB] focus:text-white">
+                        <Link href={`/dashboard/quotes/create?project_id=${project.id}&type=CONTRAT`} className="flex w-full items-center">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Nouveau contrat
                         </Link>
                     </ContextMenuItem>
                     <ContextMenuSeparator className="bg-white/10" />

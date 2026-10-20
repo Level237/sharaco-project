@@ -231,18 +231,18 @@
             </div>
             <div class="content">
                 <div class="eyebrow" style="color: #1c1c1e; background-color: #f2f2f4;">Mise à jour</div>
-                <h1 class="greeting">Devis refusé</h1>
+                <h1 class="greeting">{{ document_kind | default('Devis') }} refusé</h1>
                 
                 <p class="text-body">
                     Bonjour <strong>{{ user_name }}</strong>,<br><br>
-                    Votre client <strong>{{ client_name }}</strong> a malheureusement décliné votre proposition commerciale.
+                    Votre client <strong>{{ client_name }}</strong> a décliné votre {{ document_label | default('devis') }}.
                 </p>
 
                 <div class="document-card">
                     <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
                         <tr>
                             <td style="border-bottom: 1px solid #e5e5ea;">
-                                <p class="document-label">Numéro du devis</p>
+                                <p class="document-label">Numéro du {{ document_label | default('devis') }}</p>
                                 <p class="document-value">{{ document_number }}</p>
                             </td>
                         </tr>

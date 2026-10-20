@@ -24,6 +24,7 @@ export interface Milestone {
 
 export interface QuoteDraft {
     id?: string | null;              // UUID du document (si sauvegardé)
+    documentType?: "DEVIS" | "FACTURE" | "CONTRAT";
     projectId?: string | null;       // ID du projet lié (optionnel)
     clientId?: string;        // ID du client en DB
     clientName: string;
@@ -45,6 +46,8 @@ export interface QuoteDraft {
     paymentMode: 'simple' | 'schedule';
     paymentMilestones: Milestone[];
     notes?: string;
+    endDate?: string | null;
+    rules?: { title: string; body: string }[];
     internalNotes?: string;
     logoUrl?: string | null;
     brandColor?: string;

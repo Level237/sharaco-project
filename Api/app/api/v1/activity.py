@@ -124,13 +124,21 @@ async def get_activity_feed(
                 action = "ACCEPTED"
                 icon = "check-circle"
                 color = "emerald"
-                subtitle = f"Devis accepté par {client_name}"
+                subtitle = (
+                    f"Contrat signé par {client_name}"
+                    if doc.type == DocumentType.CONTRAT
+                    else f"Devis accepté par {client_name}"
+                )
                 timestamp = doc.accepted_at or doc.created_at
             elif doc.status == DocumentStatus.REFUSED:
                 action = "REFUSED"
                 icon = "x-circle"
                 color = "rose"
-                subtitle = f"Devis refusé par {client_name}"
+                subtitle = (
+                    f"Contrat refusé par {client_name}"
+                    if doc.type == DocumentType.CONTRAT
+                    else f"Devis refusé par {client_name}"
+                )
                 timestamp = doc.refused_at or doc.created_at
             elif doc.status == DocumentStatus.SENT:
                 action = "SENT"
@@ -162,7 +170,11 @@ async def get_activity_feed(
                 "subtitle": subtitle,
                 "icon": icon,
                 "color": color,
-                "link": f"/dashboard/quotes/{doc.id}" if doc.type == DocumentType.DEVIS else f"/dashboard/invoices/{doc.id}",
+                "link": (
+                    f"/dashboard/quotes/{doc.id}" if doc.type == DocumentType.DEVIS
+                    else f"/dashboard/contracts/{doc.id}" if doc.type == DocumentType.CONTRAT
+                    else f"/dashboard/invoices/{doc.id}"
+                ),
                 "timestamp": timestamp.isoformat(),
                 "metadata": {
                     "status": doc.status.value if hasattr(doc.status, 'value') else doc.status,

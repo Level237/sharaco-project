@@ -231,18 +231,18 @@
             </div>
             <div class="content">
                 <div class="eyebrow" style="color: #000000; background-color: #f2f2f4;">Bonne nouvelle</div>
-                <h1 class="greeting">Devis accepté ! 🎉</h1>
+                <h1 class="greeting">{{ document_kind | default('Devis') }} accepté</h1>
                 
                 <p class="text-body">
                     Bonjour <strong>{{ user_name }}</strong>,<br><br>
-                    Excellente nouvelle ! Votre devis a été accepté et signé par <strong>{{ client_name }}</strong>.
+                    Votre {{ document_label | default('devis') }} a été accepté et signé par <strong>{{ client_name }}</strong>.
                 </p>
 
                 <div class="document-card">
                     <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
                         <tr>
                             <td style="border-bottom: 1px solid #e5e5ea;">
-                                <p class="document-label">Numéro du devis</p>
+                                <p class="document-label">Numéro du {{ document_label | default('devis') }}</p>
                                 <p class="document-value">{{ document_number }}</p>
                             </td>
                         </tr>

@@ -32,6 +32,7 @@ export function useSendEmail() {
             // Invalider le cache du document pour mettre à jour le statut
             queryClient.invalidateQueries({ queryKey: ['document'] });
             queryClient.invalidateQueries({ queryKey: ['documents'] });
+            queryClient.invalidateQueries({ queryKey: ['project-tree'] });
 
             toast({
                 title: 'Email envoyé !',

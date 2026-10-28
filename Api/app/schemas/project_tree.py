@@ -62,6 +62,7 @@ class ProjectTreeContract(BaseModel):
     created_at: datetime
     amount_cents: int
     source_document_id: Optional[UUID] = None
+    layout_style: Optional[str] = None
 
 
 class ProjectTreeStandaloneInvoice(BaseModel):

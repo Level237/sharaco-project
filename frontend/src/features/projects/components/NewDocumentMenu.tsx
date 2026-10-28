@@ -13,6 +13,8 @@ import {
 import { quotesApi } from "@/features/quotes/api/quotesApi"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { ContractKindPicker } from "@/features/contracts/components/ContractKindPicker"
+import { DEFAULT_CONTRACT_RULES, type ContractKind } from "@/features/contracts/kinds"
 
 interface NewDocumentMenuProps {
     projectId: string;
@@ -23,20 +25,22 @@ export function NewDocumentMenu({ projectId, variant = "header" }: NewDocumentMe
     const router = useRouter();
     const { toast } = useToast();
     const [creating, setCreating] = useState(false);
+    const [pickerOpen, setPickerOpen] = useState(false);
 
     const createQuote = () => {
         router.push(`/dashboard/quotes/create?project_id=${projectId}`);
     };
 
-    const createContract = async () => {
+    const createContract = async (kind: ContractKind) => {
         setCreating(true);
         try {
             const document = await quotesApi.create({
                 type: "CONTRAT",
-                layout_style: "classic",
+                layout_style: kind,
                 project_id: projectId,
                 items: [],
                 notes: "",
+                rules: DEFAULT_CONTRACT_RULES[kind],
             });
             router.push(`/dashboard/contracts/${document.id}`);
         } catch (error: unknown) {
@@ -46,8 +50,18 @@ export function NewDocumentMenu({ projectId, variant = "header" }: NewDocumentMe
         }
     };
 
+    const picker = (
+        <ContractKindPicker
+            open={pickerOpen}
+            onOpenChange={setPickerOpen}
+            onSelect={createContract}
+            busy={creating}
+        />
+    );
+
     if (variant === "card") {
         return (
+            <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <button type="button" className="group flex h-full w-full flex-col outline-none" disabled={creating}>
@@ -59,13 +73,16 @@ export function NewDocumentMenu({ projectId, variant = "header" }: NewDocumentMe
                         </div>
                     </button>
                 </DropdownMenuTrigger>
-                <MenuItems onQuote={createQuote} onContract={createContract} />
+                <MenuItems onQuote={createQuote} onContract={() => setPickerOpen(true)} />
             </DropdownMenu>
+            {picker}
+            </>
         );
     }
 
     if (variant === "empty") {
         return (
+            <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button className="bg-[#2563EB] text-white hover:bg-[#2563EB]/90" disabled={creating}>
@@ -73,12 +90,15 @@ export function NewDocumentMenu({ projectId, variant = "header" }: NewDocumentMe
                         Nouveau document
                     </Button>
                 </DropdownMenuTrigger>
-                <MenuItems onQuote={createQuote} onContract={createContract} />
+                <MenuItems onQuote={createQuote} onContract={() => setPickerOpen(true)} />
             </DropdownMenu>
+            {picker}
+            </>
         );
     }
 
     return (
+        <>
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button
@@ -90,8 +110,10 @@ export function NewDocumentMenu({ projectId, variant = "header" }: NewDocumentMe
                     <span className="hidden sm:inline">Nouveau document</span>
                 </Button>
             </DropdownMenuTrigger>
-            <MenuItems onQuote={createQuote} onContract={createContract} />
+            <MenuItems onQuote={createQuote} onContract={() => setPickerOpen(true)} />
         </DropdownMenu>
+        {picker}
+        </>
     );
 }
 

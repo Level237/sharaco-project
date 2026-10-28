@@ -14,6 +14,7 @@ import { projectHref } from "@/features/projects/lib/paths"
 import type { QuoteDraft } from "@/features/quotes/types/QuoteBuilder"
 import { ContractSidebar } from "./ContractSidebar"
 import type { ContractDraft } from "../types"
+import { normalizeContractKind } from "../kinds"
 
 interface ContractEditorProps {
     documentId: string;
@@ -82,6 +83,7 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
                         title: rule.title || "",
                         body: rule.body || "",
                     })),
+                    layoutStyle: normalizeContractKind(doc.layout_style),
                 });
             } catch {
                 toast({ title: "Erreur", description: "Contrat introuvable.", variant: "destructive" });
@@ -140,7 +142,7 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
             notes: draft.notes,
             endDate: draft.endDate || null,
             rules: draft.rules,
-            layoutStyle: "classic",
+            layoutStyle: draft.layoutStyle || "prestation",
         };
     }, [draft, clientId]);
 
@@ -150,6 +152,7 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
         try {
             await quotesApi.update(documentId, {
                 notes: draft.notes,
+                layout_style: draft.layoutStyle,
                 due_date: draft.endDate ? `${draft.endDate}T12:00:00` : null,
                 rules: draft.rules.filter((rule) => rule.title.trim() || rule.body.trim()),
                 items: draft.items
@@ -240,7 +243,7 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
             <main className="relative min-h-[100dvh] min-w-0 flex-1 overflow-hidden bg-[#f4f1ea] pt-14 sm:pt-16">
                 <div className="h-full overflow-auto px-3 py-4 pb-28 sm:px-6 sm:py-6 lg:pb-6">
                     <div className="mx-auto w-full max-w-[900px]">
-                        <LivePreview draft={previewDraft} layoutStyle="classic" />
+                        <LivePreview draft={previewDraft} layoutStyle={draft.layoutStyle || "prestation"} />
                     </div>
                 </div>
             </main>

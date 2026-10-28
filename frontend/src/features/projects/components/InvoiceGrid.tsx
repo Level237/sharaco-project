@@ -1,31 +1,16 @@
-// features/projects/components/InvoiceGrid.tsx
 "use client"
 
-import { useState, useMemo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { 
-    ChevronLeft, 
-    CheckCircle2, 
-    AlertTriangle, 
-    Clock, 
-    FileText, 
-    TrendingUp, 
-    Wallet, 
-    ArrowUpRight, 
-    Eye, 
-    Plus, 
-    RefreshCw, 
-    LayoutGrid, 
-    List, 
-    Search, 
-    Calendar,
-    Receipt,
-    ShieldAlert,
-    Loader2
+import { useMemo, useState } from "react"
+import {
+    ChevronLeft,
+    Eye,
+    Loader2,
+    Plus,
+    Search,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/features/quotes/lib/formatCurrency"
-import { ProjectTreeQuote, ProjectTreeInvoice } from "../types"
+import { ProjectTreeInvoice, ProjectTreeQuote } from "../types"
 import { quotesApi } from "@/features/quotes/api/quotesApi"
 import { DocumentPreview } from "@/features/quotes/components/DocumentPreview"
 import { toast } from "sonner"
@@ -39,710 +24,292 @@ interface InvoiceGridProps {
     onRefresh?: () => void;
 }
 
-const statusConfig: Record<string, { label: string; color: string; bg: string; border: string; glow: string; icon: any }> = {
-    DRAFT: { 
-        label: "Brouillon", 
-        color: "text-slate-400", 
-        bg: "bg-slate-500/10", 
-        border: "border-slate-500/20",
-        glow: "from-slate-500/20 to-transparent",
-        icon: FileText 
-    },
-    SENT: { 
-        label: "Envoyée", 
-        color: "text-blue-400", 
-        bg: "bg-blue-500/10", 
-        border: "border-blue-500/30",
-        glow: "from-blue-500/20 to-transparent",
-        icon: Clock 
-    },
-    VIEWED: { 
-        label: "Consultée", 
-        color: "text-blue-400", 
-        bg: "bg-blue-500/10", 
-        border: "border-blue-500/30",
-        glow: "from-[#2563EB]/25 to-transparent",
-        icon: Clock 
-    },
-    PAID: { 
-        label: "Payée", 
-        color: "text-emerald-400", 
-        bg: "bg-emerald-500/10", 
-        border: "border-emerald-500/30",
-        glow: "from-emerald-500/20 to-transparent",
-        icon: CheckCircle2 
-    },
-    OVERDUE: { 
-        label: "En retard", 
-        color: "text-rose-400", 
-        bg: "bg-rose-500/10", 
-        border: "border-rose-500/30",
-        glow: "from-rose-500/25 to-transparent",
-        icon: AlertTriangle 
-    },
+const statusLabel: Record<string, { text: string; className: string }> = {
+    DRAFT: { text: "Brouillon", className: "text-slate-500" },
+    SENT: { text: "Envoyée", className: "text-slate-400" },
+    VIEWED: { text: "Consultée", className: "text-slate-400" },
+    PAID: { text: "Payée", className: "text-emerald-500" },
+    OVERDUE: { text: "En retard", className: "text-rose-400" },
 }
 
-type FilterType = "all" | "paid" | "overdue" | "pending";
+type FilterType = "all" | "paid" | "overdue" | "pending"
+
+function invoiceDate(value?: string | null) {
+    if (!value) return null
+    return new Date(value).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
+}
 
 export function InvoiceGrid({ quote, onBack, onRefresh }: InvoiceGridProps) {
-    const router = useRouter();
-    const [filter, setFilter] = useState<FilterType>("all");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-    const [isGeneratingNext, setIsGeneratingNext] = useState(false);
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const router = useRouter()
+    const [filter, setFilter] = useState<FilterType>("all")
+    const [searchQuery, setSearchQuery] = useState("")
+    const [isGeneratingNext, setIsGeneratingNext] = useState(false)
 
-    // Calculs financiers consolidés
-    const totalQuoteAmount = quote.amount_cents || 0;
-    
-    const totalInvoicedCents = useMemo(() => {
-        return quote.invoices.reduce((acc, inv) => acc + (inv.amount_cents || 0), 0);
-    }, [quote.invoices]);
+    const totalQuoteAmount = quote.amount_cents || 0
+    const totalInvoicedCents = useMemo(
+        () => quote.invoices.reduce((acc, inv) => acc + (inv.amount_cents || 0), 0),
+        [quote.invoices]
+    )
+    const totalPaidCents = useMemo(
+        () => quote.invoices.filter((inv) => inv.status === "PAID").reduce((acc, inv) => acc + (inv.amount_cents || 0), 0),
+        [quote.invoices]
+    )
+    const totalOverdueCents = useMemo(
+        () => quote.invoices
+            .filter((inv) => inv.status === "OVERDUE" || (inv.days_late && inv.days_late > 0))
+            .reduce((acc, inv) => acc + (inv.amount_cents || 0), 0),
+        [quote.invoices]
+    )
+    const totalPendingCents = useMemo(
+        () => quote.invoices
+            .filter((inv) => ["SENT", "VIEWED", "DRAFT"].includes(inv.status))
+            .reduce((acc, inv) => acc + (inv.amount_cents || 0), 0),
+        [quote.invoices]
+    )
 
-    const totalPaidCents = useMemo(() => {
-        return quote.invoices
-            .filter(inv => inv.status === "PAID")
-            .reduce((acc, inv) => acc + (inv.amount_cents || 0), 0);
-    }, [quote.invoices]);
+    const paidCount = quote.invoices.filter((i) => i.status === "PAID").length
+    const overdueCount = quote.invoices.filter((i) => i.status === "OVERDUE" || (i.days_late && i.days_late > 0)).length
+    const pendingCount = quote.invoices.length - paidCount - overdueCount
 
-    const totalOverdueCents = useMemo(() => {
-        return quote.invoices
-            .filter(inv => inv.status === "OVERDUE" || (inv.days_late && inv.days_late > 0))
-            .reduce((acc, inv) => acc + (inv.amount_cents || 0), 0);
-    }, [quote.invoices]);
-
-    const totalPendingCents = useMemo(() => {
-        return quote.invoices
-            .filter(inv => ["SENT", "VIEWED", "DRAFT"].includes(inv.status))
-            .reduce((acc, inv) => acc + (inv.amount_cents || 0), 0);
-    }, [quote.invoices]);
-
-    const paidCount = quote.invoices.filter(i => i.status === "PAID").length;
-    const overdueCount = quote.invoices.filter(i => i.status === "OVERDUE" || (i.days_late && i.days_late > 0)).length;
-    const pendingCount = quote.invoices.length - paidCount - overdueCount;
-
-    const invoicedPercent = totalQuoteAmount > 0 
-        ? Math.min(100, Math.round((totalInvoicedCents / totalQuoteAmount) * 100)) 
-        : 0;
-    const paidPercent = totalQuoteAmount > 0 
-        ? Math.min(100, Math.round((totalPaidCents / totalQuoteAmount) * 100)) 
-        : 0;
+    const paidPercent = totalQuoteAmount > 0 ? Math.min(100, Math.round((totalPaidCents / totalQuoteAmount) * 100)) : 0
     const pendingPercent = totalQuoteAmount > 0
         ? Math.min(100 - paidPercent, Math.round((totalPendingCents / totalQuoteAmount) * 100))
-        : 0;
+        : 0
 
-    // Vérifier les jalons non encore facturés
-    const uninvoicedMilestonesCount = (quote.milestones || []).filter(m => !m.invoice_id).length;
+    const uninvoicedMilestonesCount = (quote.milestones || []).filter((m) => !m.invoice_id).length
 
-    // Filtrage et recherche
     const filteredInvoices = useMemo(() => {
-        return quote.invoices.filter(inv => {
-            // Filtre par statut
-            if (filter === "paid" && inv.status !== "PAID") return false;
-            if (filter === "overdue" && !(inv.status === "OVERDUE" || (inv.days_late && inv.days_late > 0))) return false;
-            if (filter === "pending" && !["SENT", "VIEWED", "DRAFT"].includes(inv.status)) return false;
-
-            // Filtre par recherche texte
+        return quote.invoices.filter((inv) => {
+            if (filter === "paid" && inv.status !== "PAID") return false
+            if (filter === "overdue" && !(inv.status === "OVERDUE" || (inv.days_late && inv.days_late > 0))) return false
+            if (filter === "pending" && !["SENT", "VIEWED", "DRAFT"].includes(inv.status)) return false
             if (searchQuery.trim()) {
-                const query = searchQuery.toLowerCase();
-                const num = (inv.number || "").toLowerCase();
-                const milestone = (inv.milestone_title || "").toLowerCase();
-                const type = (inv.invoice_type || "").toLowerCase();
-                return num.includes(query) || milestone.includes(query) || type.includes(query);
+                const query = searchQuery.toLowerCase()
+                return [inv.number, inv.milestone_title, inv.invoice_type]
+                    .filter(Boolean)
+                    .some((value) => value!.toLowerCase().includes(query))
             }
-
-            return true;
-        });
-    }, [quote.invoices, filter, searchQuery]);
-
-    const handleRefresh = async () => {
-        if (!onRefresh) return;
-        setIsRefreshing(true);
-        try {
-            await onRefresh();
-            toast.success("Données actualisées");
-        } finally {
-            setIsRefreshing(false);
-        }
-    };
+            return true
+        })
+    }, [quote.invoices, filter, searchQuery])
 
     const handleGenerateNextInvoice = async () => {
         if (quote.status !== "ACCEPTED") {
-            toast.error("Validation du devis requise", {
-                description: "Le devis doit d'abord être accepté/validé avant de pouvoir générer les factures d'échéances.",
+            toast.error("Le devis n’est pas encore accepté.", {
                 action: {
-                    label: "Ouvrir le devis",
+                    label: "Ouvrir",
                     onClick: () => router.push(`/dashboard/quotes/${quote.id}`),
                 },
-                duration: 6000,
-            });
-            return;
+            })
+            return
         }
 
-        setIsGeneratingNext(true);
+        setIsGeneratingNext(true)
         try {
-            const res = await quotesApi.generateNextInvoice(quote.id);
-            toast.success("Facture générée avec succès !", {
-                description: `Facture ${res.invoice_number || ""} créée pour ${res.milestone_title || "le jalon"}.`,
-            });
-            if (onRefresh) onRefresh();
-        } catch (error: any) {
-            const rawMsg = error.message || error.detail || "";
-            const lower = rawMsg.toLowerCase();
-
-            if (lower.includes("antérieure") || lower.includes("antérieur") || lower.includes("traitée") || lower.includes("doit être payée") || lower.includes("doit d'abord être") || lower.includes("milestone") || lower.includes("échéance")) {
-                toast.error("Facture antérieure non traitée", {
-                    description: rawMsg || "La facture antérieure n'a pas encore été traitée. Elle doit être payée avant de facturer la suivante.",
-                    duration: 6500,
-                });
-            } else if (lower.includes("accepté") || lower.includes("devis")) {
-                toast.error("Validation du devis requise", {
-                    description: "Le devis doit d'abord être accepté avant de pouvoir émettre les factures.",
-                    action: {
-                        label: "Voir le devis",
-                        onClick: () => router.push(`/dashboard/quotes/${quote.id}`),
-                    },
-                    duration: 6500,
-                });
-            } else {
-                toast.error("Impossible de générer la facture", {
-                    description: rawMsg || "Une erreur est survenue lors de la génération.",
-                });
-            }
+            const res = await quotesApi.generateNextInvoice(quote.id)
+            toast.success(`Facture ${res.invoice_number || ""} créée.`)
+            onRefresh?.()
+        } catch (error: unknown) {
+            const rawMsg = error instanceof Error ? error.message : ""
+            toast.error(rawMsg || "Impossible de générer la facture.")
         } finally {
-            setIsGeneratingNext(false);
+            setIsGeneratingNext(false)
         }
-    };
+    }
 
-    const filterButtons: Array<{ key: FilterType; label: string; count: number; color?: string }> = [
-        { key: "all", label: "Toutes les factures", count: quote.invoices.length },
+    const filters: Array<{ key: FilterType; label: string; count: number }> = [
+        { key: "all", label: "Toutes", count: quote.invoices.length },
         { key: "paid", label: "Payées", count: paidCount },
         { key: "pending", label: "En attente", count: pendingCount },
-        { key: "overdue", label: "En retard", count: overdueCount, color: "text-rose-400" },
-    ];
+        { key: "overdue", label: "En retard", count: overdueCount },
+    ]
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="space-y-8"
-        >
-            {/* Bannière contextuelle si le devis n'est pas encore accepté */}
+        <div className="space-y-8">
             {quote.status !== "ACCEPTED" && (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-200 ">
-                    <div className="flex items-center gap-3">
-                        <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
-                        <div className="text-xs">
-                            <span className="font-bold text-white block text-sm">Devis en attente de validation ({quote.status})</span>
-                            <span className="text-amber-200/80">Pour pouvoir émettre automatiquement les factures d'échéances, vous devez d'abord valider/accepter ce devis.</span>
-                        </div>
-                    </div>
-                    <Link href={`/dashboard/quotes/${quote.id}`}>
-                        <Button size="sm" className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs h-8 px-3.5 rounded-xl shrink-0 gap-1.5 ">
-                            <span>Valider le devis</span>
-                            <ArrowUpRight className="w-3.5 h-3.5" />
-                        </Button>
+                <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-slate-300">
+                        Ce devis n’est pas encore accepté. Les factures d’échéance ne peuvent pas être émises.
+                    </p>
+                    <Link
+                        href={`/dashboard/quotes/${quote.id}`}
+                        className="text-sm font-medium text-slate-200 underline-offset-4 hover:underline"
+                    >
+                        Ouvrir le devis
                     </Link>
                 </div>
             )}
-            {/* ═══════════════════════════════════════════════════════════
-                1. HEADER & ACTIONS
-            ═══════════════════════════════════════════════════════════ */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-white/10">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
                     <button
+                        type="button"
                         onClick={onBack}
-                        className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-colors w-fit"
+                        className="mb-3 inline-flex items-center gap-1 text-sm text-slate-500 transition-colors hover:text-slate-200"
                     >
-                        <ChevronLeft className="h-4 w-4 text-slate-500 group-hover:text-white transition-colors" />
-                        <span>Retour aux devis du projet</span>
+                        <ChevronLeft className="h-4 w-4" />
+                        Devis du projet
                     </button>
-
-                    <div className="h-5 w-px bg-white/10 hidden sm:block" />
-
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
-                            <Receipt className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                    Facturation du devis
-                                </span>
-                                <span className="text-xs font-medium px-1.5 py-0.5 rounded-md bg-white/5 text-slate-300 border border-white/10">
-                                    {quote.number || "Sans numéro"}
-                                </span>
-                            </div>
-                            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-0.5">
-                                Factures & Échéances
-                            </h2>
-                        </div>
-                    </div>
+                    <h2 className="text-lg font-semibold tracking-tight text-white">
+                        Factures · {quote.number || "sans numéro"}
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                        {quote.invoices.length} facture{quote.invoices.length > 1 ? "s" : ""}
+                        {uninvoicedMilestonesCount > 0
+                            ? ` · ${uninvoicedMilestonesCount} échéance${uninvoicedMilestonesCount > 1 ? "s" : ""} restante${uninvoicedMilestonesCount > 1 ? "s" : ""}`
+                            : ""}
+                    </p>
                 </div>
 
-                <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="flex flex-wrap items-center gap-2">
                     {uninvoicedMilestonesCount > 0 && (
                         <Button
                             onClick={handleGenerateNextInvoice}
                             disabled={isGeneratingNext}
-                            className="bg-white text-black hover:bg-slate-200 font-bold text-xs h-9 px-3.5 rounded-lg gap-2 transition-colors"
+                            className="h-9 gap-2 rounded-md bg-white px-3 text-xs font-medium text-zinc-950 hover:bg-zinc-200"
                         >
-                            {isGeneratingNext ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                                <Plus className="w-3.5 h-3.5" />
-                            )}
-                            <span>Générer prochaine facture ({uninvoicedMilestonesCount} restante{uninvoicedMilestonesCount > 1 ? "s" : ""})</span>
+                            {isGeneratingNext ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                            Prochaine facture
                         </Button>
                     )}
-
                     <Link href={`/dashboard/quotes/${quote.id}`}>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs font-medium h-9 px-3 rounded-lg border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-slate-300 gap-1.5"
+                            className="h-9 gap-1.5 rounded-md border-white/10 bg-transparent px-3 text-xs font-medium text-slate-300 hover:bg-white/5"
                         >
-                            <Eye className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Voir le devis</span>
+                            <Eye className="h-3.5 w-3.5" />
+                            Devis
                         </Button>
                     </Link>
-
-                    {onRefresh && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleRefresh}
-                            disabled={isRefreshing}
-                            className="h-9 w-9 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 border border-white/5"
-                            title="Actualiser les données"
-                        >
-                            <RefreshCw className={cn("w-3.5 h-3.5", isRefreshing && "animate-spin")} />
-                        </Button>
-                    )}
                 </div>
             </div>
 
-            {/* ═══════════════════════════════════════════════════════════
-                3. FINANCIAL KPI CARDS & PROGRESSION BAR
-            ═══════════════════════════════════════════════════════════ */}
-            <div className="space-y-4">
-                <div className={cn(
-                    "flex gap-3.5 overflow-x-auto pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6",
-                    "snap-x snap-mandatory",
-                    "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-                    "md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-3.5 md:pb-0 md:-mx-0 md:px-0 md:overflow-visible"
-                )}>
-                    {/* Carte 1: Total Devisé */}
-                    <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
-                        <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
-                            <span>Devis contractuel</span>
-                            <div className="p-1.5 rounded-lg bg-white/5 text-slate-400">
-                                <FileText className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="text-2xl font-black text-white tracking-tight">
-                            {formatCurrency(totalQuoteAmount)}
-                        </div>
-                        <div className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                            <span>Base totale négociée</span>
-                        </div>
+            <div className="space-y-3">
+                <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-sm">
+                    <div>
+                        <span className="text-slate-500">Devisé </span>
+                        <span className="font-medium text-white">{formatCurrency(totalQuoteAmount)}</span>
                     </div>
-
-                    {/* Carte 2: Total Facturé */}
-                    <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
-                        <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
-                            <span>Total émis</span>
-                            <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
-                                <TrendingUp className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="text-2xl font-black text-white tracking-tight">
-                            {formatCurrency(totalInvoicedCents)}
-                        </div>
-                        <div className="text-xs text-blue-400 font-semibold mt-1">
-                            {invoicedPercent}% du montant devisé
-                        </div>
+                    <div>
+                        <span className="text-slate-500">Émis </span>
+                        <span className="font-medium text-white">{formatCurrency(totalInvoicedCents)}</span>
                     </div>
-
-                    {/* Carte 3: Total Encaissé */}
-                    <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
-                        <div className="flex items-center justify-between text-xs font-semibold text-emerald-300/80 mb-2">
-                            <span>Total encaissé</span>
-                            <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
-                                <Wallet className="w-4 h-4" />
-                            </div>
-                        </div>
-                        <div className="text-2xl font-black text-emerald-400 tracking-tight">
-                            {formatCurrency(totalPaidCents)}
-                        </div>
-                        <div className="text-xs text-emerald-300/80 font-semibold mt-1 flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>{paidCount} facture{paidCount > 1 ? "s" : ""} payée{paidCount > 1 ? "s" : ""} ({paidPercent}%)</span>
-                        </div>
+                    <div>
+                        <span className="text-slate-500">Encaissé </span>
+                        <span className="font-medium text-emerald-400">{formatCurrency(totalPaidCents)}</span>
                     </div>
-
-                    {/* Carte 4: En retard ou En attente */}
                     {overdueCount > 0 ? (
-                        <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
-                            <div className="flex items-center justify-between text-xs font-semibold text-rose-300/80 mb-2">
-                                <span>Factures en retard</span>
-                                <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 animate-pulse">
-                                    <AlertTriangle className="w-4 h-4" />
-                                </div>
-                            </div>
-                            <div className="text-2xl font-black text-rose-400 tracking-tight">
-                                {formatCurrency(totalOverdueCents)}
-                            </div>
-                            <div className="text-xs text-rose-300/80 font-bold mt-1 flex items-center gap-1">
-                                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                                <span>{overdueCount} facture{overdueCount > 1 ? "s" : ""} à relancer d'urgence</span>
-                            </div>
+                        <div>
+                            <span className="text-slate-500">En retard </span>
+                            <span className="font-medium text-rose-400">{formatCurrency(totalOverdueCents)}</span>
                         </div>
                     ) : (
-                        <div className="relative p-5 rounded-lg bg-[#111113] border border-white/5 overflow-hidden group transition-colors hover:bg-white/5 w-[85vw] sm:w-[320px] shrink-0 snap-center md:w-auto md:shrink md:snap-none">
-                            <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
-                                <span>En attente de paiement</span>
-                                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
-                                    <Clock className="w-4 h-4" />
-                                </div>
-                            </div>
-                            <div className="text-2xl font-black text-white tracking-tight">
-                                {formatCurrency(totalPendingCents)}
-                            </div>
-                            <div className="text-xs text-slate-400 mt-1">
-                                {pendingCount} facture{pendingCount > 1 ? "s" : ""} en cours d'échéance
-                            </div>
+                        <div>
+                            <span className="text-slate-500">En attente </span>
+                            <span className="font-medium text-white">{formatCurrency(totalPendingCents)}</span>
                         </div>
                     )}
                 </div>
-
-                {/* Barre de progression segmentée */}
-                <div className="p-4 rounded-lg bg-transparent sm:bg-[#111113] border-0 sm:border border-white/5 space-y-2 sm:mt-0">
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-400">
-                        <span className="flex items-center gap-2">
-                            <span>Avancement de la facturation</span>
-                            <span className="text-white font-bold">{invoicedPercent}% facturé</span>
-                        </span>
-                        <div className="flex items-center gap-3 text-[11px]">
-                            <span className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                <span>Encaissé ({paidPercent}%)</span>
-                            </span>
-                            <span className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                                <span>En attente ({pendingPercent}%)</span>
-                            </span>
-                            {invoicedPercent < 100 && (
-                                <span className="flex items-center gap-1.5">
-                                    <span className="w-2 h-2 rounded-full bg-slate-700" />
-                                    <span>Restant ({100 - invoicedPercent}%)</span>
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex ">
-                        <div 
-                            className="h-full bg-emerald-500 transition-all duration-500"
-                            style={{ width: `${paidPercent}%` }}
-                            title={`Encaissé : ${formatCurrency(totalPaidCents)}`}
-                        />
-                        <div 
-                            className="h-full bg-[#2563EB] transition-all duration-500"
-                            style={{ width: `${pendingPercent}%` }}
-                            title={`En attente : ${formatCurrency(totalPendingCents)}`}
-                        />
-                    </div>
+                <div className="flex h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full bg-emerald-500" style={{ width: `${paidPercent}%` }} />
+                    <div className="h-full bg-white/35" style={{ width: `${pendingPercent}%` }} />
                 </div>
             </div>
 
-            {/* ═══════════════════════════════════════════════════════════
-                4. TOOLBAR : FILTRES, RECHERCHE & SWITCH VIEW
-            ═══════════════════════════════════════════════════════════ */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-                {/* Boutons filtres */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                    {filterButtons.map(btn => (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap gap-1">
+                    {filters.map((btn) => (
                         <button
                             key={btn.key}
+                            type="button"
                             onClick={() => setFilter(btn.key)}
                             className={cn(
-                                "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5",
+                                "rounded-md px-2.5 py-1.5 text-xs transition-colors",
                                 filter === btn.key
-                                    ? "bg-white/10 text-white border-white/20"
-                                    : "bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border-white/10"
+                                    ? "bg-white/10 text-white"
+                                    : "text-slate-500 hover:text-slate-200",
+                                btn.key === "overdue" && btn.count > 0 && filter !== btn.key && "text-rose-400/80"
                             )}
                         >
-                            <span className={btn.color}>{btn.label}</span>
-                            <span className={cn(
-                                "text-[10px] px-1.5 py-0.2 rounded-full font-black",
-                                filter === btn.key
-                                    ? "bg-white/20 text-white"
-                                    : "bg-white/10 text-slate-400"
-                            )}>
-                                {btn.count}
-                            </span>
+                            {btn.label}
+                            <span className="ml-1.5 tabular-nums text-slate-500">{btn.count}</span>
                         </button>
                     ))}
                 </div>
-
-                {/* Recherche & Toggle Grille/Liste */}
-                <div className="flex items-center gap-2">
-                    <div className="relative flex-1 sm:w-60">
-                        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                        <input
-                            type="text"
-                            placeholder="Rechercher une facture..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full h-9 pl-9 pr-3 text-xs bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-all font-medium"
-                        />
-                    </div>
-
-                    <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5">
-                        <button
-                            onClick={() => setViewMode("grid")}
-                            className={cn(
-                                "p-1.5 rounded-lg transition-colors",
-                                viewMode === "grid" ? "bg-white/10 text-white shadow-sm" : "text-slate-400 hover:text-white"
-                            )}
-                            title="Vue en grille"
-                        >
-                            <LayoutGrid className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setViewMode("list")}
-                            className={cn(
-                                "p-1.5 rounded-lg transition-colors",
-                                viewMode === "list" ? "bg-white/10 text-white shadow-sm" : "text-slate-400 hover:text-white"
-                            )}
-                            title="Vue en liste"
-                        >
-                            <List className="w-4 h-4" />
-                        </button>
-                    </div>
+                <div className="relative sm:w-56">
+                    <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                    <input
+                        type="text"
+                        placeholder="Rechercher"
+                        value={searchQuery}
+                        onChange={(event) => setSearchQuery(event.target.value)}
+                        className="h-9 w-full rounded-md border border-white/10 bg-transparent pl-8 pr-3 text-sm text-white placeholder:text-slate-600 focus:border-white/20 focus:outline-none"
+                    />
                 </div>
             </div>
 
-            {/* ═══════════════════════════════════════════════════════════
-                5. AFFICHAGE DES FACTURES
-            ═══════════════════════════════════════════════════════════ */}
             {filteredInvoices.length === 0 ? (
-                <div className="py-20 text-center rounded-3xl bg-white/[0.02] border border-dashed border-white/10 p-8 flex flex-col items-center justify-center">
-                    <div className="w-14 h-14 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 mb-3 ">
-                        <Receipt className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-base font-bold text-white mb-1">
-                        Aucune facture trouvée
-                    </h3>
-                    <p className="text-xs text-slate-400 max-w-sm mb-5">
-                        {searchQuery
-                            ? `Aucun résultat ne correspond à la recherche "${searchQuery}".`
-                            : "Aucune facture n'est associée à ce filtre pour le moment."}
+                <div className="py-16 text-center">
+                    <p className="text-sm font-medium text-white">Aucune facture ici</p>
+                    <p className="mt-1 text-sm text-slate-500">
+                        {searchQuery ? `Rien pour « ${searchQuery} ».` : "Change de filtre, ou génère la prochaine échéance."}
                     </p>
                     {uninvoicedMilestonesCount > 0 && (
                         <Button
                             onClick={handleGenerateNextInvoice}
                             disabled={isGeneratingNext}
-                            className="bg-white text-black hover:bg-slate-200 font-bold text-xs h-9 px-4 rounded-lg gap-2 transition-colors"
+                            className="mt-5 h-9 gap-2 rounded-md bg-white px-3 text-xs font-medium text-zinc-950 hover:bg-zinc-200"
                         >
-                            <Plus className="w-3.5 h-3.5" />
-                            Générer la prochaine facture
+                            <Plus className="h-3.5 w-3.5" />
+                            Prochaine facture
                         </Button>
                     )}
                 </div>
-            ) : viewMode === "grid" ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-x-5 gap-y-8">
-                    <AnimatePresence mode="popLayout">
-                        {filteredInvoices.map((invoice) => (
-                            <InvoiceImpactCard key={invoice.id} invoice={invoice} />
-                        ))}
-                    </AnimatePresence>
-                </div>
             ) : (
-                <div className="rounded-lg border border-white/5 bg-[#111113] overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs">
-                            <thead className="bg-white/5 text-slate-400 uppercase font-black tracking-wider text-[10px] border-b border-white/10">
-                                <tr>
-                                    <th className="py-3.5 px-4">Numéro</th>
-                                    <th className="py-3.5 px-4">Jalon / Type</th>
-                                    <th className="py-3.5 px-4">Émission</th>
-                                    <th className="py-3.5 px-4">Échéance</th>
-                                    <th className="py-3.5 px-4 text-right">Montant</th>
-                                    <th className="py-3.5 px-4 text-center">Statut</th>
-                                    <th className="py-3.5 px-4 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5 font-medium text-slate-300">
-                                {filteredInvoices.map((invoice) => {
-                                    const config = statusConfig[invoice.status] || statusConfig.DRAFT;
-                                    const StatusIcon = config.icon;
-                                    const isOverdue = invoice.status === "OVERDUE" || (invoice.days_late && invoice.days_late > 0);
-
-                                    return (
-                                        <tr key={invoice.id} className="hover:bg-white/[0.03] transition-colors group">
-                                            <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2">
-                                                <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", isOverdue ? "bg-rose-500" : invoice.status === "PAID" ? "bg-emerald-500" : "bg-[#2563EB]")} />
-                                                <span className="transition-colors">
-                                                    {invoice.number || "Sans numéro"}
-                                                </span>
-                                            </td>
-                                            <td className="py-3.5 px-4">
-                                                <div className="truncate max-w-[200px]">
-                                                    {invoice.milestone_title || (invoice.invoice_type ? `Facture ${invoice.invoice_type.toLowerCase()}` : "Facture standard")}
-                                                </div>
-                                            </td>
-                                            <td className="py-3.5 px-4 text-slate-400">
-                                                {invoice.issued_at ? new Date(invoice.issued_at).toLocaleDateString('fr-FR') : "—"}
-                                            </td>
-                                            <td className="py-3.5 px-4">
-                                                {invoice.due_date ? (
-                                                    <span className={cn(isOverdue && invoice.status !== "PAID" ? "text-rose-400 font-bold" : "text-slate-400")}>
-                                                        {new Date(invoice.due_date).toLocaleDateString('fr-FR')}
-                                                        {isOverdue && invoice.days_late && invoice.days_late > 0 && (
-                                                            <span className="ml-1 text-[10px] bg-rose-500/20 text-rose-400 px-1 py-0.5 rounded">
-                                                                +{invoice.days_late}j
-                                                            </span>
-                                                        )}
-                                                    </span>
-                                                ) : "—"}
-                                            </td>
-                                            <td className="py-3.5 px-4 text-right font-black text-white">
-                                                {formatCurrency(invoice.amount_cents)}
-                                            </td>
-                                            <td className="py-3.5 px-4 text-center">
-                                                <span className={cn(
-                                                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold border",
-                                                    config.bg, config.color, config.border
-                                                )}>
-                                                    <StatusIcon className="w-3 h-3" />
-                                                    <span>{config.label}</span>
-                                                </span>
-                                            </td>
-                                            <td className="py-3.5 px-4 text-right">
-                                                <Link href={`/dashboard/invoices/${invoice.id}`}>
-                                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 gap-1 rounded-lg">
-                                                        <span>Détail</span>
-                                                        <ArrowUpRight className="w-3 h-3" />
-                                                    </Button>
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 md:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+                    {filteredInvoices.map((invoice) => (
+                        <InvoiceCard key={invoice.id} invoice={invoice} />
+                    ))}
                 </div>
             )}
-        </motion.div>
-    );
+        </div>
+    )
 }
 
-// ═══════════════════════════════════════════════════════════
-// CARTE FACTURE IMPACTANTE AVEC PRÉVISUALISATION VISUELLE DU DOCUMENT
-// ═══════════════════════════════════════════════════════════
-function InvoiceImpactCard({ invoice }: { invoice: ProjectTreeInvoice }) {
-    const config = statusConfig[invoice.status] || statusConfig.DRAFT;
-    const StatusIcon = config.icon;
-    const isOverdue = invoice.status === "OVERDUE" || (invoice.days_late && invoice.days_late > 0);
+function InvoiceCard({ invoice }: { invoice: ProjectTreeInvoice }) {
+    const status = statusLabel[invoice.status] || statusLabel.DRAFT
+    const isOverdue = invoice.status === "OVERDUE" || (invoice.days_late && invoice.days_late > 0)
+    const due = invoiceDate(invoice.due_date)
+    const issued = invoiceDate(invoice.issued_at)
 
     return (
-        <motion.div
-            layout
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="group flex flex-col"
-        >
-            <div className={cn(
-                "relative w-full aspect-[4/5] rounded-lg p-2 transition-all duration-300 overflow-hidden",
-                "bg-slate-100/50 dark:bg-white/[0.02] border flex flex-col justify-between border-slate-200/50 dark:border-white/5 group-hover:border-slate-300 dark:group-hover:border-white/10"
-            )}>
-                {/* ══════════════════════════════════════════════════════
-                    PRÉVISUALISATION RÉELLE DU DOCUMENT (IMAGE PNG)
-                ══════════════════════════════════════════════════════ */}
-                <div className="w-full h-full rounded-xl overflow-hidden shadow-sm bg-white dark:bg-slate-950/50 relative">
-                    <DocumentPreview
-                        documentId={invoice.id}
-                        layoutStyle="modern"
-                    />
-
-                    {/* Badge statut en haut à droite */}
-                    <div className="absolute top-2.5 right-2.5 z-20">
-                        <div className={cn(
-                            "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border  ",
-                            config.bg, config.color, config.border
-                        )}>
-                            <StatusIcon className="w-3 h-3" />
-                            <span>{config.label}</span>
-                        </div>
-                    </div>
-
-                    {/* Badge type de facture en haut à gauche */}
-                    <div className="absolute top-2.5 left-2.5 z-20">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-black/75  border border-white/10 text-white ">
-                            {invoice.invoice_type || "Facture"}
-                        </span>
-                    </div>
-
-                    {/* Titre milestone si associé */}
-                    {invoice.milestone_title && (
-                        <div className="absolute bottom-2.5 left-2.5 z-20 max-w-[85%]">
-                            <span className="px-2 py-1 rounded-md text-[10px] font-bold bg-[#14171d]/90  border border-white/15 text-slate-200 truncate block ">
-                                {invoice.milestone_title}
-                            </span>
-                        </div>
-                    )}
-
-                    {/* Hover Overlay avec bouton d'accès rapide */}
-                    <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 z-30">
-                        <Link href={`/dashboard/invoices/${invoice.id}`}>
-                            <Button size="sm" className="bg-white text-black hover:bg-slate-200 font-bold rounded-lg h-10 px-4 gap-2 transition-colors">
-                                <Eye className="w-4 h-4" />
-                                <span>Consulter la facture</span>
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
+        <Link href={`/dashboard/invoices/${invoice.id}`} className="group flex flex-col">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-md border border-white/10 bg-zinc-950 transition-[border-color,transform] duration-150 ease-out group-hover:-translate-y-0.5 group-hover:border-white/20 group-active:scale-[0.99]">
+                <DocumentPreview documentId={invoice.id} layoutStyle="modern" />
+                {isOverdue && invoice.status !== "PAID" && (
+                    <span className="absolute left-2 top-2 rounded bg-zinc-950/85 px-1.5 py-0.5 text-[10px] font-medium text-rose-300">
+                        {invoice.days_late && invoice.days_late > 0 ? `${invoice.days_late} j de retard` : "En retard"}
+                    </span>
+                )}
             </div>
-
-            {/* Détails textuels sous la carte */}
-            <div className="mt-3 px-1">
-                <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-black text-slate-900 dark:text-white truncate transition-colors">
-                        {invoice.number || "Facture sans numéro"}
+            <div className="mt-2.5 px-0.5">
+                <div className="flex items-baseline justify-between gap-2">
+                    <h4 className="truncate text-sm font-medium text-white">
+                        {invoice.number || "Sans numéro"}
                     </h4>
-                    <span className="text-sm font-black text-slate-900 dark:text-white shrink-0">
+                    <span className="shrink-0 text-sm tabular-nums text-slate-200">
                         {formatCurrency(invoice.amount_cents)}
                     </span>
                 </div>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1">
-                    {invoice.due_date && invoice.status !== "PAID" ? (
-                        <span className={cn("text-slate-500 dark:text-slate-400 font-medium")}>
-                            Échéance {new Date(invoice.due_date).toLocaleDateString('fr-FR')}
-                            {isOverdue && invoice.days_late && invoice.days_late > 0 && (
-                                <span className="ml-1 text-[10px] font-black text-rose-500 dark:text-rose-400">
-                                    (+{invoice.days_late}j)
-                                </span>
-                            )}
-                        </span>
-                    ) : invoice.issued_at ? (
-                        <span>Émise le {new Date(invoice.issued_at).toLocaleDateString('fr-FR')}</span>
-                    ) : (
-                        <span>Facture standard</span>
-                    )}
-
-                    <span className={cn("text-[10px] font-bold uppercase", config.color)}>
-                        {config.label}
+                <div className="mt-0.5 flex items-center justify-between gap-2 text-[11px] text-slate-500">
+                    <span className="truncate">
+                        {invoice.milestone_title
+                            || (invoice.status === "PAID" && issued ? `Payée · ${issued}` : due ? `Échéance ${due}` : issued ? `Émise ${issued}` : "Facture")}
                     </span>
+                    <span className={cn("shrink-0", status.className)}>{status.text}</span>
                 </div>
             </div>
-        </motion.div>
-    );
+        </Link>
+    )
 }

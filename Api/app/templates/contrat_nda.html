@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Confidentialité {{ document.number or '' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Newsreader", Georgia, serif;
+            color: #111;
+            background: #ececec;
+            line-height: 1.55;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: #fff;
+            padding: 18mm 20mm;
+            outline: 1px solid #111;
+            outline-offset: -10mm;
+        }
+        @media screen { body { padding: 24px; } .page { box-shadow: 0 12px 28px rgba(0,0,0,.12); } }
+        @media print { body { background: white; padding: 0; } .page { box-shadow: none; outline: none; } @page { size: A4; margin: 14mm; } }
+        .kicker { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .28em; text-transform: uppercase; }
+        h1 { font-size: 30px; font-weight: 700; margin: 14px 0 8px; letter-spacing: -.02em; }
+        .doc-id { font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+        hr { border: 0; border-top: 1px solid #111; margin: 16px 0 22px; }
+        .meta { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
+        .meta td { width: 33%; font-size: 13px; }
+        .lbl { font-family: "IBM Plex Mono", monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; display: block; margin-bottom: 3px; }
+        .article { margin-bottom: 22px; }
+        .article-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .lede { font-size: 14px; margin-bottom: 10px; }
+        .parties { width: 100%; border-collapse: collapse; }
+        .parties td { width: 50%; vertical-align: top; padding: 0 18px 0 0; }
+        .role { font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 6px; }
+        .who { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+        .details { font-size: 13px; }
+        ol.scope { margin: 0 0 8px 18px; }
+        ol.scope li { margin-bottom: 5px; font-size: 14px; }
+        .rule-block { margin-bottom: 14px; }
+        .rule-index { font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
+        .rule-title { font-size: 15px; font-weight: 700; margin: 2px 0 4px; }
+        .rule-body { font-size: 14px; white-space: pre-wrap; }
+        .notes { font-size: 14px; white-space: pre-wrap; }
+        .sign-grid { width: 100%; border-collapse: collapse; }
+        .sign-grid td { width: 50%; padding-right: 20px; vertical-align: top; }
+        .sign-box { min-height: 72px; border-bottom: 1px solid #111; margin: 28px 0 8px; }
+        .sign-label { font-size: 12px; }
+        .legal { margin-top: 28px; font-family: "IBM Plex Mono", monospace; font-size: 10px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="kicker">Confidentiel</div>
+    <h1>{{ contract_title or "Accord de confidentialité" }}</h1>
+    <div class="doc-id">{{ document.number or "Brouillon" }}</div>
+    <hr>
+
+    <table class="meta">
+        <tr>
+            <td><span class="lbl">Date</span>{{ document.created_at.strftime("%d/%m/%Y") if document.created_at else "—" }}</td>
+            <td><span class="lbl">Fin</span>{{ document.due_date.strftime("%d/%m/%Y") if document.due_date else "24 mois après les échanges" }}</td>
+            <td>
+                <span class="lbl">Statut</span>
+                {% if document.status and document.status.value == "ACCEPTED" %}Signé
+                {% elif document.status and document.status.value == "SENT" %}Envoyé
+                {% elif document.status and document.status.value == "REFUSED" %}Refusé
+                {% else %}Brouillon{% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <div class="article">
+        <div class="article-title">1. Destinataires</div>
+        <p class="lede">Les informations échangées restent entre les personnes ci-dessous.</p>
+        <table class="parties">
+            <tr>
+                <td>
+                    <div class="role">Divulgateur</div>
+                    <div class="who">{{ user.company_name or user.full_name or user.email or "Divulgateur" }}</div>
+                    <div class="details">
+                        {% if user.address %}{{ user.address | replace("\n", "<br>") | safe }}<br>{% endif %}
+                        {% if user.email %}{{ user.email }}{% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="role">Destinataire</div>
+                    <div class="who">{{ client.name or "Destinataire" }}</div>
+                    <div class="details">
+                        {% if client.address %}{{ client.address | replace("\n", "<br>") | safe }}<br>{% endif %}
+                        {% if client.email %}{{ client.email }}{% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {% set scoped = items | selectattr("description") | list %}
+    {% if scoped %}
+    <div class="article">
+        <div class="article-title">2. Périmètre</div>
+        <ol class="scope">{% for item in scoped %}<li>{{ item.description }}</li>{% endfor %}</ol>
+    </div>
+    {% endif %}
+
+    {% if reglement %}
+    <div class="article">
+        <div class="article-title">{% if scoped %}3{% else %}2{% endif %}. Engagements</div>
+        {% for rule in reglement %}
+            {% if rule.title or rule.body %}
+            <div class="rule-block">
+                <div class="rule-index">Art. {{ loop.index }}</div>
+                <h3 class="rule-title">{{ rule.title or "Sans titre" }}</h3>
+                {% if rule.body %}<div class="rule-body">{{ rule.body }}</div>{% endif %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if document.notes %}
+    <div class="article">
+        <div class="article-title">Mentions particulières</div>
+        <div class="notes">{{ document.notes }}</div>
+    </div>
+    {% endif %}
+
+    <div class="article">
+        <div class="article-title">Signatures</div>
+        <table class="sign-grid">
+            <tr>
+                <td><div class="sign-label">Divulgateur</div><div class="sign-box"></div><div class="sign-label">{{ user.company_name or user.full_name or "" }}</div></td>
+                <td><div class="sign-label">Destinataire</div><div class="sign-box"></div><div class="sign-label">{{ client.name or "" }}{% if document.signature_name %} · {{ document.signature_name }}{% endif %}</div></td>
+            </tr>
+        </table>
+    </div>
+    <p class="legal">Document généré avec Sharaco. Il ne constitue pas un conseil juridique. Adaptez les conditions à votre situation avant de signer.</p>
+</div>
+</body>
+</html>

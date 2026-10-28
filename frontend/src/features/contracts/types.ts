@@ -16,4 +16,5 @@ export interface ContractDraft {
     endDate: string;
     items: { id: string; description: string }[];
     rules: ContractRule[];
+    layoutStyle: string;
 }

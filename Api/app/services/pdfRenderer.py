@@ -24,6 +24,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from app.models.document import DocumentType, DocumentStatus
 from app.models.payment_schedule import PaymentSchedule, MilestoneStatus
+from app.services.contractKinds import CONTRACT_LAYOUT_MAP, contract_title
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ class PDFRenderer:
     }
 
     INVOICE_TEMPLATE = "facture.html"
-    CONTRACT_TEMPLATE = "contrat.html"
+    CONTRACT_LAYOUT_MAP = CONTRACT_LAYOUT_MAP
     DEFAULT_CURRENCY = "FCFA"
 
     def __init__(self):
@@ -144,7 +145,7 @@ class PDFRenderer:
         if doc_type == DocumentType.FACTURE:
             return self.INVOICE_TEMPLATE
         if doc_type == DocumentType.CONTRAT:
-            return self.CONTRACT_TEMPLATE
+            return self.CONTRACT_LAYOUT_MAP.get(layout_style, "contrat.html")
         return self.QUOTE_LAYOUT_MAP.get(layout_style, "classic.html")
 
     @staticmethod
@@ -543,6 +544,7 @@ class PDFRenderer:
             "currency_code": currency_code,
             "source_quote_number": source_quote_number,
             "reglement": _decode_contract_rules(getattr(document, "rules", None)),
+            "contract_title": contract_title(getattr(document, "layout_style", None)),
         }
         return context
 
@@ -560,7 +562,8 @@ class PDFRenderer:
         Nécessite une session DB pour charger les relations (devis source, échéancier).
         """
         try:
-            layout_file = self._get_layout_file(template.layout_style, document.type)
+            layout_key = document.layout_style if document.type == DocumentType.CONTRAT else template.layout_style
+            layout_file = self._get_layout_file(layout_key, document.type)
             tmpl = self.env.get_template(layout_file)
 
             source_quote_number = await self._get_source_quote_number(db, document)
@@ -592,7 +595,8 @@ class PDFRenderer:
         Le suivi de paiement sera masqué (has_schedule = False par défaut).
         """
         try:
-            layout_file = self._get_layout_file(template.layout_style, document.type)
+            layout_key = document.layout_style if document.type == DocumentType.CONTRAT else template.layout_style
+            layout_file = self._get_layout_file(layout_key, document.type)
             tmpl = self.env.get_template(layout_file)
             context = self._build_context(document, template, user, client, currency)
             return tmpl.render(**context)

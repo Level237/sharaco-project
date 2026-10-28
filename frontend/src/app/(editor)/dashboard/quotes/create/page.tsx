@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { TemplateSelector } from "@/features/templates/components/TemplateSelector";
 import { quotesApi } from "@/features/quotes/api/quotesApi";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ScrollText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { projectsApi } from "@/features/projects/api/projectsApi";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useClients, useCreateClient } from "@/features/clients/hooks/useClients";
 import { User, Mail, Phone, MapPin } from "lucide-react";
+import { ContractKindGrid } from "@/features/contracts/components/ContractKindPicker";
+import { DEFAULT_CONTRACT_RULES, type ContractKind } from "@/features/contracts/kinds";
 
 function QuoteBuilderContent() {
     const searchParams = useSearchParams();
@@ -46,30 +48,59 @@ function QuoteBuilderContent() {
         queryFn: () => projectsApi.getAll(),
     });
 
-    useEffect(() => {
-        if (queryType !== "CONTRAT" || !queryProjectId || contractStarted.current) return;
+    const createContractKind = async (kind: ContractKind) => {
+        if (!queryProjectId || contractStarted.current) return;
         contractStarted.current = true;
         setIsCreating(true);
-        quotesApi.create({
-            type: "CONTRAT",
-            layout_style: "classic",
-            project_id: queryProjectId,
-                    items: [],
-            notes: "",
-        }).then((document) => {
+        try {
+            const document = await quotesApi.create({
+                type: "CONTRAT",
+                layout_style: kind,
+                project_id: queryProjectId,
+                items: [],
+                notes: "",
+                rules: DEFAULT_CONTRACT_RULES[kind],
+            });
             router.replace(`/dashboard/contracts/${document.id}`);
-        }).catch((error: unknown) => {
+        } catch (error: unknown) {
             contractStarted.current = false;
             const message = error instanceof Error ? error.message : "Impossible de créer le contrat.";
             toast({ title: "Erreur", description: message, variant: "destructive" });
             setIsCreating(false);
-        });
-    }, [queryType, queryProjectId, router, toast]);
+        }
+    };
 
     if (queryType === "CONTRAT") {
         return (
-            <div className="flex h-[100dvh] items-center justify-center">
-                <Loader2 className="h-10 w-10 animate-spin text-[#2563EB]" />
+            <div className="flex min-h-[100dvh] items-center justify-center bg-zinc-950 px-4">
+                <div className="w-full max-w-[420px] overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0a]/80 shadow-2xl backdrop-blur-3xl">
+                    {isCreating ? (
+                        <div className="flex flex-col items-center justify-center space-y-4 px-6 py-12 text-center">
+                            <div className="relative mb-2">
+                                <div className="absolute inset-0 rounded-full bg-[#2563EB]/20 blur-xl" />
+                                <Loader2 className="relative z-10 h-10 w-10 animate-spin text-[#2563EB]" />
+                            </div>
+                            <p className="text-xl font-black text-white">Création en cours…</p>
+                            <p className="text-sm font-medium text-slate-400">Nous préparons le contrat et vous redirigeons vers l’éditeur.</p>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex flex-col items-center bg-gradient-to-b from-blue-500/10 to-transparent px-6 pb-5 pt-10 text-center">
+                                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/20 shadow-inner ring-1 ring-white/10">
+                                    <ScrollText className="h-8 w-8 text-blue-400" strokeWidth={1.5} />
+                                </div>
+                                <h1 className="text-2xl font-bold text-white">Quel contrat ?</h1>
+                                <p className="mt-1.5 max-w-[300px] text-sm text-slate-400">Choisissez selon le besoin, pas selon le look.</p>
+                            </div>
+                            <div className="space-y-3 px-6 pb-6">
+                                <ContractKindGrid onSelect={createContractKind} disabled={!queryProjectId} />
+                                <p className="px-1 text-center text-[11px] leading-snug text-slate-500">
+                                    Les articles proposés sont une base à adapter. Ce n’est pas un conseil juridique.
+                                </p>
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
         );
     }

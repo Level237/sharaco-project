@@ -5,6 +5,13 @@ from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 from app.models.document import DocumentType, DocumentStatus
+from app.services.contractKinds import CONTRACT_LAYOUTS
+
+QUOTE_LAYOUT_STYLES = [
+    "modern", "classic", "minimal", "bold", "elegant", "premium",
+    "bento", "studio", "asymmetric", "fintech", "terminal", "aura",
+]
+VALID_LAYOUT_STYLES = QUOTE_LAYOUT_STYLES + [kind for kind in CONTRACT_LAYOUTS if kind not in QUOTE_LAYOUT_STYLES]
 
 
 class MilestonePreviewInput(BaseModel):
@@ -182,9 +189,8 @@ class DocumentCreate(BaseModel):
     @field_validator("layout_style")
     @classmethod
     def validate_layout_style(cls, v: Optional[str]) -> Optional[str]:
-        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio", "asymmetric", "fintech", "terminal", "aura"]
-        if v and v not in valid_layouts:
-            raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
+        if v and v not in VALID_LAYOUT_STYLES:
+            raise ValueError(f"Layout invalide. Options: {', '.join(VALID_LAYOUT_STYLES)}")
         return v or "classic"
 
     @model_validator(mode="after")
@@ -262,7 +268,7 @@ class DocumentUpdate(BaseModel):
     def validate_layout_style(cls, v: Optional[str]) -> Optional[str]:
         if v is None:
             return v
-        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio", "asymmetric", "fintech", "terminal", "aura"]
+        valid_layouts = VALID_LAYOUT_STYLES
         if v not in valid_layouts:
             raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
         return v

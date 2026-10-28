@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import type { ContractDraft, ContractRule } from "../types"
+import { CONTRACT_KINDS, DEFAULT_CONTRACT_RULES, contractKindMeta, type ContractKind } from "../kinds"
 
 interface ContractSidebarProps {
     draft: ContractDraft;
@@ -15,6 +16,15 @@ interface ContractSidebarProps {
 }
 
 export function ContractSidebar({ draft, onChange, isMobile = false }: ContractSidebarProps) {
+    const kind = contractKindMeta(draft.layoutStyle);
+
+    const changeKind = (next: ContractKind) => {
+        onChange({
+            layoutStyle: next,
+            rules: DEFAULT_CONTRACT_RULES[next].map((rule) => ({ ...rule })),
+        });
+    };
+
     const updateItem = (id: string, description: string) => {
         onChange({
             items: draft.items.map((item) => (item.id === id ? { ...item, description } : item)),
@@ -43,7 +53,23 @@ export function ContractSidebar({ draft, onChange, isMobile = false }: ContractS
             )}
 
             <div className={cn("space-y-2", isMobile ? "mt-1" : "mt-8")}>
-                <Label className="text-slate-300">Fin prévue de la prestation</Label>
+                <Label className="text-slate-300">Type</Label>
+                <select
+                    value={kind.id}
+                    onChange={(event) => changeKind(event.target.value as ContractKind)}
+                    className="h-11 w-full rounded-md border border-white/10 bg-white/5 px-3 text-base text-white"
+                >
+                    {CONTRACT_KINDS.map((row) => (
+                        <option key={row.id} value={row.id} className="bg-zinc-950 text-white">
+                            {row.title}
+                        </option>
+                    ))}
+                </select>
+                <p className="text-xs text-slate-500">Changer de type remplace les articles proposés.</p>
+            </div>
+
+            <div className="mt-6 space-y-2">
+                <Label className="text-slate-300">{kind.dateLabel}</Label>
                 <Input
                     type="date"
                     value={draft.endDate}
@@ -54,7 +80,7 @@ export function ContractSidebar({ draft, onChange, isMobile = false }: ContractS
 
             <section className="mt-8">
                 <div className="mb-3 flex items-center justify-between gap-3">
-                    <Label className="text-slate-300">Prestations</Label>
+                    <Label className="text-slate-300">{kind.itemsLabel}</Label>
                     <Button
                         type="button"
                         variant="ghost"
@@ -72,7 +98,7 @@ export function ContractSidebar({ draft, onChange, isMobile = false }: ContractS
                         <div key={item.id} className="flex min-w-0 items-center gap-2">
                             <Input
                                 value={item.description}
-                                placeholder="Intitulé de la prestation"
+                                placeholder="Intitulé"
                                 onChange={(event) => updateItem(item.id, event.target.value)}
                                 className="h-11 min-w-0 flex-1 border-white/10 bg-white/5 text-base text-white"
                             />

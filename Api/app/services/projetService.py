@@ -615,6 +615,7 @@ class ProjectService:
                     "created_at": c.created_at,
                     "amount_cents": DocumentService.calculate_totals(c.items)["grand_total_cents"],
                     "source_document_id": c.source_document_id,
+                    "layout_style": c.layout_style,
                 }
                 for c in contracts
             ],

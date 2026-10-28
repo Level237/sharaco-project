@@ -85,6 +85,7 @@ export interface ProjectTreeContract {
     created_at: string;
     amount_cents: number;
     source_document_id?: string | null;
+    layout_style?: string | null;
 }
 
 export interface ProjectTreeStandaloneInvoice {

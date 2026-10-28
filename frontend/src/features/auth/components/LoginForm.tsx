@@ -218,7 +218,7 @@ export function LoginForm() {
                                     render={({ field }) => (
                                         <FormItem className="text-left">
                                             <div className="flex items-center mt-6 justify-between mb-5">
-                                                <Label htmlFor="password" className="text-zinc-400 text-xs tracking-widest font-bold">Mot de passe</Label>
+                                                <Label htmlFor="password" className="text-zinc-400 text-xs  font-bold">Mot de passe</Label>
                                                 <button
                                                     type="button"
                                                     className="text-xs text-sky-500 cursor-pointer hover:text-sky-400 font-bold transition-colors"

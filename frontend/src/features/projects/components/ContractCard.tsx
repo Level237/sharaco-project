@@ -16,6 +16,7 @@ import { quotesApi } from "@/features/quotes/api/quotesApi"
 import { SendEmailModal } from "@/features/quotes/components/sendEmailModal"
 import { useState } from "react"
 import type { ProjectTreeContract } from "../types"
+import { contractKindMeta } from "@/features/contracts/kinds"
 
 interface ContractCardProps {
     contract: ProjectTreeContract;
@@ -36,6 +37,7 @@ const statusLabel: Record<string, string> = {
 export function ContractCard({ contract, variants, onRefresh, clientEmail, clientName }: ContractCardProps) {
     const [emailOpen, setEmailOpen] = useState(false);
     const canSend = contract.status === "DRAFT" || contract.status === "SENT";
+    const kind = contractKindMeta(contract.layout_style);
 
     const handleDownloadPdf = async () => {
         await quotesApi.downloadPdf(contract.id, `${contract.number || "contrat"}.pdf`);
@@ -53,7 +55,7 @@ export function ContractCard({ contract, variants, onRefresh, clientEmail, clien
         <motion.div variants={variants} initial="hidden" animate="show" layout className="group flex flex-col">
             <div className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-white/[0.02] p-1.5 transition-transform duration-300 group-hover:-translate-y-1">
                 <Link href={`/dashboard/contracts/${contract.id}`} className="relative block h-full w-full overflow-hidden rounded-md bg-slate-950/50 shadow-sm">
-                    <DocumentPreview documentId={contract.id} layoutStyle="classic" />
+                    <DocumentPreview documentId={contract.id} layoutStyle={contract.layout_style || "prestation"} />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100">
                             <Eye className="h-5 w-5" />
@@ -112,7 +114,7 @@ export function ContractCard({ contract, variants, onRefresh, clientEmail, clien
                     {contract.number || "Contrat"}
                 </h4>
                 <div className="mt-1 text-[11px] font-medium text-slate-400">
-                    {statusLabel[contract.status] || contract.status}
+                    {kind.title} · {statusLabel[contract.status] || contract.status}
                     {contract.amount_cents > 0 ? ` · ${formatCurrency(contract.amount_cents)}` : ""}
                 </div>
             </div>

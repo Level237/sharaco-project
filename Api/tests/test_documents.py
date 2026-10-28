@@ -61,6 +61,14 @@ class TestDocumentCalculations(unittest.TestCase):
             "contrat.html",
         )
         self.assertEqual(
+            pdf_renderer._get_layout_file("cession", DocumentType.CONTRAT),
+            "contrat_cession.html",
+        )
+        self.assertEqual(
+            pdf_renderer._get_layout_file("nda", DocumentType.CONTRAT),
+            "contrat_nda.html",
+        )
+        self.assertEqual(
             pdf_renderer._get_layout_file("classic", DocumentType.FACTURE),
             "facture.html",
         )
@@ -84,6 +92,13 @@ class TestDocumentCalculations(unittest.TestCase):
         self.assertEqual(payload.type, DocumentType.CONTRAT)
         empty_contract = DocumentCreate(type=DocumentType.CONTRAT, project_id=uuid.uuid4(), items=[])
         self.assertEqual(empty_contract.items, [])
+        cession = DocumentCreate(
+            type=DocumentType.CONTRAT,
+            project_id=uuid.uuid4(),
+            layout_style="cession",
+            items=[],
+        )
+        self.assertEqual(cession.layout_style, "cession")
         with self.assertRaises(ValidationError):
             DocumentCreate(type=DocumentType.DEVIS, project_id=uuid.uuid4(), items=[])
 

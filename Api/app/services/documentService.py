@@ -17,6 +17,7 @@ import json
 from app.models.client import Client
 from app.models.user import User
 from app.services.pdfRenderer import pdf_renderer
+from app.services.contractKinds import default_rules_for, normalize_contract_layout
 import logging
 from app.utils.datetime import to_naive_utc
 
@@ -321,6 +322,7 @@ class DocumentService:
             due_date=to_naive_utc(due_date),
             notes=notes,
             rules=DocumentService.encode_rules(rules),
+            layout_style=layout_style,
             user_id=user.id,
             client_id=uuid4(),
         )
@@ -392,6 +394,11 @@ class DocumentService:
         rules: Optional[list] = None,
     ) -> Document:
         logger.info(f"🔨 create_document appelé avec document_id={document_id}, layout={layout_style}")
+
+        if type == DocumentType.CONTRAT:
+            layout_style = normalize_contract_layout(layout_style)
+            if not rules:
+                rules = default_rules_for(layout_style)
 
         if document_id:
             existing = await db.execute(

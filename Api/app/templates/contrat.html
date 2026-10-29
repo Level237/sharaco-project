@@ -6,6 +6,7 @@
     <title>Contrat {{ document.number or '' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root { --accent: {{ accent or '#2563EB' }}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -42,7 +43,7 @@
             font-size: 10px;
             letter-spacing: 0.28em;
             text-transform: uppercase;
-            color: #78716c;
+            color: var(--accent);
             font-weight: 600;
         }
 
@@ -62,7 +63,7 @@
 
         .rule {
             height: 2px;
-            background: #1c1917;
+            background: var(--accent);
             margin: 18px 0 22px;
         }
 
@@ -108,7 +109,8 @@
             display: inline-block;
             width: 26px;
             height: 26px;
-            border: 1.5px solid #1c1917;
+            border: 1.5px solid var(--accent);
+            color: var(--accent);
             text-align: center;
             line-height: 23px;
             font-size: 12px;
@@ -230,7 +232,7 @@
             font-size: 10px;
             letter-spacing: 0.18em;
             text-transform: uppercase;
-            color: #78716c;
+            color: var(--accent);
             font-weight: 700;
             margin-bottom: 4px;
         }
@@ -271,7 +273,7 @@
 
         .sign-box {
             min-height: 88px;
-            border-bottom: 1px solid #1c1917;
+            border-bottom: 1px solid var(--accent);
             margin: 28px 0 8px;
         }
 

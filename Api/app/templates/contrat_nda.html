@@ -5,6 +5,7 @@
     <title>Confidentialité {{ document.number or '' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap" rel="stylesheet">
     <style>
+        :root { --accent: {{ accent or '#111111' }}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: "Newsreader", Georgia, serif;
@@ -25,10 +26,10 @@
         }
         @media screen { body { padding: 24px; } .page { box-shadow: 0 12px 28px rgba(0,0,0,.12); } }
         @media print { body { background: white; padding: 0; } .page { box-shadow: none; outline: none; } @page { size: A4; margin: 14mm; } }
-        .kicker { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .28em; text-transform: uppercase; }
+        .kicker { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--accent); }
         h1 { font-size: 30px; font-weight: 700; margin: 14px 0 8px; letter-spacing: -.02em; }
         .doc-id { font-family: "IBM Plex Mono", monospace; font-size: 12px; }
-        hr { border: 0; border-top: 1px solid #111; margin: 16px 0 22px; }
+        hr { border: 0; border-top: 1px solid var(--accent); margin: 16px 0 22px; }
         .meta { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
         .meta td { width: 33%; font-size: 13px; }
         .lbl { font-family: "IBM Plex Mono", monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; display: block; margin-bottom: 3px; }
@@ -49,7 +50,7 @@
         .notes { font-size: 14px; white-space: pre-wrap; }
         .sign-grid { width: 100%; border-collapse: collapse; }
         .sign-grid td { width: 50%; padding-right: 20px; vertical-align: top; }
-        .sign-box { min-height: 72px; border-bottom: 1px solid #111; margin: 28px 0 8px; }
+        .sign-box { min-height: 72px; border-bottom: 1px solid var(--accent); margin: 28px 0 8px; }
         .sign-label { font-size: 12px; }
         .legal { margin-top: 28px; font-family: "IBM Plex Mono", monospace; font-size: 10px; line-height: 1.5; }
     </style>

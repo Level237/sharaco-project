@@ -5,6 +5,7 @@
     <title>Accompagnement {{ document.number or '' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root { --accent: {{ accent or '#2563EB' }}; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: "IBM Plex Sans", sans-serif;
@@ -28,13 +29,13 @@
         .stamp { display: table-cell; text-align: right; vertical-align: bottom; }
         .kicker { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: #64748b; font-weight: 600; }
         h1 { font-size: 26px; font-weight: 700; letter-spacing: -.03em; margin-top: 6px; }
-        .chip { display: inline-block; border: 1px solid #94a3b8; padding: 6px 10px; font-size: 12px; font-weight: 600; color: #334155; }
+        .chip { display: inline-block; border: 1px solid var(--accent); padding: 6px 10px; font-size: 12px; font-weight: 600; color: var(--accent); }
         .grid { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
         .grid td { width: 25%; border: 1px solid #e2e8f0; padding: 10px 12px; background: #fff; vertical-align: top; }
         .lbl { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #64748b; margin-bottom: 4px; font-weight: 600; }
         .val { font-size: 13px; font-weight: 600; }
         .article { margin-bottom: 22px; }
-        .article-title { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #0f172a; font-weight: 700; margin-bottom: 8px; border-bottom: 2px solid #0f172a; padding-bottom: 6px; }
+        .article-title { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #0f172a; font-weight: 700; margin-bottom: 8px; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
         .lede { font-size: 13.5px; color: #334155; margin-bottom: 10px; }
         .parties { width: 100%; border-collapse: collapse; }
         .parties td { width: 50%; vertical-align: top; padding: 12px 14px; background: #fff; border: 1px solid #e2e8f0; }
@@ -44,14 +45,14 @@
         ol.scope { margin: 0 0 8px 18px; }
         ol.scope li { margin-bottom: 5px; font-size: 13.5px; }
         .rule-block { display: table; width: 100%; margin-top: 10px; }
-        .rule-num { display: table-cell; width: 42px; font-weight: 700; color: #64748b; }
+        .rule-num { display: table-cell; width: 42px; font-weight: 700; color: var(--accent); }
         .rule-copy { display: table-cell; }
         .rule-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
         .rule-body { font-size: 13.5px; white-space: pre-wrap; color: #334155; }
         .notes { font-size: 13.5px; white-space: pre-wrap; }
         .sign-grid { width: 100%; border-collapse: collapse; }
         .sign-grid td { width: 50%; padding-right: 16px; vertical-align: top; }
-        .sign-box { min-height: 76px; border-bottom: 1px solid #0f172a; margin: 22px 0 8px; }
+        .sign-box { min-height: 76px; border-bottom: 1px solid var(--accent); margin: 22px 0 8px; }
         .sign-label { font-size: 12px; color: #475569; }
         .legal { margin-top: 28px; font-size: 10.5px; color: #64748b; }
     </style>

@@ -73,7 +73,7 @@ export function ContractKindPicker({
 }) {
     return (
         <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
-            <DialogContent className="max-w-[92vw] overflow-hidden rounded-3xl border-slate-200/50 bg-white/70 p-0 shadow-2xl backdrop-blur-3xl dark:border-white/10 dark:bg-[#0a0a0a]/80 sm:max-w-[420px]">
+            <DialogContent className="flex max-h-[90dvh] max-w-[92vw] flex-col overflow-hidden rounded-3xl border-slate-200/50 bg-white/70 p-0 shadow-2xl backdrop-blur-3xl dark:border-white/10 dark:bg-[#0a0a0a]/80 sm:max-w-[420px]">
                 {busy ? (
                     <div className="flex flex-col items-center justify-center space-y-4 px-6 py-12 text-center">
                         <div className="relative mb-2">
@@ -88,8 +88,8 @@ export function ContractKindPicker({
                         </DialogDescription>
                     </div>
                 ) : (
-                    <div className="flex flex-col">
-                        <div className="flex flex-col items-center bg-gradient-to-b from-blue-500/10 to-transparent px-4 pb-5 pt-8 text-center sm:px-6 sm:pt-10">
+                    <div className="flex min-h-0 flex-col overflow-hidden">
+                        <div className="flex shrink-0 flex-col items-center bg-gradient-to-b from-blue-500/10 to-transparent px-4 pb-5 pt-8 text-center sm:px-6 sm:pt-10">
                             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 shadow-inner ring-1 ring-white/20 dark:bg-blue-500/20 dark:ring-white/10">
                                 <ScrollText className="h-8 w-8 text-blue-600 dark:text-blue-400" strokeWidth={1.5} />
                             </div>
@@ -101,7 +101,7 @@ export function ContractKindPicker({
                             </DialogDescription>
                         </div>
 
-                        <div className="space-y-3 px-4 pb-5 sm:px-6 sm:pb-6">
+                        <div className="min-h-0 space-y-3 overflow-y-auto overscroll-contain px-4 pb-5 sm:px-6 sm:pb-6">
                             <ContractKindGrid onSelect={onSelect} />
 
                             <p className="px-1 text-center text-[11px] leading-snug text-slate-400 dark:text-slate-500">

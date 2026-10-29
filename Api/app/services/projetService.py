@@ -313,7 +313,6 @@ class ProjectService:
             select(Project)
             .options(
                 selectinload(Project.attachments),
-                selectinload(Project.documents),
                 selectinload(Project.client)
             )
             .where(

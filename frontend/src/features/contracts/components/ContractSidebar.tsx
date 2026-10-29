@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus, Trash2 } from "lucide-react"
+import { CheckCircle2, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import type { ContractDraft, ContractRule } from "../types"
 import { CONTRACT_KINDS, DEFAULT_CONTRACT_RULES, contractKindMeta, type ContractKind } from "../kinds"
+import { CONTRACT_BRAND_COLORS } from "../brandColors"
 
 interface ContractSidebarProps {
     draft: ContractDraft;
@@ -66,6 +67,44 @@ export function ContractSidebar({ draft, onChange, isMobile = false }: ContractS
                     ))}
                 </select>
                 <p className="text-xs text-slate-500">Changer de type remplace les articles proposés.</p>
+            </div>
+
+            <div className="mt-6 space-y-3">
+                <Label className="text-slate-300">Couleur d’accent</Label>
+                <div className="flex flex-wrap gap-2.5">
+                    {CONTRACT_BRAND_COLORS.map((color) => {
+                        const isActive = draft.brandColor?.toLowerCase() === color.value.toLowerCase()
+                        return (
+                            <button
+                                key={color.value}
+                                type="button"
+                                title={color.name}
+                                onClick={() => onChange({ brandColor: color.value })}
+                                className={cn(
+                                    "h-8 w-8 rounded-full border-2 transition-transform hover:scale-110",
+                                    isActive ? "border-white scale-110" : "border-transparent"
+                                )}
+                                style={{ backgroundColor: color.value }}
+                            >
+                                {isActive ? <CheckCircle2 className="mx-auto h-4 w-4 text-white" /> : null}
+                            </button>
+                        )
+                    })}
+                </div>
+                <div className="flex w-fit items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-2.5">
+                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md border border-white/10">
+                        <input
+                            type="color"
+                            value={draft.brandColor || "#2563EB"}
+                            onChange={(event) => onChange({ brandColor: event.target.value })}
+                            className="absolute -left-2 -top-2 h-14 w-14 cursor-pointer"
+                            aria-label="Couleur personnalisée"
+                        />
+                    </div>
+                    <p className="font-mono text-sm font-semibold tracking-wider text-white">
+                        {(draft.brandColor || "#2563EB").toUpperCase()}
+                    </p>
+                </div>
             </div>
 
             <div className="mt-6 space-y-2">

@@ -72,8 +72,8 @@ function QuoteBuilderContent() {
 
     if (queryType === "CONTRAT") {
         return (
-            <div className="flex min-h-[100dvh] items-center justify-center bg-zinc-950 px-4">
-                <div className="w-full max-w-[420px] overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0a]/80 shadow-2xl backdrop-blur-3xl">
+            <div className="flex min-h-[100dvh] items-start justify-center overflow-y-auto bg-zinc-950 px-4 py-8">
+                <div className="my-auto w-full max-w-[420px] overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0a]/80 shadow-2xl backdrop-blur-3xl">
                     {isCreating ? (
                         <div className="flex flex-col items-center justify-center space-y-4 px-6 py-12 text-center">
                             <div className="relative mb-2">

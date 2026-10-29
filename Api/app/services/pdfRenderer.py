@@ -545,6 +545,9 @@ class PDFRenderer:
             "source_quote_number": source_quote_number,
             "reglement": _decode_contract_rules(getattr(document, "rules", None)),
             "contract_title": contract_title(getattr(document, "layout_style", None)),
+            "accent": getattr(document, "primary_color", None)
+                or getattr(template, "primary_color", None)
+                or "#2563EB",
         }
         return context
 

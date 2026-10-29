@@ -37,8 +37,9 @@ export function useProject(id: string | null) {
     return useQuery({
         queryKey: ['project', id],
         queryFn: () => projectsApi.getById(id!),
-        enabled: !!id,
+        enabled: Boolean(id),
         staleTime: 2 * 60 * 1000,
+        retry: 1,
     });
 }
 

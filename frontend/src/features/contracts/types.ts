@@ -17,4 +17,5 @@ export interface ContractDraft {
     items: { id: string; description: string }[];
     rules: ContractRule[];
     layoutStyle: string;
+    brandColor: string;
 }

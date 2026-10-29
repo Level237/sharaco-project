@@ -323,6 +323,7 @@ class DocumentService:
             notes=notes,
             rules=DocumentService.encode_rules(rules),
             layout_style=layout_style,
+            primary_color=primary_color,
             user_id=user.id,
             client_id=uuid4(),
         )

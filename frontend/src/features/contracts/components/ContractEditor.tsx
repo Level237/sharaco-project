@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
 import { ArrowLeft, ChevronUp, Loader2, Mail, Save, Settings2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 import { quotesApi } from "@/features/quotes/api/quotesApi"
 import { clientsApi } from "@/features/clients/api/clientsApi"
 import { LivePreview } from "@/features/quotes/components/QuoteBuilder/LivePreview"
@@ -15,6 +22,7 @@ import type { QuoteDraft } from "@/features/quotes/types/QuoteBuilder"
 import { ContractSidebar } from "./ContractSidebar"
 import type { ContractDraft } from "../types"
 import { normalizeContractKind } from "../kinds"
+import { CONTRACT_BRAND_COLORS, DEFAULT_CONTRACT_COLOR } from "../brandColors"
 
 interface ContractEditorProps {
     documentId: string;
@@ -84,6 +92,7 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
                         body: rule.body || "",
                     })),
                     layoutStyle: normalizeContractKind(doc.layout_style),
+                    brandColor: doc.primary_color || DEFAULT_CONTRACT_COLOR,
                 });
             } catch {
                 toast({ title: "Erreur", description: "Contrat introuvable.", variant: "destructive" });
@@ -143,6 +152,7 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
             endDate: draft.endDate || null,
             rules: draft.rules,
             layoutStyle: draft.layoutStyle || "prestation",
+            brandColor: draft.brandColor || DEFAULT_CONTRACT_COLOR,
         };
     }, [draft, clientId]);
 
@@ -153,6 +163,7 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
             await quotesApi.update(documentId, {
                 notes: draft.notes,
                 layout_style: draft.layoutStyle,
+                primary_color: draft.brandColor,
                 due_date: draft.endDate ? `${draft.endDate}T12:00:00` : null,
                 rules: draft.rules.filter((rule) => rule.title.trim() || rule.body.trim()),
                 items: draft.items
@@ -197,7 +208,7 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
     };
 
     return (
-        <div className="flex min-h-[100dvh] w-full overflow-hidden bg-zinc-950">
+        <div className="flex h-[100dvh] w-full overflow-hidden bg-zinc-950">
             <header className="fixed inset-x-0 top-0 z-[80] flex h-14 items-center justify-between gap-2 border-b border-white/10 bg-zinc-950/90 px-3 backdrop-blur-xl sm:h-16 sm:px-4">
                 <button
                     type="button"
@@ -208,11 +219,20 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
                     <span className="hidden sm:inline">Retour au projet</span>
                     <span className="truncate sm:hidden">{draft.number || "Contrat"}</span>
                 </button>
-                <div className="hidden min-w-0 flex-1 px-3 lg:block">
-                    <p className="truncate text-sm font-medium text-white">{draft.number}</p>
-                    
+                <div className="hidden min-w-0 flex-1 justify-center px-3 lg:flex">
+                    <ContractColorPicker
+                        color={draft.brandColor}
+                        onChange={(brandColor) => patchDraft({ brandColor })}
+                    />
                 </div>
                 <div className="flex items-center gap-2">
+                    <div className="lg:hidden">
+                        <ContractColorPicker
+                            color={draft.brandColor}
+                            onChange={(brandColor) => patchDraft({ brandColor })}
+                            compact
+                        />
+                    </div>
                     {(draft.status === "DRAFT" || draft.status === "SENT" || !draft.status) && (
                         <Button
                             type="button"
@@ -236,12 +256,12 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
                 </div>
             </header>
 
-            <aside className="hidden h-[100dvh] w-[min(420px,38vw)] shrink-0 pt-16 lg:block">
+            <aside className="hidden h-full w-[min(420px,38vw)] shrink-0 overflow-hidden pt-16 lg:block">
                 <ContractSidebar draft={draft} onChange={patchDraft} />
             </aside>
 
-            <main className="relative min-h-[100dvh] min-w-0 flex-1 overflow-hidden bg-[#f4f1ea] pt-14 sm:pt-16">
-                <div className="h-full overflow-auto px-3 py-4 pb-28 sm:px-6 sm:py-6 lg:pb-6">
+            <main className="relative h-full min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#f4f1ea] pt-14 sm:pt-16">
+                <div className="px-3 py-4 pb-28 sm:px-6 sm:py-6 lg:pb-6">
                     <div className="mx-auto w-full max-w-[900px]">
                         <LivePreview draft={previewDraft} layoutStyle={draft.layoutStyle || "prestation"} />
                     </div>
@@ -267,6 +287,72 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
             />
         </div>
     );
+}
+
+function ContractColorPicker({
+    color,
+    onChange,
+    compact = false,
+}: {
+    color: string
+    onChange: (color: string) => void
+    compact?: boolean
+}) {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                {compact ? (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 border border-white/10 bg-white/5 hover:bg-white/10"
+                    >
+                        <div
+                            className="h-4 w-4 rounded-full border border-white/20"
+                            style={{ backgroundColor: color }}
+                        />
+                    </Button>
+                ) : (
+                    <button
+                        type="button"
+                        className="flex min-w-[110px] items-center gap-3 rounded-lg border border-white/5 bg-white/5 px-3 py-1.5 hover:bg-white/10"
+                    >
+                        <div
+                            className="h-3.5 w-3.5 rounded-full border border-white/20"
+                            style={{ backgroundColor: color }}
+                        />
+                        <span className="font-mono text-[10px] font-black uppercase tracking-widest text-zinc-300">
+                            {color}
+                        </span>
+                    </button>
+                )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+                align={compact ? "end" : "center"}
+                className="z-[120] w-56 rounded-lg border-white/10 bg-zinc-900 p-3 shadow-2xl backdrop-blur-xl"
+            >
+                <DropdownMenuLabel className="px-1 pb-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    Palette de couleurs
+                </DropdownMenuLabel>
+                <div className={cn("grid gap-2", compact ? "grid-cols-5" : "grid-cols-6")}>
+                    {CONTRACT_BRAND_COLORS.map((item) => (
+                        <button
+                            key={item.value}
+                            type="button"
+                            title={item.name}
+                            onClick={() => onChange(item.value)}
+                            className={cn(
+                                "h-6 w-6 rounded-full border-2 transition-all hover:scale-110",
+                                color.toLowerCase() === item.value.toLowerCase() ? "border-white" : "border-transparent"
+                            )}
+                            style={{ backgroundColor: item.value }}
+                        />
+                    ))}
+                </div>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
 }
 
 function ContractMobileDrawer({

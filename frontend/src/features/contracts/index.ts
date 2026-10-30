@@ -1,3 +1,5 @@
 export { ContractEditor } from "./components/ContractEditor"
 export { ContractSidebar } from "./components/ContractSidebar"
+export { ContractDetailView } from "./components/ContractDetailView"
+export { contractDetailHref, contractEditHref } from "./paths"
 export type { ContractDraft, ContractRule } from "./types"

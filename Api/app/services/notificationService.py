@@ -2,6 +2,7 @@ from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 from app.core.currency import format_amount, resolve_currency
+from app.core.config import settings
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,37 +44,52 @@ class NotificationService:
             document_kind = "Contrat" if is_contract else "Devis"
             document_label = "contrat" if is_contract else "devis"
             logger.info(
-                f"🔔 Notification acceptation : {document_kind} {document.number} accepté"
+                f"🔔 Notification acceptation : {document_kind} {document.number} "
+                f"{'signé' if is_contract else 'accepté'}"
             )
 
-            # ✅ Calcul du montant avec la devise de l'utilisateur propriétaire
             totals = DocumentService.calculate_totals(document.items)
             user_currency = resolve_currency(
                 getattr(document.owner, "currency", None),
                 getattr(document.owner, "country", None),
             )
             amount = format_amount(totals["grand_total_cents"], user_currency)
+            show_amount = (totals.get("grand_total_cents") or 0) > 0
 
-            # ✅ Nom de l'utilisateur
             user_name = (
                 getattr(document.owner, "full_name", None)
                 or getattr(document.owner, "first_name", None)
                 or document.owner.email.split("@")[0]
             )
+            client_name = document.client.name if document.client else "votre client"
+            base_url = (settings.FRONTEND_URL or "http://localhost:3000").rstrip("/")
+            dashboard_url = (
+                f"{base_url}/dashboard/contracts/{document.id}"
+                if is_contract
+                else f"{base_url}/dashboard/quotes/create/{document.id}"
+            )
+            subject = (
+                f"{client_name} vient de signer le contrat {document.number or ''}".strip()
+                if is_contract
+                else f"✅ {document_kind} {document.number} accepté"
+            )
 
-            # Envoyer l'email
             result = await EmailService.send_notification(
                 to_email=document.owner.email,
-                subject=f"✅ {document_kind} {document.number} accepté",
+                subject=subject,
                 template="document_accepted.html",
                 context={
                     "user_name": user_name,
+                    "is_contract": is_contract,
                     "document_kind": document_kind,
                     "document_label": document_label,
                     "document_number": document.number or str(document_id),
-                    "client_name": document.client.name if document.client else "Client",
-                    "signature_name": document.signature_name or "Non précisé",
+                    "client_name": client_name,
+                    "signature_name": document.signature_name or client_name,
                     "amount": amount,
+                    "show_amount": show_amount,
+                    "dashboard_url": dashboard_url,
+                    "cta_label": "Voir le contrat" if is_contract else "Générer la facture",
                     "accepted_at": (
                         document.accepted_at.strftime("%d/%m/%Y à %H:%M")
                         if document.accepted_at

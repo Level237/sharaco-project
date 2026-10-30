@@ -298,6 +298,14 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
                                                                     </span>
                                                                 </div>
                                                             )}
+                                                            {isContract && activity.action === "ACCEPTED" && (
+                                                                <div className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                                                                    <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-400" />
+                                                                    <span className="text-[9px] sm:text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                                                                        Signé
+                                                                    </span>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </Link>

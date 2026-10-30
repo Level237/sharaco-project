@@ -18,4 +18,9 @@ export interface ContractDraft {
     rules: ContractRule[];
     layoutStyle: string;
     brandColor: string;
+    signatureName?: string | null;
+    acceptedAt?: string | null;
+    providerSignatureName?: string | null;
+    providerSignedAt?: string | null;
+    signatureRevision?: number;
 }

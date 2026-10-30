@@ -50,6 +50,23 @@ export function ContractSidebar({ draft, onChange, isMobile = false }: ContractS
                     <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Contrat</p>
                     <h2 className="mt-1 truncate text-lg font-semibold text-white">{draft.number || "Brouillon"}</h2>
                     <p className="mt-1 truncate text-sm text-slate-400">{draft.clientName || "Client du projet"}</p>
+                    {(draft.signatureRevision || 1) > 1 && (
+                        <p className="mt-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                            Version {draft.signatureRevision}
+                        </p>
+                    )}
+                    <div className="mt-3 space-y-1 text-xs text-zinc-400">
+                        <p>
+                            Prestataire :{" "}
+                            {draft.providerSignatureName
+                                ? `signé par ${draft.providerSignatureName}`
+                                : "en attente"}
+                        </p>
+                        <p>
+                            Client :{" "}
+                            {draft.signatureName ? `signé par ${draft.signatureName}` : "en attente"}
+                        </p>
+                    </div>
                 </>
             )}
 

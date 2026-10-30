@@ -3,8 +3,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowLeft, ChevronUp, Loader2, Mail, Save, Settings2, X } from "lucide-react"
+import { ArrowLeft, CheckCircle2, ChevronUp, Loader2, Mail, PenTool, Save, Settings2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -23,6 +31,23 @@ import { ContractSidebar } from "./ContractSidebar"
 import type { ContractDraft } from "../types"
 import { normalizeContractKind } from "../kinds"
 import { CONTRACT_BRAND_COLORS, DEFAULT_CONTRACT_COLOR } from "../brandColors"
+import { contractDetailHref } from "../paths"
+import { useAuthStore } from "@/store/auth-store"
+import type { Document } from "@/features/quotes/types"
+
+function signatureFields(doc: Document): Pick<
+    ContractDraft,
+    "status" | "signatureName" | "acceptedAt" | "providerSignatureName" | "providerSignedAt" | "signatureRevision"
+> {
+    return {
+        status: doc.status,
+        signatureName: doc.signature_name || null,
+        acceptedAt: doc.accepted_at || null,
+        providerSignatureName: doc.provider_signature_name || null,
+        providerSignedAt: doc.provider_signed_at || null,
+        signatureRevision: doc.signature_revision || 1,
+    }
+}
 
 interface ContractEditorProps {
     documentId: string;
@@ -42,6 +67,10 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
     const [clientId, setClientId] = useState<string>("");
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isEmailOpen, setIsEmailOpen] = useState(false);
+    const [isSignOpen, setIsSignOpen] = useState(false);
+    const [providerName, setProviderName] = useState("");
+    const [signing, setSigning] = useState(false);
+    const user = useAuthStore((state) => state.user);
 
     useEffect(() => {
         let cancelled = false;
@@ -50,6 +79,10 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
                 const doc = await quotesApi.getById(documentId);
                 if (doc.type !== "CONTRAT") {
                     router.replace(`/dashboard/quotes/create/${documentId}`);
+                    return;
+                }
+                if (doc.status === "ACCEPTED") {
+                    router.replace(contractDetailHref(documentId));
                     return;
                 }
                 let client = { name: "", email: "", phone: "", address: "" };
@@ -93,7 +126,9 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
                     })),
                     layoutStyle: normalizeContractKind(doc.layout_style),
                     brandColor: doc.primary_color || DEFAULT_CONTRACT_COLOR,
+                    ...signatureFields(doc),
                 });
+                setProviderName(user?.full_name || user?.company_name || "");
             } catch {
                 toast({ title: "Erreur", description: "Contrat introuvable.", variant: "destructive" });
             } finally {
@@ -153,14 +188,19 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
             rules: draft.rules,
             layoutStyle: draft.layoutStyle || "prestation",
             brandColor: draft.brandColor || DEFAULT_CONTRACT_COLOR,
+            signatureName: draft.signatureName,
+            acceptedAt: draft.acceptedAt,
+            providerSignatureName: draft.providerSignatureName,
+            providerSignedAt: draft.providerSignedAt,
+            signatureRevision: draft.signatureRevision,
         };
     }, [draft, clientId]);
 
-    const save = useCallback(async () => {
+    const save = useCallback(async (options?: { silent?: boolean }) => {
         if (!draft) return false;
         setSaving(true);
         try {
-            await quotesApi.update(documentId, {
+            const updated = await quotesApi.update(documentId, {
                 notes: draft.notes,
                 layout_style: draft.layoutStyle,
                 primary_color: draft.brandColor,
@@ -175,7 +215,18 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
                         tax_rate: 0,
                     })),
             });
-            toast({ title: "Contrat enregistré" });
+            const reset =
+                updated.signatures_reset ||
+                (updated.signature_revision || 1) > (draft.signatureRevision || 1);
+            setDraft((prev) => (prev ? { ...prev, ...signatureFields(updated) } : prev));
+            if (reset) {
+                toast({
+                    title: "Nouvelle version",
+                    description: "Les signatures ont été annulées. Les deux parties devront re-signer.",
+                });
+            } else if (!options?.silent) {
+                toast({ title: "Contrat enregistré" });
+            }
             return true;
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Impossible d'enregistrer le contrat.";
@@ -185,6 +236,27 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
             setSaving(false);
         }
     }, [documentId, draft, toast]);
+
+    const signAsProvider = useCallback(async () => {
+        if (!providerName.trim()) {
+            toast({ title: "Nom requis", description: "Indiquez votre nom pour signer.", variant: "destructive" });
+            return;
+        }
+        const saved = await save({ silent: true });
+        if (!saved) return;
+        setSigning(true);
+        try {
+            const updated = await quotesApi.signAsProvider(documentId, providerName.trim());
+            setDraft((prev) => (prev ? { ...prev, ...signatureFields(updated) } : prev));
+            setIsSignOpen(false);
+            toast({ title: "Contrat signé", description: "Votre signature apparaît sur le document." });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Impossible de signer.";
+            toast({ title: "Erreur", description: message, variant: "destructive" });
+        } finally {
+            setSigning(false);
+        }
+    }, [documentId, providerName, save, toast]);
 
     const openSendModal = useCallback(async () => {
         const saved = await save();
@@ -233,6 +305,28 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
                             compact
                         />
                     </div>
+                    {draft.providerSignatureName ? (
+                        <span className="hidden items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-2 text-xs font-medium text-emerald-300 sm:inline-flex">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Signé
+                        </span>
+                    ) : (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                if (!providerName) {
+                                    setProviderName(user?.full_name || user?.company_name || "");
+                                }
+                                setIsSignOpen(true);
+                            }}
+                            disabled={saving || signing}
+                            className="h-10 border-white/10 bg-white/5 px-3 text-slate-200 hover:bg-white/10 sm:px-4"
+                        >
+                            <PenTool className="h-4 w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Signer</span>
+                        </Button>
+                    )}
                     {(draft.status === "DRAFT" || draft.status === "SENT" || !draft.status) && (
                         <Button
                             type="button"
@@ -285,6 +379,44 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
                 documentLabel="contrat"
                 onSent={() => setDraft((prev) => prev ? { ...prev, status: "SENT" } : prev)}
             />
+
+            <Dialog open={isSignOpen} onOpenChange={setIsSignOpen}>
+                <DialogContent className="border-white/10 bg-zinc-950 text-zinc-100 sm:max-w-[420px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-white">Signer en tant que prestataire</DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            Votre nom et la date apparaîtront dans la case prestataire.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-zinc-300">Votre nom</label>
+                        <Input
+                            value={providerName}
+                            onChange={(event) => setProviderName(event.target.value)}
+                            placeholder="Prénom et nom"
+                            className="h-12 border-white/10 bg-white/5 text-white"
+                            disabled={signing}
+                        />
+                    </div>
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsSignOpen(false)}
+                            disabled={signing}
+                            className="h-11 flex-1 border-white/10 bg-transparent text-zinc-300"
+                        >
+                            Annuler
+                        </Button>
+                        <Button
+                            onClick={() => void signAsProvider()}
+                            disabled={!providerName.trim() || signing}
+                            className="h-11 flex-1 bg-[#2563EB] text-white hover:bg-[#2563EB]/90"
+                        >
+                            {signing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Signer"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

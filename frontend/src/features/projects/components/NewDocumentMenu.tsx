@@ -42,7 +42,7 @@ export function NewDocumentMenu({ projectId, variant = "header" }: NewDocumentMe
                 notes: "",
                 rules: DEFAULT_CONTRACT_RULES[kind],
             });
-            router.push(`/dashboard/contracts/${document.id}`);
+            router.push(`/dashboard/contracts/${document.id}/edit`);
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Impossible de créer le contrat.";
             toast({ title: "Erreur", description: message, variant: "destructive" });

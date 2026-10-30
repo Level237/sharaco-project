@@ -548,8 +548,42 @@ class PDFRenderer:
             "accent": getattr(document, "primary_color", None)
                 or getattr(template, "primary_color", None)
                 or "#2563EB",
+            "signatures": self._build_signatures(document),
         }
         return context
+
+    @staticmethod
+    def _format_sign_date(value) -> str | None:
+        if not value:
+            return None
+        if isinstance(value, str):
+            try:
+                value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                return value
+        if getattr(value, "tzinfo", None):
+            value = value.replace(tzinfo=None)
+        try:
+            return value.strftime("%d/%m/%Y")
+        except AttributeError:
+            return None
+
+    @classmethod
+    def _build_signatures(cls, document: Document) -> dict:
+        client_name = getattr(document, "signature_name", None)
+        provider_name = getattr(document, "provider_signature_name", None)
+        revision = getattr(document, "signature_revision", 1) or 1
+        return {
+            "revision": revision,
+            "client": {
+                "name": client_name,
+                "date": cls._format_sign_date(getattr(document, "accepted_at", None)),
+            } if client_name else None,
+            "provider": {
+                "name": provider_name,
+                "date": cls._format_sign_date(getattr(document, "provider_signed_at", None)),
+            } if provider_name else None,
+        }
 
     async def render_html(
         self,

@@ -54,4 +54,9 @@ export interface QuoteDraft {
     isSaved?: boolean;        // Indique si le draft est sauvegardé en DB
     templateId?: string | null;  // ID du template sélectionné
     layoutStyle?: string;     // "classic" | "modern" | "minimal"
+    signatureName?: string | null;
+    acceptedAt?: string | null;
+    providerSignatureName?: string | null;
+    providerSignedAt?: string | null;
+    signatureRevision?: number;
 }

@@ -222,16 +222,11 @@ class DocumentService:
 
     @staticmethod
     async def handle_contract_acceptance(db: AsyncSession, contract: Document) -> dict:
-        from app.services.notificationService import NotificationService
-
         contract.status = DocumentStatus.ACCEPTED
         contract.accepted_at = to_naive_utc(datetime.now(timezone.utc))
         db.add(contract)
+        pdf_renderer.invalidate_document_cache(contract.id)
         await db.flush()
-        try:
-            await NotificationService.notify_document_accepted(contract.id, db)
-        except Exception as e:
-            logger.warning(f"⚠️ Erreur notification contrat: {e}")
         await db.refresh(contract)
         return {
             "quote": contract,
@@ -283,6 +278,11 @@ class DocumentService:
         due_date: Optional[datetime] = None,
         rules: Optional[list] = None,
         notes: Optional[str] = None,
+        signature_name: Optional[str] = None,
+        accepted_at: Optional[datetime] = None,
+        provider_signature_name: Optional[str] = None,
+        provider_signed_at: Optional[datetime] = None,
+        signature_revision: int = 1,
     ) -> str:
         # ✅ CHANGÉ : default tax_rate à 0 au lieu de 20
         if items is None:
@@ -326,6 +326,11 @@ class DocumentService:
             primary_color=primary_color,
             user_id=user.id,
             client_id=uuid4(),
+            signature_name=signature_name,
+            accepted_at=to_naive_utc(accepted_at) if accepted_at else None,
+            provider_signature_name=provider_signature_name,
+            provider_signed_at=to_naive_utc(provider_signed_at) if provider_signed_at else None,
+            signature_revision=signature_revision or 1,
         )
 
         fake_doc.items = [
@@ -547,6 +552,55 @@ class DocumentService:
         return document
 
     @staticmethod
+    def _contract_content_snapshot(document) -> tuple:
+        items = tuple(
+            (
+                getattr(item, "description", ""),
+                getattr(item, "quantity", 1),
+                getattr(item, "unit_price_cents", 0),
+                getattr(item, "tax_rate", 0),
+            )
+            for item in (document.items or [])
+        )
+        due = document.due_date
+        due_key = due.strftime("%Y-%m-%d") if hasattr(due, "strftime") else (str(due)[:10] if due else None)
+        layout = getattr(document, "layout_style", None)
+        if document.type == DocumentType.CONTRAT:
+            layout = normalize_contract_layout(layout)
+        return (
+            document.notes,
+            getattr(document, "rules", None),
+            layout,
+            due_key,
+            str(document.client_id) if document.client_id else None,
+            (getattr(document, "primary_color", None) or "").lower(),
+            items,
+        )
+
+    @staticmethod
+    def invalidate_contract_signatures(document) -> bool:
+        if document.type != DocumentType.CONTRAT:
+            return False
+        had_signature = bool(
+            document.signature_name
+            or getattr(document, "provider_signature_name", None)
+            or document.accepted_at
+            or document.status in (DocumentStatus.ACCEPTED, DocumentStatus.REFUSED)
+        )
+        if not had_signature:
+            return False
+        document.signature_name = None
+        document.accepted_at = None
+        document.provider_signature_name = None
+        document.provider_signed_at = None
+        document.refused_at = None
+        document.refusal_reason = None
+        document.signature_revision = (getattr(document, "signature_revision", 1) or 1) + 1
+        if document.status in (DocumentStatus.ACCEPTED, DocumentStatus.REFUSED):
+            document.status = DocumentStatus.DRAFT
+        return True
+
+    @staticmethod
     async def update_document(db, document, client_id=None, template_id=None, layout_style=None,
                                due_date=None, items=None, notes=None,
                                primary_color=None, secondary_color=None, accent_color=None,
@@ -554,6 +608,7 @@ class DocumentService:
                                show_bank_details=None, show_tax_id=None, project_id=None,
                                source_document_id=None, clear_source_document_id=False,
                                rules=None):
+        previous_snapshot = DocumentService._contract_content_snapshot(document)
         if client_id is not None: document.client_id = client_id
         if project_id is not None: document.project_id = project_id
         if clear_source_document_id:
@@ -588,6 +643,13 @@ class DocumentService:
                     document_id=document.id,
                 )
                 db.add(item)
+        signatures_reset = False
+        if document.type == DocumentType.CONTRAT:
+            next_snapshot = DocumentService._contract_content_snapshot(document)
+            if next_snapshot != previous_snapshot:
+                signatures_reset = DocumentService.invalidate_contract_signatures(document)
+        setattr(document, "_signatures_reset", signatures_reset)
+        pdf_renderer.invalidate_document_cache(document.id)
         await db.commit()
         await db.refresh(document, ['items'])
         return document

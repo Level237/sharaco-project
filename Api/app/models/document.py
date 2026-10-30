@@ -84,6 +84,9 @@ class Document(SQLModel, table=True):
     refused_at: Optional[datetime] = None
     refusal_reason: Optional[str] = None
     signature_name: Optional[str] = Field(default=None, max_length=255)
+    provider_signature_name: Optional[str] = Field(default=None, max_length=255)
+    provider_signed_at: Optional[datetime] = None
+    signature_revision: int = Field(default=1, description="Incrémenté à chaque invalidation des signatures")
 
     paid_at: Optional[datetime] = Field(
         default=None,

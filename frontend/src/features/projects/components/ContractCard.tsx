@@ -81,12 +81,14 @@ export function ContractCard({ contract, variants, onRefresh, clientEmail, clien
                                     Visualiser
                                 </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem asChild className="cursor-pointer">
-                                <Link href={`/dashboard/contracts/${contract.id}`}>
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Modifier
-                                </Link>
-                            </DropdownMenuItem>
+                            {contract.status !== "ACCEPTED" && (
+                                <DropdownMenuItem asChild className="cursor-pointer">
+                                    <Link href={`/dashboard/contracts/${contract.id}/edit`}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Modifier
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem className="cursor-pointer" onClick={handleDownloadPdf}>
                                 <FileDown className="mr-2 h-4 w-4 text-blue-500" />
                                 Télécharger PDF

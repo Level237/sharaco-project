@@ -62,6 +62,9 @@ interface ClientDocument {
     refused_at?: string
     refusal_reason?: string
     signature_name?: string
+    provider_signature_name?: string
+    provider_signed_at?: string
+    signature_revision?: number
     payment_schedule?: MilestonePreview[] | null
 }
 
@@ -164,6 +167,12 @@ export default function ClientDocumentPage() {
         const data = await api.get<ClientDocument>(`/api/v1/documents/client/${token}`)
         setDocument(data)
         setActionCompleted(true)
+        try {
+            const html = await templatesApi.previewDocumentByClientToken(token)
+            setPreviewHtml(html)
+        } catch {
+            /* keep current preview */
+        }
     }
 
     const handleAccept = async () => {
@@ -337,6 +346,18 @@ export default function ClientDocumentPage() {
                         />
                     </div>
                 </div>
+
+                {document.type === "CONTRAT" && document.provider_signature_name && document.status !== "ACCEPTED" && (
+                    <div className="mb-5 rounded-xl border border-white/10 bg-white/5 px-4 py-3 sm:mb-6">
+                        <p className="text-sm font-semibold text-zinc-200">Prestataire déjà signé</p>
+                        <p className="mt-0.5 text-sm text-zinc-400">
+                            {document.provider_signature_name}
+                            {document.provider_signed_at
+                                ? ` · ${new Date(document.provider_signed_at).toLocaleDateString("fr-FR")}`
+                                : ""}
+                        </p>
+                    </div>
+                )}
 
                 {isSignable && document.status === "ACCEPTED" && (
                     <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 sm:mb-6 sm:px-5 sm:py-4">

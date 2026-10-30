@@ -54,6 +54,12 @@ export const quotesApi = {
         return api.put<Document>(`/api/v1/documents/${id}`, data);
     },
 
+    signAsProvider: async (id: string, signatureName: string): Promise<Document> => {
+        return api.post<Document>(`/api/v1/documents/${id}/sign-as-provider`, {
+            signature_name: signatureName,
+        });
+    },
+
     delete: async (id: string): Promise<void> => {
         return api.delete<void>(`/api/v1/documents/${id}`);
     },

@@ -234,6 +234,11 @@ async def preview_document_live(
         due_date=preview_data.due_date,
         rules=[r.model_dump() for r in preview_data.rules] if preview_data.rules else None,
         notes=preview_data.notes,
+        signature_name=preview_data.signature_name,
+        accepted_at=preview_data.accepted_at,
+        provider_signature_name=preview_data.provider_signature_name,
+        provider_signed_at=preview_data.provider_signed_at,
+        signature_revision=preview_data.signature_revision,
     )
     return HTMLResponse(content=html_content)
 
@@ -283,6 +288,11 @@ async def preview_document_pdf(
         due_date=preview_data.due_date,
         rules=[r.model_dump() for r in preview_data.rules] if preview_data.rules else None,
         notes=preview_data.notes,
+        signature_name=preview_data.signature_name,
+        accepted_at=preview_data.accepted_at,
+        provider_signature_name=preview_data.provider_signature_name,
+        provider_signed_at=preview_data.provider_signed_at,
+        signature_revision=preview_data.signature_revision,
     )
 
     pdf_buffer = await pdf_renderer.render_pdf_from_html(html_content)
@@ -616,6 +626,13 @@ async def accept_document_as_client(
 
     await db.commit()
     await db.refresh(document)
+    pdf_renderer.invalidate_document_cache(document.id)
+
+    if document.type == DocumentType.CONTRAT:
+        try:
+            await NotificationService.notify_document_accepted(document.id, db)
+        except Exception as notify_error:
+            logger.warning(f"⚠️ Notification contrat signé: {notify_error}")
 
     invoice = acceptance_result.get("invoice")
 
@@ -928,6 +945,9 @@ async def get_document_for_client(
         "accepted_at": document.accepted_at,
         "refused_at": document.refused_at,
         "signature_name": document.signature_name,
+        "provider_signature_name": document.provider_signature_name,
+        "provider_signed_at": document.provider_signed_at,
+        "signature_revision": getattr(document, "signature_revision", 1) or 1,
     }
 
 
@@ -1506,6 +1526,31 @@ async def update_document_status(
     return _enrich_document(updated, totals)
 
 
+@router.post("/{document_id}/sign-as-provider", response_model=DocumentRead)
+async def sign_document_as_provider(
+    document_id: UUID,
+    data: AcceptDocumentRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    document = await DocumentService.get_by_id(db, document_id, current_user.id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document introuvable")
+    if document.type != DocumentType.CONTRAT:
+        raise HTTPException(status_code=400, detail="Seul un contrat peut être signé par le prestataire")
+    if document.status == DocumentStatus.REFUSED:
+        raise HTTPException(status_code=400, detail="Ce contrat a été refusé")
+
+    document.provider_signature_name = data.signature_name.strip()
+    document.provider_signed_at = to_naive_utc(datetime.now(timezone.utc))
+    db.add(document)
+    pdf_renderer.invalidate_document_cache(document.id)
+    await db.commit()
+    await db.refresh(document, ["items", "client", "payment_schedule"])
+    totals = DocumentService.calculate_totals(document.items)
+    return _enrich_document(document, totals)
+
+
 @router.patch("/{document_id}/project", response_model=DocumentRead)
 async def link_document_to_project(
     document_id: UUID,
@@ -2041,6 +2086,12 @@ def _enrich_document(doc, totals: dict) -> dict:
         "subtotal_cents": totals["subtotal_cents"],
         "tax_total_cents": totals["tax_total_cents"],
         "grand_total_cents": totals["grand_total_cents"],
+        "accepted_at": getattr(doc, "accepted_at", None),
+        "signature_name": getattr(doc, "signature_name", None),
+        "provider_signature_name": getattr(doc, "provider_signature_name", None),
+        "provider_signed_at": getattr(doc, "provider_signed_at", None),
+        "signature_revision": getattr(doc, "signature_revision", 1) or 1,
+        "signatures_reset": bool(getattr(doc, "_signatures_reset", False)),
     }
 
 

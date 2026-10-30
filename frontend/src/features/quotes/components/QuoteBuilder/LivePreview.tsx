@@ -71,6 +71,11 @@ function draftToPreviewRequest(
                 trigger_date: ms.trigger_date || null,
             }))
             : null,
+        signature_name: draft.signatureName || null,
+        accepted_at: draft.acceptedAt || null,
+        provider_signature_name: draft.providerSignatureName || null,
+        provider_signed_at: draft.providerSignedAt || null,
+        signature_revision: draft.signatureRevision || 1,
     };
 }
 

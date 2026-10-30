@@ -126,6 +126,9 @@ class SharedDocumentRead(BaseModel):
     refused_at: Optional[datetime] = None
     refusal_reason: Optional[str] = None
     signature_name: Optional[str] = None
+    provider_signature_name: Optional[str] = None
+    provider_signed_at: Optional[datetime] = None
+    signature_revision: int = 1
     can_validate: bool = False  # Indique si le client peut accepter/refuser le document
     # Style
     primary_color: Optional[str] = "#2563EB"
@@ -235,6 +238,12 @@ class DocumentRead(BaseModel):
     tax_total_cents: Optional[int] = None
     grand_total_cents: Optional[int] = None
     client: Optional[ClientBrief] = None
+    accepted_at: Optional[datetime] = None
+    signature_name: Optional[str] = None
+    provider_signature_name: Optional[str] = None
+    provider_signed_at: Optional[datetime] = None
+    signature_revision: int = 1
+    signatures_reset: bool = False
     model_config = {"from_attributes": True}
 
 
@@ -321,6 +330,11 @@ class DocumentPreviewRequest(BaseModel):
     due_date: Optional[datetime] = None
     reference: Optional[str] = None
     payment_schedule: Optional[List[MilestonePreviewInput]] = None
+    signature_name: Optional[str] = None
+    accepted_at: Optional[datetime] = None
+    provider_signature_name: Optional[str] = None
+    provider_signed_at: Optional[datetime] = None
+    signature_revision: int = 1
 
 
 class DocumentListRead(BaseModel):

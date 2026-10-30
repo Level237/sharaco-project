@@ -53,7 +53,9 @@
         .notes { font-size: 13.5px; white-space: pre-wrap; }
         .sign-grid { width: 100%; border-collapse: collapse; margin-top: 8px; }
         .sign-grid td { width: 50%; vertical-align: top; padding-right: 18px; }
-        .sign-box { min-height: 80px; border-bottom: 1px solid var(--accent); margin: 24px 0 8px; }
+        .sign-box { min-height: 80px; border-bottom: 1px solid var(--accent); margin: 24px 0 8px; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 8px; }
+        .sign-name { font-size: 15px; font-weight: 700; }
+        .sign-date { font-size: 11px; color: #8a6a5a; margin-top: 4px; }
         .sign-label { font-size: 12px; color: #4a3228; }
         .legal { margin-top: 32px; padding-top: 12px; border-top: 1px solid #c9b29e; font-size: 10.5px; color: #8a6a5a; }
     </style>
@@ -62,7 +64,7 @@
 <div class="page">
     <div class="kicker">Sharaco · Droits</div>
     <h1>{{ contract_title or "Cession de droits" }}</h1>
-    <div class="doc-id">N° {{ document.number or "Brouillon" }}</div>
+    <div class="doc-id">N° {{ document.number or "Brouillon" }}{% if signatures and signatures.revision > 1 %} · Version {{ signatures.revision }}{% endif %}</div>
 
     <table class="meta">
         <tr>
@@ -141,12 +143,9 @@
     <div class="article">
         <div class="article-title">Signatures</div>
         <p class="lede">Chaque partie reconnaît l’étendue de la cession telle qu’écrite ici.</p>
-        <table class="sign-grid">
-            <tr>
-                <td><div class="sign-label">Le cédant</div><div class="sign-box"></div><div class="sign-label">{{ user.company_name or user.full_name or "" }}</div></td>
-                <td><div class="sign-label">Le cessionnaire</div><div class="sign-box"></div><div class="sign-label">{{ client.name or "" }}{% if document.signature_name %} · {{ document.signature_name }}{% endif %}</div></td>
-            </tr>
-        </table>
+        {% set provider_role = "Le cédant" %}
+        {% set client_role = "Le cessionnaire" %}
+        {% include "partials/contract_signatures.html" %}
     </div>
     <p class="legal">Document généré avec Sharaco. Il ne constitue pas un conseil juridique. Adaptez les conditions à votre situation avant de signer.</p>
 </div>

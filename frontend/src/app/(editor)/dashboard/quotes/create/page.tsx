@@ -61,7 +61,7 @@ function QuoteBuilderContent() {
                 notes: "",
                 rules: DEFAULT_CONTRACT_RULES[kind],
             });
-            router.replace(`/dashboard/contracts/${document.id}`);
+            router.replace(`/dashboard/contracts/${document.id}/edit`);
         } catch (error: unknown) {
             contractStarted.current = false;
             const message = error instanceof Error ? error.message : "Impossible de créer le contrat.";

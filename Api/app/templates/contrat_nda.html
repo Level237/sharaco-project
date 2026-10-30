@@ -50,7 +50,9 @@
         .notes { font-size: 14px; white-space: pre-wrap; }
         .sign-grid { width: 100%; border-collapse: collapse; }
         .sign-grid td { width: 50%; padding-right: 20px; vertical-align: top; }
-        .sign-box { min-height: 72px; border-bottom: 1px solid var(--accent); margin: 28px 0 8px; }
+        .sign-box { min-height: 72px; border-bottom: 1px solid var(--accent); margin: 28px 0 8px; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 8px; }
+        .sign-name { font-size: 15px; font-weight: 700; }
+        .sign-date { font-size: 11px; color: #64748b; margin-top: 4px; }
         .sign-label { font-size: 12px; }
         .legal { margin-top: 28px; font-family: "IBM Plex Mono", monospace; font-size: 10px; line-height: 1.5; }
     </style>
@@ -59,7 +61,7 @@
 <div class="page">
     <div class="kicker">Confidentiel</div>
     <h1>{{ contract_title or "Accord de confidentialité" }}</h1>
-    <div class="doc-id">{{ document.number or "Brouillon" }}</div>
+    <div class="doc-id">{{ document.number or "Brouillon" }}{% if signatures and signatures.revision > 1 %} · Version {{ signatures.revision }}{% endif %}</div>
     <hr>
 
     <table class="meta">
@@ -133,12 +135,9 @@
 
     <div class="article">
         <div class="article-title">Signatures</div>
-        <table class="sign-grid">
-            <tr>
-                <td><div class="sign-label">Divulgateur</div><div class="sign-box"></div><div class="sign-label">{{ user.company_name or user.full_name or "" }}</div></td>
-                <td><div class="sign-label">Destinataire</div><div class="sign-box"></div><div class="sign-label">{{ client.name or "" }}{% if document.signature_name %} · {{ document.signature_name }}{% endif %}</div></td>
-            </tr>
-        </table>
+        {% set provider_role = "Divulgateur" %}
+        {% set client_role = "Destinataire" %}
+        {% include "partials/contract_signatures.html" %}
     </div>
     <p class="legal">Document généré avec Sharaco. Il ne constitue pas un conseil juridique. Adaptez les conditions à votre situation avant de signer.</p>
 </div>

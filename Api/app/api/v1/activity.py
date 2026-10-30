@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, union_all, literal_column
+from sqlalchemy import select, union_all, literal_column, func
 from datetime import datetime, timezone, timedelta
 from uuid import UUID
 from app.services.documentService import DocumentService
@@ -100,12 +100,21 @@ async def get_activity_feed(
     # 2. Documents avec gestion du PAID
     # ═══════════════════════════════════════════════
     if not type_filter or type_filter == "DOCUMENT":
+        latest_event = func.greatest(
+            Document.created_at,
+            func.coalesce(Document.accepted_at, Document.created_at),
+            func.coalesce(Document.refused_at, Document.created_at),
+            func.coalesce(Document.sent_at, Document.created_at),
+            func.coalesce(Document.viewed_at, Document.created_at),
+            func.coalesce(Document.paid_at, Document.created_at),
+            func.coalesce(Document.provider_signed_at, Document.created_at),
+        )
         documents_query = await db.execute(
             select(Document)
             .options(selectinload(Document.client),selectinload(Document.items),)
             .where(Document.user_id == current_user.id)
-            .order_by(Document.created_at.desc())
-            .limit(limit * 2)  # ✅ On prend plus car on va générer plusieurs activités par doc
+            .order_by(latest_event.desc())
+            .limit(limit * 2)
         )
         documents = documents_query.scalars().all()
         
@@ -148,6 +157,7 @@ async def get_activity_feed(
                         "layout_style": layout_style,
                         "client_id": str(doc.client_id) if doc.client_id else None,
                         "project_id": str(doc.project_id) if getattr(doc, "project_id", None) else None,
+                        "signature_name": getattr(doc, "signature_name", None),
                     },
                 })
 
@@ -172,11 +182,12 @@ async def get_activity_feed(
                     doc.paid_at or doc.created_at,
                 )
             elif doc.status == DocumentStatus.ACCEPTED:
+                signer = doc.signature_name or client_name
                 append_activity(
                     "ACCEPTED",
                     "check-circle",
                     "emerald",
-                    f"Contrat signé par {client_name}" if is_contract else f"Devis accepté par {client_name}",
+                    f"Contrat signé par {signer}" if is_contract else f"Devis accepté par {signer}",
                     doc.accepted_at or doc.created_at,
                 )
             elif doc.status == DocumentStatus.REFUSED:

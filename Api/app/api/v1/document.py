@@ -33,8 +33,10 @@ from app.schemas.document import (
     DocumentPreviewRequest,
     SharedDocumentRead,
     AcceptDocumentRequest,
-    RefuseDocumentRequest
+    RefuseDocumentRequest,
+    TotalsCalculateRequest,
 )
+from app.core.limiter import limiter
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.models.document import Document
@@ -241,6 +243,27 @@ async def preview_document_live(
         signature_revision=preview_data.signature_revision,
     )
     return HTMLResponse(content=html_content)
+
+
+@router.post("/calculate")
+async def calculate_document_totals(
+    data: TotalsCalculateRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Totaux HT / TVA / TTC — source de vérité serveur pour l'éditeur."""
+    return DocumentService.calculate_totals([item.model_dump() for item in data.items])
+
+
+@router.get("/contract-kinds/{kind}/default-rules")
+async def get_contract_default_rules(
+    kind: str,
+    current_user: User = Depends(get_current_user),
+):
+    from app.services.contractKinds import CONTRACT_LAYOUT_MAP, default_rules_for
+
+    if kind not in CONTRACT_LAYOUT_MAP:
+        raise HTTPException(status_code=400, detail="Type de contrat inconnu")
+    return default_rules_for(kind)
 
 
 @router.post("/preview/pdf")
@@ -551,7 +574,9 @@ async def revoke_share_link(
 # ============================================================
 
 @router.post("/client/{token}/accept")
+@limiter.limit("30/minute")
 async def accept_document_as_client(
+    request: Request,
     token: str,
     data: AcceptDocumentRequest,
     db: AsyncSession = Depends(get_db),
@@ -660,7 +685,9 @@ async def accept_document_as_client(
 
 
 @router.post("/client/{token}/refuse")
+@limiter.limit("30/minute")
 async def refuse_document_as_client(
+    request: Request,
     token: str,
     data: RefuseDocumentRequest,
     db: AsyncSession = Depends(get_db),
@@ -723,7 +750,9 @@ async def refuse_document_as_client(
 
 
 @router.post("/shared/{token}/refuse")
+@limiter.limit("30/minute")
 async def refuse_shared_document(
+    request: Request,
     token: str,
     data: RefuseDocumentRequest,
     db: AsyncSession = Depends(get_db),
@@ -773,7 +802,9 @@ async def refuse_shared_document(
 # ============================================================
 
 @router.get("/shared/{token}", response_model=SharedDocumentRead)
+@limiter.limit("30/minute")
 async def get_shared_document_public(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db),
 ):
@@ -860,7 +891,9 @@ async def get_shared_document_public(
 
 
 @router.get("/client/{token}", response_model=SharedDocumentRead)
+@limiter.limit("30/minute")
 async def get_document_for_client(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db),
 ):
@@ -955,7 +988,9 @@ async def get_document_for_client(
 # 🧾 FACTURE PUBLIQUE (avec échéancier du devis parent)
 # ═══════════════════════════════════════════════════════════
 @router.get("/invoices/public/{token}")
+@limiter.limit("30/minute")
 async def get_public_invoice(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db),
 ):
@@ -1659,7 +1694,9 @@ async def delete_document(
 
 
 @router.get("/client/{token}/preview", response_class=HTMLResponse)
+@limiter.limit("30/minute")
 async def preview_document_for_client(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db),
 ):
@@ -1708,7 +1745,9 @@ async def preview_document_for_client(
     return HTMLResponse(content=html_content)
 
 @router.get("/shared/{token}/preview", response_class=HTMLResponse)
+@limiter.limit("30/minute")
 async def preview_shared_document(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db),
 ):

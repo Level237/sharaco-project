@@ -18,7 +18,8 @@ import { Button } from "@/components/ui/button";
 import { useClients, useCreateClient } from "@/features/clients/hooks/useClients";
 import { User, Mail, Phone, MapPin } from "lucide-react";
 import { ContractKindGrid } from "@/features/contracts/components/ContractKindPicker";
-import { DEFAULT_CONTRACT_RULES, type ContractKind } from "@/features/contracts/kinds";
+import { type ContractKind } from "@/features/contracts/kinds";
+import { contractEditHref } from "@/features/contracts/paths";
 
 function QuoteBuilderContent() {
     const searchParams = useSearchParams();
@@ -59,9 +60,8 @@ function QuoteBuilderContent() {
                 project_id: queryProjectId,
                 items: [],
                 notes: "",
-                rules: DEFAULT_CONTRACT_RULES[kind],
             });
-            router.replace(`/dashboard/contracts/${document.id}/edit`);
+            router.replace(contractEditHref(document.id));
         } catch (error: unknown) {
             contractStarted.current = false;
             const message = error instanceof Error ? error.message : "Impossible de créer le contrat.";

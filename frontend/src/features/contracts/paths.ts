@@ -3,5 +3,5 @@ export function contractDetailHref(id: string) {
 }
 
 export function contractEditHref(id: string) {
-    return `/dashboard/contracts/${id}/edit`
+    return `/dashboard/contracts/edit/${id}`
 }

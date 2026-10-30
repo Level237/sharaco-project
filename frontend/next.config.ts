@@ -1,5 +1,8 @@
+import { createRequire } from "module";
 import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
+
+const require = createRequire(import.meta.url);
 
 const securityHeaders = [
   {
@@ -33,11 +36,45 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  productionBrowserSourceMaps: false,
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const WebpackObfuscator = require("webpack-obfuscator");
+      config.plugins.push(
+        new WebpackObfuscator(
+          {
+            compact: true,
+            controlFlowFlattening: true,
+            controlFlowFlatteningThreshold: 0.4,
+            deadCodeInjection: false,
+            debugProtection: false,
+            stringArray: true,
+            stringArrayThreshold: 0.75,
+            rotateStringArray: true,
+            selfDefending: false,
+            renameGlobals: false,
+            reservedNames: ["^__NEXT", "^webpack"],
+          },
+          ["**/node_modules/**"],
+        ),
+      );
+    }
+    return config;
+  },
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/dashboard/contracts/:id/edit",
+        destination: "/dashboard/contracts/edit/:id",
       },
     ];
   },
@@ -59,6 +96,9 @@ export default withSentryConfig(nextConfig, {
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.

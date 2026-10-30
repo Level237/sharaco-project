@@ -697,8 +697,16 @@ class DocumentService:
         subtotal_cents = 0
         tax_total_cents = 0
         for item in items or []:
-            line_subtotal = item.quantity * item.unit_price_cents
-            line_tax = int(line_subtotal * item.tax_rate / 100)
+            if isinstance(item, dict):
+                quantity = int(item.get("quantity") or 0)
+                unit_price_cents = int(item.get("unit_price_cents") or 0)
+                tax_rate = int(item.get("tax_rate") or 0)
+            else:
+                quantity = int(getattr(item, "quantity", 0) or 0)
+                unit_price_cents = int(getattr(item, "unit_price_cents", 0) or 0)
+                tax_rate = int(getattr(item, "tax_rate", 0) or 0)
+            line_subtotal = quantity * unit_price_cents
+            line_tax = int(line_subtotal * tax_rate / 100)
             subtotal_cents += line_subtotal
             tax_total_cents += line_tax
         return {

@@ -41,10 +41,11 @@ function formatDate(value?: string | null) {
     return date.toLocaleDateString("fr-FR")
 }
 
-export function ContractDetailView() {
+export function ContractDetailView({ contractId: contractIdProp }: { contractId?: string }) {
     const params = useParams()
     const router = useRouter()
-    const contractId = params.id as string
+    const contractId = contractIdProp || (params.id as string)
+
     const { toast } = useToast()
     const user = useAuthStore((state) => state.user)
 

@@ -64,12 +64,7 @@ class PaymentScheduleService:
             
             # ✅ CORRECTION : Utiliser grand_total_cents (pas "total")
             amount = int(round(grand_total_cents * percent / 100))
-            
-            
-            print("---------------------------------------------------------------")
 
-            print(f"DEBUG: Creating milestone '{ms['title']}' with amount {amount} cents and percent {percent}%")
-            
             schedule = PaymentSchedule(
                 document_id=document.id,
                 sequence=ms.get("sequence", len(created) + 1),

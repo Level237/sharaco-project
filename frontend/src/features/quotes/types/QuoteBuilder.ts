@@ -41,7 +41,6 @@ export interface QuoteDraft {
     hasVat: boolean;
     vatRate?: number;         // Taux de TVA par défaut
     isTaxExempt: boolean;
-    discountRate: number;
     items: QuoteLineItem[];
     paymentMode: 'simple' | 'schedule';
     paymentMilestones: Milestone[];

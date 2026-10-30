@@ -14,7 +14,8 @@ import { quotesApi } from "@/features/quotes/api/quotesApi"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { ContractKindPicker } from "@/features/contracts/components/ContractKindPicker"
-import { DEFAULT_CONTRACT_RULES, type ContractKind } from "@/features/contracts/kinds"
+import { type ContractKind } from "@/features/contracts/kinds"
+import { contractEditHref } from "@/features/contracts/paths"
 
 interface NewDocumentMenuProps {
     projectId: string;
@@ -40,9 +41,8 @@ export function NewDocumentMenu({ projectId, variant = "header" }: NewDocumentMe
                 project_id: projectId,
                 items: [],
                 notes: "",
-                rules: DEFAULT_CONTRACT_RULES[kind],
             });
-            router.push(`/dashboard/contracts/${document.id}/edit`);
+            router.push(contractEditHref(document.id));
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Impossible de créer le contrat.";
             toast({ title: "Erreur", description: message, variant: "destructive" });

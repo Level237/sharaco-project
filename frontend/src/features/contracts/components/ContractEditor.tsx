@@ -171,7 +171,6 @@ export function ContractEditor({ documentId }: ContractEditorProps) {
             validityDays: 30,
             hasVat: false,
             isTaxExempt: true,
-            discountRate: 0,
             items: draft.items
                 .filter((item) => item.description.trim())
                 .map((item) => ({

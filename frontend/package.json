@@ -59,8 +59,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.2.11",
+    "javascript-obfuscator": "^5.9.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "webpack-obfuscator": "^3.6.1"
   },
   "overrides": {
     "brace-expansion": ">=2.1.7",

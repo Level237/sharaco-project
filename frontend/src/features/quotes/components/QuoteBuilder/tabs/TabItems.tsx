@@ -19,11 +19,10 @@ interface TabItemsProps {
 }
 
 export function TabItems({ draft, onItemChange, onAddItem, onRemoveItem, onDraftChange }: TabItemsProps) {
-    const { subTotal, totalTax, grandTotal, discountAmount } = useQuoteTotal(
-        draft.items, 
-        draft.hasVat, 
-        draft.vatRate, 
-        draft.discountRate, 
+    const { subTotal, totalTax, grandTotal, totalsError } = useQuoteTotal(
+        draft.items,
+        draft.hasVat,
+        draft.vatRate,
         draft.isTaxExempt
     );
 
@@ -127,13 +126,6 @@ export function TabItems({ draft, onItemChange, onAddItem, onRemoveItem, onDraft
                         <span className="text-zinc-200">{formatCurrency(subTotal)}</span>
                     </div>
 
-                    {draft.discountRate > 0 && (
-                        <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-emerald-500/80">
-                            <span>Remise ({draft.discountRate}%)</span>
-                            <span>-{formatCurrency(discountAmount)}</span>
-                        </div>
-                    )}
-
                     {!draft.isTaxExempt && draft.hasVat && (
                         <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-zinc-500">
                             <span>Montant TVA</span>
@@ -152,6 +144,12 @@ export function TabItems({ draft, onItemChange, onAddItem, onRemoveItem, onDraft
                             {formatCurrency(grandTotal)}
                         </span>
                     </div>
+
+                    {totalsError && (
+                        <p className="text-xs font-medium text-rose-400" role="alert">
+                            {totalsError}
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

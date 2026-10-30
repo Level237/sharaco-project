@@ -354,6 +354,10 @@ class DocumentListRead(BaseModel):
     project_id: Optional[UUID] = None
     model_config = {"from_attributes": True}
 
+class TotalsCalculateRequest(BaseModel):
+    items: List[DocumentPreviewItem] = []
+
+
 class AcceptDocumentRequest(BaseModel):
     signature_name: str = Field(..., min_length=2, max_length=255, description="Nom du signataire")
 

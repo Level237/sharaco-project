@@ -12,6 +12,7 @@ from app.services.pdfRenderer import pdf_renderer
 from app.services.templateService import TemplateService
 from app.schemas.reminder import ReminderConfigCreate, ReminderConfigRead, ReminderConfigUpdate, ReminderLogRead
 from app.models.document import DocumentStatus
+from app.core.limiter import limiter
 
 router = APIRouter(tags=["reminders"])
 
@@ -180,10 +181,11 @@ async def get_reminder_history(
 # ============================================================
 
 @router.get("/track/{token}.png")
+@limiter.limit("30/minute")
 async def track_pixel(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db),
-    request: Request = None,
 ):
     """Pixel de tracking 1x1 — enregistre l'ouverture du document via son token sécurisé."""
     from sqlmodel import select, or_
@@ -215,10 +217,11 @@ async def track_pixel(
 
 
 @router.get("/public/{token}", response_class=HTMLResponse)
+@limiter.limit("30/minute")
 async def public_document_view(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db),
-    request: Request = None,
 ):
     """Vue publique sécurisée du document pour le client (accès strict par token cryptographique)."""
     from sqlmodel import select, or_

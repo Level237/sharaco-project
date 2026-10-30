@@ -1,18 +1,10 @@
-"use client"
+import { ProjectDetailView } from "@/features/projects/components/ProjectDetailView"
 
-import { useParams, usePathname } from "next/navigation"
-import { ProjectDetailView, projectIdFromPath } from "@/features/projects/components/ProjectDetailView"
-
-function firstParam(value: unknown): string {
-    if (Array.isArray(value)) return String(value[0] || "")
-    if (typeof value === "string") return value
-    return ""
-}
-
-export default function ProjectByIdPage() {
-    const params = useParams()
-    const pathname = usePathname() || ""
-    const projectId = firstParam(params?.id) || projectIdFromPath(pathname)
-
-    return <ProjectDetailView projectId={projectId} />
+export default async function ProjectByIdPage({
+    params,
+}: {
+    params: Promise<{ id: string }>
+}) {
+    const { id } = await params
+    return <ProjectDetailView projectId={id} />
 }

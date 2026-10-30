@@ -56,7 +56,6 @@ export function Editor({ templateId, documentId }: EditorProps) {
         hasVat: false,
         vatRate: 20,
         isTaxExempt: false,
-        discountRate: 0,
         items: [
             {
                 id: uuidv4(),
@@ -190,7 +189,6 @@ export function Editor({ templateId, documentId }: EditorProps) {
                     hasVat: (doc.items || []).some((item) => (item.tax_rate ?? 0) > 0) || ((doc.tax_total_cents ?? 0) > 0),
                     vatRate: (doc.items || []).find((item) => (item.tax_rate ?? 0) > 0)?.tax_rate || 20,
                     isTaxExempt: false,
-                    discountRate: 0,
                     items: mappedItems.length > 0 ? mappedItems : [{
                         id: uuidv4(),
                         description: "",

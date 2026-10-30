@@ -17,6 +17,7 @@ import { SendEmailModal } from "@/features/quotes/components/sendEmailModal"
 import { useState } from "react"
 import type { ProjectTreeContract } from "../types"
 import { contractKindMeta } from "@/features/contracts/kinds"
+import { contractDetailHref, contractEditHref } from "@/features/contracts/paths"
 
 interface ContractCardProps {
     contract: ProjectTreeContract;
@@ -54,7 +55,7 @@ export function ContractCard({ contract, variants, onRefresh, clientEmail, clien
     return (
         <motion.div variants={variants} initial="hidden" animate="show" layout className="group flex flex-col">
             <div className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-white/[0.02] p-1.5 transition-transform duration-300 group-hover:-translate-y-1">
-                <Link href={`/dashboard/contracts/${contract.id}`} className="relative block h-full w-full overflow-hidden rounded-md bg-slate-950/50 shadow-sm">
+                <Link href={contractDetailHref(contract.id)} className="relative block h-full w-full overflow-hidden rounded-md bg-slate-950/50 shadow-sm">
                     <DocumentPreview documentId={contract.id} layoutStyle={contract.layout_style || "prestation"} />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100">
@@ -76,14 +77,14 @@ export function ContractCard({ contract, variants, onRefresh, clientEmail, clien
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56 border-white/10 bg-[#111113] p-2 text-slate-200">
                             <DropdownMenuItem asChild className="cursor-pointer">
-                                <Link href={`/dashboard/contracts/${contract.id}`}>
+                                <Link href={contractDetailHref(contract.id)}>
                                     <Eye className="mr-2 h-4 w-4" />
                                     Visualiser
                                 </Link>
                             </DropdownMenuItem>
                             {contract.status !== "ACCEPTED" && (
                                 <DropdownMenuItem asChild className="cursor-pointer">
-                                    <Link href={`/dashboard/contracts/${contract.id}/edit`}>
+                                    <Link href={contractEditHref(contract.id)}>
                                         <Pencil className="mr-2 h-4 w-4" />
                                         Modifier
                                     </Link>

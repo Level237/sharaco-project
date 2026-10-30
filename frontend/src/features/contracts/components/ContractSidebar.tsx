@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import type { ContractDraft, ContractRule } from "../types"
-import { CONTRACT_KINDS, DEFAULT_CONTRACT_RULES, contractKindMeta, type ContractKind } from "../kinds"
+import { quotesApi } from "@/features/quotes/api/quotesApi"
+import { CONTRACT_KINDS, contractKindMeta, type ContractKind } from "../kinds"
 import { CONTRACT_BRAND_COLORS } from "../brandColors"
 
 interface ContractSidebarProps {
@@ -20,10 +21,12 @@ export function ContractSidebar({ draft, onChange, isMobile = false }: ContractS
     const kind = contractKindMeta(draft.layoutStyle);
 
     const changeKind = (next: ContractKind) => {
-        onChange({
-            layoutStyle: next,
-            rules: DEFAULT_CONTRACT_RULES[next].map((rule) => ({ ...rule })),
-        });
+        onChange({ layoutStyle: next })
+        void quotesApi.getContractDefaultRules(next).then((rules) => {
+            onChange({ layoutStyle: next, rules })
+        }).catch(() => {
+            onChange({ layoutStyle: next })
+        })
     };
 
     const updateItem = (id: string, description: string) => {

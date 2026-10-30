@@ -15,6 +15,7 @@ from app.services.billingSettingsService import BillingSettingsService
 from uuid import uuid4
 import json
 from app.models.client import Client
+from app.models.projet import Project
 from app.models.user import User
 from app.services.pdfRenderer import pdf_renderer
 from app.services.contractKinds import default_rules_for, normalize_contract_layout
@@ -743,6 +744,23 @@ class DocumentService:
     @staticmethod
     def preview_number(type: DocumentType) -> str:
         return f"{DocumentService.number_prefix(type)}-2026-001"
+
+    @staticmethod
+    async def ensure_project_belongs_to_client(
+        db: AsyncSession,
+        project_id: UUID,
+        user_id: UUID,
+        client_id: Optional[UUID] = None,
+    ) -> Project:
+        result = await db.execute(
+            select(Project).where(Project.id == project_id, Project.user_id == user_id)
+        )
+        project = result.scalar_one_or_none()
+        if not project:
+            raise LookupError("Projet introuvable ou n'appartient pas à cet utilisateur")
+        if client_id is not None and project.client_id != client_id:
+            raise ValueError("Le projet n'appartient pas à ce client")
+        return project
 
     @staticmethod
     async def resolve_quote_contract_link(

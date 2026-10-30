@@ -32,7 +32,7 @@ export function EditorPanel({
     isMobile = false,
     onClose,
 }: EditorPanelProps) {
-    const { grandTotal } = useQuoteTotal(draft.items, draft.hasVat, draft.vatRate, draft.discountRate, draft.isTaxExempt);
+    const { grandTotal, totalsError } = useQuoteTotal(draft.items, draft.hasVat, draft.vatRate, draft.isTaxExempt);
 
     const handlePaymentModeChange = (mode: 'simple' | 'schedule') => {
         onChange('paymentMode', mode);
@@ -150,6 +150,11 @@ export function EditorPanel({
                         </TabsContent>
 
                         <TabsContent value="payment" className="mt-0 outline-none">
+                            {totalsError && (
+                                <p className="mb-4 text-xs font-medium text-rose-400" role="alert">
+                                    {totalsError}
+                                </p>
+                            )}
                             <PaymentScheduleEditor
                                 totalAmount={grandTotal}
                                 value={draft.paymentMilestones}

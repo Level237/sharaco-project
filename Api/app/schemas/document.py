@@ -1,10 +1,17 @@
 # app/schemas/document.py
 
-from pydantic import BaseModel, field_validator,Field
+from pydantic import BaseModel, field_validator, model_validator, Field
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
 from app.models.document import DocumentType, DocumentStatus
+from app.services.contractKinds import CONTRACT_LAYOUTS
+
+QUOTE_LAYOUT_STYLES = [
+    "modern", "classic", "minimal", "bold", "elegant", "premium",
+    "bento", "studio", "asymmetric", "fintech", "terminal", "aura",
+]
+VALID_LAYOUT_STYLES = QUOTE_LAYOUT_STYLES + [kind for kind in CONTRACT_LAYOUTS if kind not in QUOTE_LAYOUT_STYLES]
 
 
 class MilestonePreviewInput(BaseModel):
@@ -51,6 +58,11 @@ class MilestoneRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ContractRule(BaseModel):
+    title: str = ""
+    body: str = ""
+
 
 class DocumentItemCreate(BaseModel):
     description: str
@@ -114,6 +126,9 @@ class SharedDocumentRead(BaseModel):
     refused_at: Optional[datetime] = None
     refusal_reason: Optional[str] = None
     signature_name: Optional[str] = None
+    provider_signature_name: Optional[str] = None
+    provider_signed_at: Optional[datetime] = None
+    signature_revision: int = 1
     can_validate: bool = False  # Indique si le client peut accepter/refuser le document
     # Style
     primary_color: Optional[str] = "#2563EB"
@@ -156,9 +171,14 @@ class DocumentCreate(BaseModel):
     template_id: Optional[UUID] = None
     due_date: Optional[datetime] = None
     payment_schedule: Optional[list[MilestoneInput]] = None
-    items: List[DocumentItemCreate]
+    items: List[DocumentItemCreate] = []
     notes: Optional[str] = None
+    rules: Optional[List[ContractRule]] = None
     project_id: Optional[UUID] = Field(None, description="ID du projet associé (optionnel)")
+    source_document_id: Optional[UUID] = Field(
+        None,
+        description="Devis : UUID du contrat lié. Facture : UUID du devis d'origine. Contrat : toujours vide.",
+    )
     # ✅ Champs de style
     primary_color: Optional[str] = "#2563EB"
     secondary_color: Optional[str] = "#1E40AF"
@@ -172,17 +192,15 @@ class DocumentCreate(BaseModel):
     @field_validator("layout_style")
     @classmethod
     def validate_layout_style(cls, v: Optional[str]) -> Optional[str]:
-        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio", "asymmetric", "fintech", "terminal", "aura"]
-        if v and v not in valid_layouts:
-            raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
+        if v and v not in VALID_LAYOUT_STYLES:
+            raise ValueError(f"Layout invalide. Options: {', '.join(VALID_LAYOUT_STYLES)}")
         return v or "classic"
 
-    @field_validator("items")
-    @classmethod
-    def items_must_not_be_empty(cls, v: list) -> list:
-        if not v:
+    @model_validator(mode="after")
+    def items_required_except_contract(self):
+        if self.type != DocumentType.CONTRAT and not self.items:
             raise ValueError("Un document doit contenir au moins une ligne")
-        return v
+        return self
 
 
 class DocumentRead(BaseModel):
@@ -201,7 +219,9 @@ class DocumentRead(BaseModel):
     layout_style: str = "classic"
     items: List[DocumentItemRead] = []
     notes: Optional[str] = None
+    rules: Optional[List[ContractRule]] = None
     project_id: Optional[UUID] = None
+    source_document_id: Optional[UUID] = None
     
     # ✅ Champs de style
     primary_color: Optional[str] = "#2563EB"
@@ -218,6 +238,12 @@ class DocumentRead(BaseModel):
     tax_total_cents: Optional[int] = None
     grand_total_cents: Optional[int] = None
     client: Optional[ClientBrief] = None
+    accepted_at: Optional[datetime] = None
+    signature_name: Optional[str] = None
+    provider_signature_name: Optional[str] = None
+    provider_signed_at: Optional[datetime] = None
+    signature_revision: int = 1
+    signatures_reset: bool = False
     model_config = {"from_attributes": True}
 
 
@@ -230,7 +256,12 @@ class DocumentUpdate(BaseModel):
     due_date: Optional[datetime] = None
     items: Optional[List[DocumentItemCreate]] = None
     notes: Optional[str] = None
-    
+    rules: Optional[List[ContractRule]] = None
+    source_document_id: Optional[UUID] = Field(
+        None,
+        description="Devis : UUID du contrat lié (null pour détacher)",
+    )
+
     # ✅ NOUVEAU : Champs de style/couleurs
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
@@ -246,7 +277,7 @@ class DocumentUpdate(BaseModel):
     def validate_layout_style(cls, v: Optional[str]) -> Optional[str]:
         if v is None:
             return v
-        valid_layouts = ["modern", "classic", "minimal", "bold", "elegant", "premium", "bento", "studio", "asymmetric", "fintech", "terminal", "aura"]
+        valid_layouts = VALID_LAYOUT_STYLES
         if v not in valid_layouts:
             raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
         return v
@@ -295,8 +326,15 @@ class DocumentPreviewRequest(BaseModel):
     show_bank_details: bool = True
     show_tax_id: bool = True
     notes: Optional[str] = None
+    rules: Optional[List[ContractRule]] = None
+    due_date: Optional[datetime] = None
     reference: Optional[str] = None
     payment_schedule: Optional[List[MilestonePreviewInput]] = None
+    signature_name: Optional[str] = None
+    accepted_at: Optional[datetime] = None
+    provider_signature_name: Optional[str] = None
+    provider_signed_at: Optional[datetime] = None
+    signature_revision: int = 1
 
 
 class DocumentListRead(BaseModel):
@@ -315,6 +353,10 @@ class DocumentListRead(BaseModel):
     grand_total_cents: Optional[int] = None
     project_id: Optional[UUID] = None
     model_config = {"from_attributes": True}
+
+class TotalsCalculateRequest(BaseModel):
+    items: List[DocumentPreviewItem] = []
+
 
 class AcceptDocumentRequest(BaseModel):
     signature_name: str = Field(..., min_length=2, max_length=255, description="Nom du signataire")

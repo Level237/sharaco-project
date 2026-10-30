@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Cession {{ document.number or '' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: {{ accent or '#7a2e1f' }}; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Source Sans 3", sans-serif;
+            color: #2a1810;
+            background: #d9cfc4;
+            line-height: 1.55;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: #f7efe4;
+            padding: 16mm 18mm;
+            border-left: 10px solid var(--accent);
+        }
+        @media screen { body { padding: 24px; } .page { box-shadow: 0 18px 40px rgba(42,24,16,.16); } }
+        @media print {
+            body { background: white; padding: 0; }
+            .page { box-shadow: none; padding: 0 0 0 8mm; }
+            @page { size: A4; margin: 12mm; }
+        }
+        .kicker { font-size: 10px; letter-spacing: .32em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+        h1 { font-family: "Cormorant Garamond", Georgia, serif; font-size: 36px; font-weight: 700; margin: 10px 0 4px; }
+        .doc-id { font-size: 13px; color: #6b4a3a; }
+        .meta { width: 100%; border-collapse: collapse; margin: 22px 0 28px; }
+        .meta td { width: 33%; vertical-align: top; padding-right: 14px; }
+        .lbl { display: block; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #8a6a5a; margin-bottom: 4px; font-weight: 700; }
+        .val { font-size: 14px; font-weight: 600; }
+        .article { margin-bottom: 24px; }
+        .article-title { font-family: "Cormorant Garamond", Georgia, serif; font-size: 22px; margin-bottom: 8px; color: var(--accent); }
+        .lede { font-size: 13.5px; color: #4a3228; margin-bottom: 12px; }
+        .parties { width: 100%; border-collapse: collapse; }
+        .parties td { width: 50%; vertical-align: top; padding: 14px 16px; background: #efe3d4; border-top: 2px solid var(--accent); }
+        .role { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+        .who { font-family: "Cormorant Garamond", Georgia, serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .details { font-size: 12.5px; color: #4a3228; }
+        ol.scope { margin: 0 0 8px 18px; }
+        ol.scope li { margin-bottom: 6px; font-size: 13.5px; }
+        .rule-block { margin-top: 16px; padding-left: 14px; border-left: 2px solid #c9b29e; }
+        .rule-index { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #8a6a5a; font-weight: 700; }
+        .rule-title { font-family: "Cormorant Garamond", Georgia, serif; font-size: 17px; margin: 2px 0 6px; }
+        .rule-body { font-size: 13.5px; white-space: pre-wrap; color: #4a3228; }
+        .notes { font-size: 13.5px; white-space: pre-wrap; }
+        .sign-grid { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        .sign-grid td { width: 50%; vertical-align: top; padding-right: 18px; }
+        .sign-box { min-height: 80px; border-bottom: 1px solid var(--accent); margin: 24px 0 8px; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 8px; }
+        .sign-name { font-size: 15px; font-weight: 700; }
+        .sign-date { font-size: 11px; color: #8a6a5a; margin-top: 4px; }
+        .sign-label { font-size: 12px; color: #4a3228; }
+        .legal { margin-top: 32px; padding-top: 12px; border-top: 1px solid #c9b29e; font-size: 10.5px; color: #8a6a5a; }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="kicker">Sharaco · Droits</div>
+    <h1>{{ contract_title or "Cession de droits" }}</h1>
+    <div class="doc-id">N° {{ document.number or "Brouillon" }}{% if signatures and signatures.revision > 1 %} · Version {{ signatures.revision }}{% endif %}</div>
+
+    <table class="meta">
+        <tr>
+            <td><span class="lbl">Date</span><span class="val">{{ document.created_at.strftime("%d/%m/%Y") if document.created_at else "—" }}</span></td>
+            <td><span class="lbl">Fin de la cession</span><span class="val">{{ document.due_date.strftime("%d/%m/%Y") if document.due_date else "Selon conditions" }}</span></td>
+            <td>
+                <span class="lbl">Statut</span>
+                <span class="val">
+                    {% if document.status and document.status.value == "ACCEPTED" %}Signé
+                    {% elif document.status and document.status.value == "SENT" %}Envoyé
+                    {% elif document.status and document.status.value == "REFUSED" %}Refusé
+                    {% else %}Brouillon{% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <div class="article">
+        <div class="article-title">Les parties</div>
+        <p class="lede">Le cédant transmet des droits au cessionnaire, dans le cadre du projet rattaché.</p>
+        <table class="parties">
+            <tr>
+                <td>
+                    <div class="role">Cédant</div>
+                    <div class="who">{{ user.company_name or user.full_name or user.email or "Cédant" }}</div>
+                    <div class="details">
+                        {% if user.full_name and user.company_name %}{{ user.full_name }}<br>{% endif %}
+                        {% if user.address %}{{ user.address | replace("\n", "<br>") | safe }}<br>{% endif %}
+                        {% if user.email %}{{ user.email }}{% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="role">Cessionnaire</div>
+                    <div class="who">{{ client.name or "Cessionnaire" }}</div>
+                    <div class="details">
+                        {% if client.address %}{{ client.address | replace("\n", "<br>") | safe }}<br>{% endif %}
+                        {% if client.email %}{{ client.email }}{% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {% set scoped = items | selectattr("description") | list %}
+    {% if scoped %}
+    <div class="article">
+        <div class="article-title">Livrables cédés</div>
+        <ol class="scope">
+            {% for item in scoped %}<li>{{ item.description }}</li>{% endfor %}
+        </ol>
+    </div>
+    {% endif %}
+
+    {% if reglement %}
+    <div class="article">
+        <div class="article-title">Conditions de cession</div>
+        {% for rule in reglement %}
+            {% if rule.title or rule.body %}
+            <div class="rule-block">
+                <div class="rule-index">Article {{ loop.index }}</div>
+                <h3 class="rule-title">{{ rule.title or "Sans titre" }}</h3>
+                {% if rule.body %}<div class="rule-body">{{ rule.body }}</div>{% endif %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if document.notes %}
+    <div class="article">
+        <div class="article-title">Conditions particulières</div>
+        <div class="notes">{{ document.notes }}</div>
+    </div>
+    {% endif %}
+
+    <div class="article">
+        <div class="article-title">Signatures</div>
+        <p class="lede">Chaque partie reconnaît l’étendue de la cession telle qu’écrite ici.</p>
+        {% set provider_role = "Le cédant" %}
+        {% set client_role = "Le cessionnaire" %}
+        {% include "partials/contract_signatures.html" %}
+    </div>
+    <p class="legal">Document généré avec Sharaco. Il ne constitue pas un conseil juridique. Adaptez les conditions à votre situation avant de signer.</p>
+</div>
+</body>
+</html>

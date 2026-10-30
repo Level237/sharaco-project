@@ -1,0 +1,24 @@
+<table class="sign-grid">
+    <tr>
+        <td>
+            <div class="sign-label">{{ provider_role }}</div>
+            <div class="sign-box">
+                {% if signatures and signatures.provider %}
+                <div class="sign-name">{{ signatures.provider.name }}</div>
+                {% if signatures.provider.date %}<div class="sign-date">Signé le {{ signatures.provider.date }}</div>{% endif %}
+                {% endif %}
+            </div>
+            <div class="sign-label">{{ user.company_name or user.full_name or "" }}</div>
+        </td>
+        <td>
+            <div class="sign-label">{{ client_role }}</div>
+            <div class="sign-box">
+                {% if signatures and signatures.client %}
+                <div class="sign-name">{{ signatures.client.name }}</div>
+                {% if signatures.client.date %}<div class="sign-date">Signé le {{ signatures.client.date }}</div>{% endif %}
+                {% endif %}
+            </div>
+            <div class="sign-label">{{ client.name or "" }}</div>
+        </td>
+    </tr>
+</table>

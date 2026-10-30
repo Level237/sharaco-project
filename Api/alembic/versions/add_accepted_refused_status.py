@@ -8,7 +8,7 @@ Create Date: 2026-07-08 18:30:00.000000
 
 """
 from typing import Sequence, Union
-from alembic import op
+from alembic import context, op
 import sqlalchemy as sa
 from sqlalchemy import inspect
 
@@ -25,7 +25,12 @@ def upgrade() -> None:
     # 1. Ajouter les nouvelles valeurs à l'enum PostgreSQL
     op.execute("ALTER TYPE documentstatus ADD VALUE IF NOT EXISTS 'ACCEPTED'")
     op.execute("ALTER TYPE documentstatus ADD VALUE IF NOT EXISTS 'REFUSED'")
-    
+
+    # En --sql, Alembic n'a pas de vraie connexion : inspect() plante.
+    # Les colonnes ci-dessous sont déjà créées par f543424d8af7.
+    if context.is_offline_mode():
+        return
+
     # 2. Vérifier quelles colonnes existent déjà
     conn = op.get_bind()
     inspector = inspect(conn)

@@ -136,7 +136,7 @@ Pour maintenir la cohérence, la scalabilité et la robustesse de l'application,
 ├────────────────────────────────────────────────────────────────────────────┤
 │  FAIT :                                                                    │
 │  ✅ Source de vérité unique pour les règles métier et calculs             │
-│  ✅ Calcul des montants, sous-totaux, TVA, remises, et totaux généraux     │
+│  ✅ Calcul des montants, sous-totaux, TVA, et totaux généraux              │
 │  ✅ Numérotation séquentielle et chronologique des factures / devis        │
 │  ✅ Gestion de la machine d'état et transitions de statut                  │
 │  ✅ Isolation stricte des données par tenant (filtrage automatique user_id)│

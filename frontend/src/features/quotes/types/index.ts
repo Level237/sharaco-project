@@ -1,6 +1,6 @@
 // features/quotes/types/index.ts
 
-export type DocumentType = 'DEVIS' | 'FACTURE';
+export type DocumentType = 'DEVIS' | 'FACTURE' | 'CONTRAT';
 export type DocumentStatus = 'DRAFT' | 'SENT' | 'VIEWED' | 'ACCEPTED' | 'REFUSED' | 'PAID' | 'OVERDUE';
 
 export interface DocumentItem {
@@ -47,6 +47,7 @@ export interface Document {
     grand_total_cents?: number;
     total_cents?: number; // Rétrocompatibilité
     notes?: string | null;
+    rules?: { title: string; body: string }[];
     client_token?: string;
     share_token?: string;
     primary_color?: string;
@@ -70,6 +71,11 @@ export interface Document {
         address?: string;
     };
     payment_schedule?: MilestonePreview[];
+    signature_name?: string | null;
+    provider_signature_name?: string | null;
+    provider_signed_at?: string | null;
+    signature_revision?: number;
+    signatures_reset?: boolean;
 }
 
 export interface DocumentCreate {
@@ -91,6 +97,7 @@ export interface DocumentCreate {
     template_id?: string | null;
     due_date?: string | null;
     notes?: string | null;
+    rules?: { title: string; body: string }[];
     payment_schedule?: MilestonePreview[] | null;
 }
 
@@ -126,8 +133,15 @@ export interface DocumentPreviewRequest {
     show_bank_details?: boolean;
     show_tax_id?: boolean;
     notes?: string | null;
+    rules?: { title: string; body: string }[] | null;
+    due_date?: string | null;
     reference?: string | null;
     payment_schedule?: MilestonePreview[] | null;
+    signature_name?: string | null;
+    accepted_at?: string | null;
+    provider_signature_name?: string | null;
+    provider_signed_at?: string | null;
+    signature_revision?: number;
 }
 
 // Re-export de QuoteDraft pour useAutoSave et useDocumentUpdate

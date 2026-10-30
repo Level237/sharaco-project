@@ -86,7 +86,7 @@ export function ClientWorkspace({ clientId }: { clientId: string }) {
                         {projects.map((project) => (
                             <ProjectFolder
                                 key={project.id}
-                                project={project}
+                                project={{ ...project, client_id: project.client_id || clientId }}
                                 showClient={false}
                                 onDelete={(id) => deleteProject.mutate(id)}
                             />

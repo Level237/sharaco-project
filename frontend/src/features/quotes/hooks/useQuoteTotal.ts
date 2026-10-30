@@ -1,41 +1,71 @@
-import { useMemo } from 'react';
-import { QuoteLineItem } from '../types/QuoteBuilder';
+import { useEffect, useMemo, useState } from "react"
+import { QuoteLineItem } from "../types/QuoteBuilder"
+import { useDebouncedValue } from "./useDebouncedValue"
+import { quotesApi } from "../api/quotesApi"
 
 interface QuoteTotals {
-    subTotal: number;
-    discountAmount: number;
-    subTotalAfterDiscount: number;
-    totalTax: number;
-    grandTotal: number;
+    subTotal: number
+    totalTax: number
+    grandTotal: number
+    totalsError: string | null
 }
 
-export function useQuoteTotal(items: QuoteLineItem[], hasVat: boolean = false, vatRate: number = 20, discountRate: number = 0, isTaxExempt: boolean = false): QuoteTotals {
-    return useMemo(() => {
-        let subTotal = 0;
-        let totalTax = 0;
-        const applyTax = hasVat && !isTaxExempt;
+function lineSubtotal(item: QuoteLineItem) {
+    return (item.quantity || 0) * (item.unitPrice || 0)
+}
 
-        items.forEach((item) => {
-            const lineSubTotal = (item.quantity || 0) * (item.unitPrice || 0);
-            subTotal += lineSubTotal;
+export function useQuoteTotal(
+    items: QuoteLineItem[],
+    hasVat: boolean = false,
+    vatRate: number = 20,
+    isTaxExempt: boolean = false,
+): QuoteTotals {
+    const subTotal = useMemo(
+        () => items.reduce((sum, item) => sum + lineSubtotal(item), 0),
+        [items],
+    )
 
-            if (applyTax) {
-                totalTax += lineSubTotal * (vatRate / 100);
-            }
-        });
+    const payload = useMemo(
+        () =>
+            items.map((item) => ({
+                description: item.description || "",
+                quantity: item.quantity || 0,
+                unit_price_cents: item.unitPrice || 0,
+                tax_rate: hasVat && !isTaxExempt ? (item.tax_rate ?? vatRate) : 0,
+            })),
+        [items, hasVat, vatRate, isTaxExempt],
+    )
+    const debouncedItems = useDebouncedValue(payload, 250)
 
-        const discountAmount = subTotal * (discountRate / 100);
-        const subTotalAfterDiscount = subTotal - discountAmount;
+    const [serverTotals, setServerTotals] = useState({ totalTax: 0, grandTotal: subTotal })
+    const [totalsError, setTotalsError] = useState<string | null>(null)
 
-        // If discount applies, tax must be re-proportioned across the subtotal
-        const effectiveTax = applyTax ? totalTax * (1 - (discountRate / 100)) : 0;
+    useEffect(() => {
+        let cancelled = false
+        quotesApi
+            .calculateTotals(debouncedItems)
+            .then((result) => {
+                if (cancelled) return
+                setTotalsError(null)
+                setServerTotals({
+                    totalTax: result.tax_total_cents || 0,
+                    grandTotal: result.grand_total_cents || 0,
+                })
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setTotalsError("Impossible de calculer les totaux. Vérifiez la connexion et réessayez.")
+                }
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [debouncedItems])
 
-        return {
-            subTotal,
-            discountAmount,
-            subTotalAfterDiscount,
-            totalTax: effectiveTax,
-            grandTotal: subTotalAfterDiscount + effectiveTax,
-        };
-    }, [items, hasVat, vatRate, discountRate, isTaxExempt]);
+    return {
+        subTotal,
+        totalTax: serverTotals.totalTax,
+        grandTotal: serverTotals.grandTotal,
+        totalsError,
+    }
 }

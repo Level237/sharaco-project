@@ -54,6 +54,17 @@ class ProjectTreeQuote(BaseModel):
     summary: ProjectTreeQuoteSummary
 
 
+class ProjectTreeContract(BaseModel):
+    """Contrat rattaché au projet."""
+    id: UUID
+    number: Optional[str] = None
+    status: str
+    created_at: datetime
+    amount_cents: int
+    source_document_id: Optional[UUID] = None
+    layout_style: Optional[str] = None
+
+
 class ProjectTreeStandaloneInvoice(BaseModel):
     """Facture non liée à un devis (si ex.)."""
     id: UUID
@@ -72,6 +83,7 @@ class ProjectTreeSummary(BaseModel):
     total_overdue: int
     total_pending: int
     quote_count: int
+    contract_count: int = 0
     invoice_count: int
     paid_invoice_count: int
     overdue_invoice_count: int
@@ -85,6 +97,8 @@ class ProjectTreeResponse(BaseModel):
     project_name: str
     client_id: Optional[UUID] = None
     client_name: Optional[str] = None
+    client_email: Optional[str] = None
     quotes: List[ProjectTreeQuote] = []
+    contracts: List[ProjectTreeContract] = []
     standalone_invoices: List[ProjectTreeStandaloneInvoice] = []
     summary: ProjectTreeSummary

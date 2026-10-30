@@ -46,12 +46,35 @@ export const quotesApi = {
         return api.get<Document>(`/api/v1/documents/${id}`);
     },
 
+    calculateTotals: async (items: {
+        description: string;
+        quantity: number;
+        unit_price_cents: number;
+        tax_rate?: number;
+    }[]): Promise<{
+        subtotal_cents: number;
+        tax_total_cents: number;
+        grand_total_cents: number;
+    }> => {
+        return api.post("/api/v1/documents/calculate", { items });
+    },
+
+    getContractDefaultRules: async (kind: string): Promise<{ title: string; body: string }[]> => {
+        return api.get(`/api/v1/documents/contract-kinds/${kind}/default-rules`);
+    },
+
     create: async (data: DocumentCreate): Promise<Document> => {
         return api.post<Document>('/api/v1/documents/', data);
     },
 
     update: async (id: string, data: unknown): Promise<Document> => {
         return api.put<Document>(`/api/v1/documents/${id}`, data);
+    },
+
+    signAsProvider: async (id: string, signatureName: string): Promise<Document> => {
+        return api.post<Document>(`/api/v1/documents/${id}/sign-as-provider`, {
+            signature_name: signatureName,
+        });
     },
 
     delete: async (id: string): Promise<void> => {

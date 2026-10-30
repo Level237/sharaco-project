@@ -54,12 +54,71 @@ class TestDocumentCalculations(unittest.TestCase):
         self.assertIn(DocumentStatus.PAID, valid_transitions[DocumentStatus.VIEWED])
         self.assertEqual(len(valid_transitions[DocumentStatus.PAID]), 0)
 
-    def test_clients_match_rejects_other_client_project(self):
-        client_x = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-        client_y = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
-        self.assertTrue(DocumentService.clients_match(None, client_y))
-        self.assertTrue(DocumentService.clients_match(client_x, client_x))
-        self.assertFalse(DocumentService.clients_match(client_x, client_y))
+    def test_contract_layout_file(self):
+        from app.services.pdfRenderer import pdf_renderer
+        self.assertEqual(
+            pdf_renderer._get_layout_file("classic", DocumentType.CONTRAT),
+            "contrat.html",
+        )
+        self.assertEqual(
+            pdf_renderer._get_layout_file("cession", DocumentType.CONTRAT),
+            "contrat_cession.html",
+        )
+        self.assertEqual(
+            pdf_renderer._get_layout_file("nda", DocumentType.CONTRAT),
+            "contrat_nda.html",
+        )
+        self.assertEqual(
+            pdf_renderer._get_layout_file("classic", DocumentType.FACTURE),
+            "facture.html",
+        )
+
+    def test_contract_number_prefix(self):
+        self.assertEqual(DocumentService.number_prefix(DocumentType.CONTRAT), "CTR")
+        self.assertEqual(DocumentService.preview_number(DocumentType.CONTRAT), "CTR-2026-001")
+        self.assertEqual(DocumentService.number_prefix(DocumentType.DEVIS), "DEV")
+
+    def test_document_create_accepts_contrat(self):
+        import uuid
+        from pydantic import ValidationError
+        from app.schemas.document import DocumentCreate
+
+        payload = DocumentCreate(
+            type=DocumentType.CONTRAT,
+            project_id=uuid.uuid4(),
+            notes="Objet du contrat et durée.",
+            items=[{"description": "Prestation", "quantity": 1, "unit_price_cents": 0, "tax_rate": 0}],
+        )
+        self.assertEqual(payload.type, DocumentType.CONTRAT)
+        empty_contract = DocumentCreate(type=DocumentType.CONTRAT, project_id=uuid.uuid4(), items=[])
+        self.assertEqual(empty_contract.items, [])
+        cession = DocumentCreate(
+            type=DocumentType.CONTRAT,
+            project_id=uuid.uuid4(),
+            layout_style="cession",
+            items=[],
+        )
+        self.assertEqual(cession.layout_style, "cession")
+        with self.assertRaises(ValidationError):
+            DocumentCreate(type=DocumentType.DEVIS, project_id=uuid.uuid4(), items=[])
+
+    def test_contract_email_template_renders(self):
+        from app.services.emailService import email_env
+
+        html = email_env.get_template("contrat.html").render(
+            to_name="Awa Ndiaye",
+            document_number="CTR-2026-001",
+            total_amount="",
+            client_url="https://example.com/client/abc",
+            due_date="20/10/2026",
+            user_name="Koffi Mensah",
+            user_company="Atelier Nord",
+            custom_message="Merci de relire l'article 2.",
+        )
+        self.assertIn("CTR-2026-001", html)
+        self.assertIn("signer le contrat", html.lower())
+        self.assertIn("20/10/2026", html)
+        self.assertIn("article 2", html)
 
     def test_document_schemas_project_id(self):
         """Vérifie la présence et validation du project_id dans DocumentCreate et DocumentUpdate."""

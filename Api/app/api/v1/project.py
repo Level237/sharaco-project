@@ -251,7 +251,12 @@ async def get_project(
     """Récupérer les détails d'un projet."""
     logger.info(f"🔍 GET /projects/{project_id}")
     
-    project = await ProjectService.get_by_id(db, project_id, current_user.id)
+    try:
+        project = await ProjectService.get_by_id(db, project_id, current_user.id)
+    except Exception as e:
+        logger.error(f"❌ GET /projects/{project_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Impossible de charger le projet")
+
     if not project:
         raise HTTPException(status_code=404, detail="Projet introuvable")
     

@@ -1,14 +1,12 @@
-// features/projects/components/QuoteCardWithInvoices.tsx
 "use client"
 
 import { motion, type Variants } from "framer-motion"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { FileText, FileCheck, Eye, CreditCard, Ban, Trash2, MoreVertical, Folder, Unlink } from "lucide-react"
+import { FileText, FileCheck, Eye, CreditCard, Ban, Trash2, MoreVertical, Folder, Pencil, FileDown } from "lucide-react"
 import { DocumentPreview } from "@/features/quotes/components/DocumentPreview"
 import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/features/quotes/lib/formatCurrency"
 
-import { useDeleteDocument } from "@/features/quotes/hooks/useDeleteDocument"
 import { quotesApi } from "@/features/quotes/api/quotesApi"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -18,9 +16,10 @@ interface QuoteCardWithInvoicesProps {
     quote: ProjectTreeQuote;
     variants?: Variants;
     onExpand: () => void;
+    onRefresh?: () => void;
 }
 
-const statusConfig: Record<string, { label: string; icon: any; color: string }> = {
+const statusConfig: Record<string, { label: string; icon: typeof FileText; color: string }> = {
     ACCEPTED: { label: "Accepté", icon: CreditCard, color: "text-emerald-500" },
     REFUSED: { label: "Refusé", icon: Ban, color: "text-rose-500" },
     SENT: { label: "Envoyé", icon: FileCheck, color: "text-blue-500" },
@@ -29,29 +28,23 @@ const statusConfig: Record<string, { label: string; icon: any; color: string }> 
     PAID: { label: "Payé", icon: CreditCard, color: "text-emerald-500" },
 }
 
-export function QuoteCardWithInvoices({ quote, variants, onExpand }: QuoteCardWithInvoicesProps) {
+export function QuoteCardWithInvoices({ quote, variants, onExpand, onRefresh }: QuoteCardWithInvoicesProps) {
     const config = statusConfig[quote.status] || statusConfig.DRAFT;
     const StatusIcon = config.icon;
 
-    const { deleteDocument } = useDeleteDocument({});
-
     const handleDelete = async () => {
-        if (confirm("Supprimer ce devis ?")) {
-            await deleteDocument(quote.id, quote.number || "");
-        }
+        if (!window.confirm(`Supprimer le devis « ${quote.number || ""} » ?`)) return;
+        await quotesApi.delete(quote.id);
+        onRefresh?.();
     };
 
     const handleDownloadPdf = async () => {
-        try {
-            await quotesApi.downloadPdf(quote.id, `${quote.number || 'devis'}.pdf`);
-        } catch (error) {
-            console.error('Erreur téléchargement PDF:', error);
-        }
+        await quotesApi.downloadPdf(quote.id, `${quote.number || "devis"}.pdf`);
     };
 
     const invoiceCount = quote.invoices.length;
-    const hasOverdue = quote.invoices.some(inv => inv.status === "OVERDUE");
-    const paidCount = quote.invoices.filter(inv => inv.status === "PAID").length;
+    const hasOverdue = quote.invoices.some((inv) => inv.status === "OVERDUE");
+    const paidCount = quote.invoices.filter((inv) => inv.status === "PAID").length;
 
     return (
         <motion.div
@@ -61,92 +54,86 @@ export function QuoteCardWithInvoices({ quote, variants, onExpand }: QuoteCardWi
             layout
             className="group flex flex-col"
         >
-            <div className="relative w-full aspect-[4/5] rounded-lg bg-slate-100/50 dark:bg-white/[0.02] border border-slate-200/50 dark:border-white/5 overflow-hidden group-hover:-translate-y-1 transition-transform duration-300 p-2 flex items-center justify-center">
-                {/* Preview */}
-                <div className="w-full h-full rounded-md overflow-hidden shadow-sm bg-white dark:bg-slate-950/50 relative">
-                    <DocumentPreview
-                        documentId={quote.id}
-                        layoutStyle="modern"
-                    />
-                </div>
+            <div className="relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded-lg border border-white/5 bg-white/[0.02] p-1.5 transition-transform duration-300 group-hover:-translate-y-1">
+                <Link href={`/dashboard/quotes/${quote.id}`} className="relative block h-full w-full overflow-hidden rounded-md bg-slate-950/50 shadow-sm">
+                    <DocumentPreview documentId={quote.id} layoutStyle="modern" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100">
+                            <Eye className="h-5 w-5" />
+                        </div>
+                    </div>
+                </Link>
 
-                {/* Badge factures (en bas à gauche) */}
                 {invoiceCount > 0 && (
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation();
+                        type="button"
+                        onClick={(event) => {
+                            event.stopPropagation();
                             onExpand();
                         }}
                         className={cn(
-                            "absolute bottom-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-lg backdrop-blur-md transition-all hover:scale-105",
-                            hasOverdue
-                                ? "bg-rose-500/90 text-white"
-                                : "bg-white/90 dark:bg-slate-900/90 text-slate-900 dark:text-white border border-white/20"
+                            "absolute bottom-3 left-3 z-20 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold shadow-lg backdrop-blur-md",
+                            hasOverdue ? "bg-rose-500/90 text-white" : "border border-white/20 bg-slate-900/90 text-white"
                         )}
                     >
                         <Folder className="h-3 w-3" />
-                        <span>{invoiceCount} facture{invoiceCount > 1 ? 's' : ''}</span>
-                        {paidCount === invoiceCount && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        )}
+                        {invoiceCount} facture{invoiceCount > 1 ? "s" : ""}
+                        {paidCount === invoiceCount && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
                     </button>
                 )}
 
-                {/* Hover Actions */}
-                <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-                    <Link href={`/dashboard/quotes/${quote.id}`}>
-                        <Button size="icon" className="h-10 w-10 rounded-full bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:scale-110 transition-transform">
-                            <Eye className="h-4 w-4" />
-                        </Button>
-                    </Link>
-
-                    {invoiceCount > 0 && (
-                        <Button
-                            onClick={onExpand}
-                            size="icon"
-                            className="h-10 w-10 rounded-full bg-[#2563EB] text-white hover:bg-[#1d4ed8] shadow-lg hover:scale-110 transition-transform"
-                            title="Voir les factures"
-                        >
-                            <Folder className="h-4 w-4" />
-                        </Button>
-                    )}
-
+                <div className="absolute right-2 top-2 z-20">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button size="icon" className="h-10 w-10 rounded-full bg-white text-slate-900 hover:bg-slate-100 shadow-lg hover:scale-110 transition-transform">
-                                <MoreVertical className="h-4 w-4" />
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-10 w-10 rounded-md border border-white/10 bg-black/40 text-slate-200 shadow-lg backdrop-blur-md hover:bg-black/60"
+                            >
+                                <MoreVertical className="h-5 w-5" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-xl p-2 w-56 bg-white dark:bg-[#111113] border border-slate-200/60 dark:border-white/10 shadow-2xl">
-                            <DropdownMenuItem onClick={handleDownloadPdf} className="cursor-pointer rounded-xl py-2.5 px-3 font-medium">
-                                <FileText className="mr-2.5 h-4 w-4 text-blue-500" />
+                        <DropdownMenuContent align="end" className="w-56 border-white/10 bg-[#111113] p-2 text-slate-200">
+                            <DropdownMenuItem asChild className="cursor-pointer">
+                                <Link href={`/dashboard/quotes/${quote.id}`}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Visualiser
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild className="cursor-pointer">
+                                <Link href={`/dashboard/quotes/create/${quote.id}`}>
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Modifier
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer" onClick={handleDownloadPdf}>
+                                <FileDown className="mr-2 h-4 w-4 text-blue-500" />
                                 Télécharger PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleDelete} className="cursor-pointer rounded-xl py-2.5 px-3 text-rose-600 dark:text-rose-500 focus:text-rose-700 font-medium">
-                                <Trash2 className="mr-2.5 h-4 w-4" />
-                                Supprimer devis
-                            </DropdownMenuItem>
+                            {quote.status === "DRAFT" && (
+                                <DropdownMenuItem className="cursor-pointer text-rose-400 focus:text-rose-300" onClick={handleDelete}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Supprimer le devis
+                                </DropdownMenuItem>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
             </div>
 
-            {/* Text Details */}
-            <div className="mt-3 px-1 w-full min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+            <div className="mt-3 w-full min-w-0 px-1">
+                <h4 className="truncate text-sm font-bold text-white">
                     {quote.number || "Devis sans numéro"}
                 </h4>
-                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1.5 min-w-0">
-                    <div className="flex items-center gap-1 shrink-0">
-                        <div className={cn("p-0.5 rounded-md bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10", config.color)}>
-                            <StatusIcon className="w-3 h-3" />
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[11px] font-medium text-slate-400">
+                    <div className="flex items-center gap-1">
+                        <div className={cn("rounded-md border border-white/10 bg-white/5 p-0.5", config.color)}>
+                            <StatusIcon className="h-3 w-3" />
                         </div>
-                        <span className="truncate">{config.label}</span>
+                        <span>{config.label}</span>
                     </div>
-                    <span className="text-slate-300 dark:text-slate-600 shrink-0 hidden sm:inline">•</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
-                        {formatCurrency(quote.amount_cents)}
-                    </span>
+                    <span className="hidden text-slate-600 sm:inline">•</span>
+                    <span className="font-bold text-slate-300">{formatCurrency(quote.amount_cents)}</span>
                 </div>
             </div>
         </motion.div>

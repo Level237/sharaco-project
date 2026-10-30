@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -10,8 +11,21 @@ from app.core.config import settings
 # access to the values within the .ini file in use.
 config = context.config
 
-# Override la URL de alembic.ini avec celle du settings (depuis .env)
-config.set_main_option("sqlalchemy.url", settings.SYNC_DATABASE_URL)
+
+def _sync_database_url() -> str:
+    """URL sync : ALEMBIC_DATABASE_URL / DATABASE_URL (prod) sinon .env local."""
+    raw = os.environ.get("ALEMBIC_DATABASE_URL") or os.environ.get("DATABASE_URL")
+    if raw:
+        if raw.startswith("postgresql+asyncpg://"):
+            raw = "postgresql://" + raw[len("postgresql+asyncpg://"):]
+        elif raw.startswith("postgres://"):
+            raw = "postgresql://" + raw[len("postgres://"):]
+        return raw
+    return settings.SYNC_DATABASE_URL
+
+
+# ConfigParser interprète %. Doubler pour les mots de passe.
+config.set_main_option("sqlalchemy.url", _sync_database_url().replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

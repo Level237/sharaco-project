@@ -44,6 +44,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
 
     const [draft, setDraft] = useState<QuoteDraft>({
         id: null,
+        documentType: "DEVIS",
         clientId: "",
         clientName: "",
         clientEmail: "",
@@ -55,7 +56,6 @@ export function Editor({ templateId, documentId }: EditorProps) {
         hasVat: false,
         vatRate: 20,
         isTaxExempt: false,
-        discountRate: 0,
         items: [
             {
                 id: uuidv4(),
@@ -176,6 +176,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
 
                 setDraft({
                     id: doc.id,
+                    documentType: doc.type || "DEVIS",
                     projectId: (doc as any).project_id || null,
                     clientId: doc.client_id,
                     clientName: clientData.name,
@@ -188,7 +189,6 @@ export function Editor({ templateId, documentId }: EditorProps) {
                     hasVat: (doc.items || []).some((item) => (item.tax_rate ?? 0) > 0) || ((doc.tax_total_cents ?? 0) > 0),
                     vatRate: (doc.items || []).find((item) => (item.tax_rate ?? 0) > 0)?.tax_rate || 20,
                     isTaxExempt: false,
-                    discountRate: 0,
                     items: mappedItems.length > 0 ? mappedItems : [{
                         id: uuidv4(),
                         description: "",
@@ -288,7 +288,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
             !(draft.paymentMilestones.length === 1 && draft.paymentMilestones[0].percent === 100);
 
         const previewRequest = {
-            type: "DEVIS",
+            type: draft.documentType || "DEVIS",
             client_name: draft.clientName || "Client Exemple",
             client_email: draft.clientEmail || "",
             client_address: draft.clientAddress || "",

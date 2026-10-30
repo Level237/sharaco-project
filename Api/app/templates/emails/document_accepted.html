@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Devis accepté</title>
+    <title>{{ document_kind | default('Devis') }} {{ 'signé' if is_contract else 'accepté' }}</title>
     <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
     <style>
 
@@ -231,18 +231,24 @@
             </div>
             <div class="content">
                 <div class="eyebrow" style="color: #000000; background-color: #f2f2f4;">Bonne nouvelle</div>
-                <h1 class="greeting">Devis accepté ! 🎉</h1>
+                <h1 class="greeting">
+                    {% if is_contract %}Votre client vient de signer{% else %}{{ document_kind | default('Devis') }} accepté{% endif %}
+                </h1>
                 
                 <p class="text-body">
                     Bonjour <strong>{{ user_name }}</strong>,<br><br>
-                    Excellente nouvelle ! Votre devis a été accepté et signé par <strong>{{ client_name }}</strong>.
+                    {% if is_contract %}
+                    <strong>{{ client_name }}</strong> vient de signer le contrat <strong>{{ document_number }}</strong>.
+                    {% else %}
+                    Votre {{ document_label | default('devis') }} a été accepté et signé par <strong>{{ client_name }}</strong>.
+                    {% endif %}
                 </p>
 
                 <div class="document-card">
                     <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
                         <tr>
                             <td style="border-bottom: 1px solid #e5e5ea;">
-                                <p class="document-label">Numéro du devis</p>
+                                <p class="document-label">Numéro du {{ document_label | default('devis') }}</p>
                                 <p class="document-value">{{ document_number }}</p>
                             </td>
                         </tr>
@@ -252,16 +258,18 @@
                                 <p class="document-value">{{ signature_name }}</p>
                             </td>
                         </tr>
+                        {% if show_amount %}
                         <tr>
                             <td style="background-color: #fafafc;">
-                                <p class="document-label">Montant accepté</p>
+                                <p class="document-label">{% if is_contract %}Montant{% else %}Montant accepté{% endif %}</p>
                                 <p class="document-amount">{{ amount }}</p>
                             </td>
                         </tr>
+                        {% endif %}
                         <tr>
                             <td style="background-color: #ffffff; padding: 16px 24px;">
                                 <p style="margin: 0; font-size: 13px; color: #8e8e93; font-weight: 500;">
-                                    Validé le : <strong>{{ accepted_at }}</strong>
+                                    Signé le : <strong>{{ accepted_at }}</strong>
                                 </p>
                             </td>
                         </tr>
@@ -269,11 +277,15 @@
                 </div>
 
                 <div class="cta-container">
-                    <a href="{{ dashboard_url | default('#') }}" class="btn">Générer la facture</a>
+                    <a href="{{ dashboard_url | default('#') }}" class="btn">{{ cta_label | default('Ouvrir') }}</a>
                 </div>
 
                 <div class="disclaimer">
+                    {% if is_contract %}
+                    La signature (nom et date) est désormais visible sur le contrat. Vous pouvez le consulter depuis votre espace.
+                    {% else %}
                     Vous pouvez maintenant convertir ce devis en facture et commencer la prestation. Félicitations !
+                    {% endif %}
                 </div>
             </div>
             <div class="footer">

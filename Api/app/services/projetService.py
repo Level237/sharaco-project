@@ -313,7 +313,6 @@ class ProjectService:
             select(Project)
             .options(
                 selectinload(Project.attachments),
-                selectinload(Project.documents),
                 selectinload(Project.client)
             )
             .where(
@@ -398,8 +397,22 @@ class ProjectService:
         
         invoices_result = await db.execute(invoices_stmt)
         invoices = list(invoices_result.scalars().all())
+
+        contracts_stmt = (
+            select(Document)
+            .options(selectinload(Document.items))
+            .where(
+                Document.project_id == project_id,
+                Document.type == DocumentType.CONTRAT,
+            )
+            .order_by(Document.created_at.desc())
+        )
+        contracts_result = await db.execute(contracts_stmt)
+        contracts = list(contracts_result.scalars().all())
         
-        logger.info(f"🔍 Projet {project_id}: {len(quotes)} devis, {len(invoices)} factures trouvées")
+        logger.info(
+            f"🔍 Projet {project_id}: {len(quotes)} devis, {len(contracts)} contrats, {len(invoices)} factures"
+        )
         
         # ═══════════════════════════════════════════════════════════
         # 4. Indexer les factures par source_document_id
@@ -578,6 +591,7 @@ class ProjectService:
             "total_overdue": total_overdue,
             "total_pending": total_pending,
             "quote_count": len(quotes),
+            "contract_count": len(contracts),
             "invoice_count": invoice_count,
             "paid_invoice_count": paid_invoice_count,
             "overdue_invoice_count": overdue_invoice_count,
@@ -590,7 +604,20 @@ class ProjectService:
             "project_name": project.name,
             "client_id": project.client_id,
             "client_name": project.client.name if project.client else None,
+            "client_email": project.client.email if project.client else None,
             "quotes": quotes_data,
+            "contracts": [
+                {
+                    "id": c.id,
+                    "number": c.number,
+                    "status": c.status.value if hasattr(c.status, "value") else c.status,
+                    "created_at": c.created_at,
+                    "amount_cents": DocumentService.calculate_totals(c.items)["grand_total_cents"],
+                    "source_document_id": c.source_document_id,
+                    "layout_style": c.layout_style,
+                }
+                for c in contracts
+            ],
             "standalone_invoices": standalone_data,
             "summary": project_summary,
         }

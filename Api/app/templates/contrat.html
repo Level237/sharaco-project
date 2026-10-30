@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrat {{ document.number or '' }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: {{ accent or '#2563EB' }}; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Source Sans 3", "Segoe UI", sans-serif;
+            color: #1c1917;
+            background: #e7e5e4;
+            line-height: 1.55;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: #fffcf7;
+            padding: 18mm 18mm 16mm;
+            position: relative;
+        }
+
+        @media screen {
+            body { padding: 24px; }
+            .page { box-shadow: 0 18px 40px rgba(28, 25, 23, 0.12); }
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .page { box-shadow: none; padding: 0; }
+            .article, .sign-grid { page-break-inside: avoid; }
+            @page { size: A4; margin: 14mm; }
+        }
+
+        .kicker {
+            font-size: 10px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        h1 {
+            font-family: "Libre Baskerville", Georgia, serif;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 8px 0 6px;
+            color: #1c1917;
+        }
+
+        .doc-id {
+            font-size: 13px;
+            color: #57534e;
+        }
+
+        .rule {
+            height: 2px;
+            background: var(--accent);
+            margin: 18px 0 22px;
+        }
+
+        .meta {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 28px;
+        }
+
+        .meta td {
+            width: 33.33%;
+            vertical-align: top;
+            padding-right: 16px;
+        }
+
+        .meta .lbl {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #78716c;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .meta .val { font-size: 14px; font-weight: 600; }
+
+        .article { margin-bottom: 26px; }
+
+        .article-head {
+            display: table;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .num {
+            display: table-cell;
+            width: 34px;
+            vertical-align: middle;
+        }
+
+        .num span {
+            display: inline-block;
+            width: 26px;
+            height: 26px;
+            border: 1.5px solid var(--accent);
+            color: var(--accent);
+            text-align: center;
+            line-height: 23px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: "Libre Baskerville", Georgia, serif;
+        }
+
+        .article-title {
+            display: table-cell;
+            vertical-align: middle;
+            font-family: "Libre Baskerville", Georgia, serif;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .lede {
+            font-size: 13.5px;
+            color: #44403c;
+            margin-bottom: 12px;
+        }
+
+        .parties {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .parties td {
+            width: 50%;
+            vertical-align: top;
+            background: #f5f0e8;
+            padding: 14px 16px;
+            border: 1px solid #e7e0d4;
+        }
+
+        .parties td + td { border-left: none; }
+
+        .role {
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #78716c;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .who {
+            font-family: "Libre Baskerville", Georgia, serif;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .details { font-size: 12.5px; color: #44403c; }
+
+        ol.scope {
+            margin: 0 0 8px 18px;
+            padding: 0;
+        }
+
+        ol.scope li {
+            margin-bottom: 6px;
+            font-size: 13.5px;
+        }
+
+        .scope-meta {
+            font-size: 12px;
+            color: #57534e;
+        }
+
+        .pay {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .pay th, .pay td {
+            text-align: left;
+            padding: 8px 0;
+            border-bottom: 1px solid #e7e5e4;
+            font-size: 13px;
+        }
+
+        .pay th {
+            font-size: 10px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #78716c;
+            font-weight: 600;
+        }
+
+        .pay .r { text-align: right; }
+
+        .total-row td {
+            font-weight: 700;
+            border-bottom: none;
+            padding-top: 12px;
+            font-size: 14px;
+        }
+
+        .notes {
+            font-size: 13.5px;
+            white-space: pre-wrap;
+            color: #292524;
+        }
+
+        .rule-block {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid #e7e0d4;
+        }
+
+        .rule-block:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .rule-index {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .rule-title {
+            font-family: "Libre Baskerville", Georgia, serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1c1917;
+            line-height: 1.3;
+            margin: 0 0 8px;
+        }
+
+        .rule-body {
+            font-size: 13.5px;
+            line-height: 1.65;
+            color: #44403c;
+            white-space: pre-wrap;
+        }
+
+        .muted {
+            font-size: 12.5px;
+            color: #78716c;
+            font-style: italic;
+        }
+
+        .sign-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .sign-grid td {
+            width: 50%;
+            vertical-align: top;
+            padding-right: 20px;
+        }
+
+        .sign-box {
+            min-height: 88px;
+            border-bottom: 1px solid var(--accent);
+            margin: 28px 0 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-bottom: 8px;
+        }
+        .sign-name { font-size: 15px; font-weight: 700; color: #1c1917; }
+        .sign-date { font-size: 11px; color: #78716c; margin-top: 4px; }
+
+        .sign-label { font-size: 12px; color: #44403c; }
+
+        .legal {
+            margin-top: 36px;
+            padding-top: 12px;
+            border-top: 1px solid #e7e5e4;
+            font-size: 10.5px;
+            color: #78716c;
+            line-height: 1.45;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="kicker">Sharaco · Document contractuel</div>
+    <h1>Contrat de prestation</h1>
+    <div class="doc-id">N° {{ document.number or "Brouillon" }}{% if signatures and signatures.revision > 1 %} · Version {{ signatures.revision }}{% endif %}</div>
+    <div class="rule"></div>
+
+    <table class="meta">
+        <tr>
+            <td>
+                <span class="lbl">Date</span>
+                <span class="val">{{ document.created_at.strftime("%d/%m/%Y") if document.created_at else "—" }}</span>
+            </td>
+            <td>
+                <span class="lbl">Fin prévue</span>
+                <span class="val">{{ document.due_date.strftime("%d/%m/%Y") if document.due_date else "À la fin des prestations" }}</span>
+            </td>
+            <td>
+                <span class="lbl">Statut</span>
+                <span class="val">
+                    {% if document.status and document.status.value == "ACCEPTED" %}Signé
+                    {% elif document.status and document.status.value == "SENT" %}Envoyé
+                    {% elif document.status and document.status.value == "REFUSED" %}Refusé
+                    {% else %}Brouillon{% endif %}
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <div class="article">
+        <div class="article-head">
+            <div class="num"><span>1</span></div>
+            <div class="article-title">Les parties</div>
+        </div>
+        <p class="lede">Le présent contrat est conclu entre les parties suivantes, dans le cadre du projet auquel il est rattaché.</p>
+        <table class="parties">
+            <tr>
+                <td>
+                    <div class="role">Prestataire</div>
+                    <div class="who">{{ user.company_name or user.full_name or user.email or "Prestataire" }}</div>
+                    <div class="details">
+                        {% if user.full_name and user.company_name %}{{ user.full_name }}<br>{% endif %}
+                        {% if user.address %}{{ user.address | replace("\n", "<br>") | safe }}<br>{% endif %}
+                        {% if user.email %}{{ user.email }}<br>{% endif %}
+                        {% if template.show_tax_id and user.tax_id %}NIF / RCCM : {{ user.tax_id }}{% endif %}
+                    </div>
+                </td>
+                <td>
+                    <div class="role">Client</div>
+                    <div class="who">{{ client.name or "Client" }}</div>
+                    <div class="details">
+                        {% if client.address %}{{ client.address | replace("\n", "<br>") | safe }}<br>{% endif %}
+                        {% if client.email %}{{ client.email }}<br>{% endif %}
+                        {% if client.phone %}Tél. {{ client.phone }}{% endif %}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {% set n = namespace(i=2) %}
+    {% set scoped = items | selectattr("description") | list %}
+
+    {% if scoped %}
+    <div class="article">
+        <div class="article-head">
+            <div class="num"><span>{{ n.i }}</span></div>
+            <div class="article-title">Prestations</div>
+        </div>
+        <p class="lede">Le prestataire s’engage à réaliser les prestations ci-dessous pour le client.</p>
+        <ol class="scope">
+            {% for item in scoped %}
+            <li>
+                {{ item.description }}
+                {% if item.quantity and item.quantity > 1 %}
+                    <span class="scope-meta"> · qté {{ item.quantity }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+    {% set n.i = n.i + 1 %}
+    {% endif %}
+
+    <div class="article">
+        <div class="article-head">
+            <div class="num"><span>{{ n.i }}</span></div>
+            <div class="article-title">Durée de la prestation</div>
+        </div>
+        {% if document.due_date %}
+        <p class="lede">La prestation prend effet à la date du contrat. La fin prévue est le {{ document.due_date.strftime("%d/%m/%Y") }}.</p>
+        {% else %}
+        <p class="lede">La prestation prend effet à la date du contrat. La date de fin n’est pas encore fixée.</p>
+        {% endif %}
+    </div>
+    {% set n.i = n.i + 1 %}
+
+    {% if totals.grand_total_cents and totals.grand_total_cents > 0 %}
+    <div class="article">
+        <div class="article-head">
+            <div class="num"><span>{{ n.i }}</span></div>
+            <div class="article-title">Rémunération</div>
+        </div>
+        <table class="pay">
+            <thead>
+                <tr>
+                    <th>Désignation</th>
+                    <th class="r">Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                {% set ht = (item.quantity or 1) * (item.unit_price_cents or 0) %}
+                <tr>
+                    <td>{{ item.description or "Prestation" }}</td>
+                    <td class="r">{{ "{:,}".format(ht) }} {{ currency }}</td>
+                </tr>
+                {% endfor %}
+                {% if totals.tax_total_cents and totals.tax_total_cents > 0 %}
+                <tr>
+                    <td>Taxes</td>
+                    <td class="r">{{ "{:,}".format(totals.tax_total_cents) }} {{ currency }}</td>
+                </tr>
+                {% endif %}
+                <tr class="total-row">
+                    <td>Total</td>
+                    <td class="r">{{ "{:,}".format(totals.grand_total_cents) }} {{ currency }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% set n.i = n.i + 1 %}
+    {% endif %}
+
+    {% if reglement %}
+    <div class="article">
+        <div class="article-head">
+            <div class="num"><span>{{ n.i }}</span></div>
+            <div class="article-title">Règlement intérieur</div>
+        </div>
+        {% for rule in reglement %}
+            {% if rule.title or rule.body %}
+            <div class="rule-block">
+                <span class="rule-index">Article {{ loop.index }}</span>
+                <h3 class="rule-title">{{ rule.title or "Sans titre" }}</h3>
+                {% if rule.body %}<div class="rule-body">{{ rule.body }}</div>{% endif %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% set n.i = n.i + 1 %}
+    {% endif %}
+
+    {% if document.notes %}
+    <div class="article">
+        <div class="article-head">
+            <div class="num"><span>{{ n.i }}</span></div>
+            <div class="article-title">Conditions particulières</div>
+        </div>
+        <div class="notes">{{ document.notes }}</div>
+    </div>
+    {% set n.i = n.i + 1 %}
+    {% endif %}
+
+    <div class="article">
+        <div class="article-head">
+            <div class="num"><span>{{ n.i }}</span></div>
+            <div class="article-title">Signatures</div>
+        </div>
+        <p class="lede">Fait en deux exemplaires. Chaque partie reconnaît avoir pris connaissance du présent contrat.</p>
+        {% set provider_role = "Le prestataire" %}
+        {% set client_role = "Le client" %}
+        {% include "partials/contract_signatures.html" %}
+    </div>
+
+    <p class="legal">
+        Document généré avec Sharaco pour formaliser l’accord entre les parties.
+        Il ne constitue pas un conseil juridique. Adaptez les conditions à votre situation avant de signer.
+    </p>
+</div>
+</body>
+</html>

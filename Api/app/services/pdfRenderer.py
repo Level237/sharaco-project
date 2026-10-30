@@ -24,8 +24,25 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from app.models.document import DocumentType, DocumentStatus
 from app.models.payment_schedule import PaymentSchedule, MilestoneStatus
+from app.services.contractKinds import CONTRACT_LAYOUT_MAP, contract_title
 
 logger = logging.getLogger(__name__)
+
+
+def _decode_contract_rules(raw: str | None) -> list[dict]:
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+    except (TypeError, json.JSONDecodeError):
+        return []
+    if not isinstance(data, list):
+        return []
+    return [
+        {"title": str(item.get("title") or ""), "body": str(item.get("body") or "")}
+        for item in data
+        if isinstance(item, dict)
+    ]
 
 
 class PDFRenderer:
@@ -51,6 +68,7 @@ class PDFRenderer:
     }
 
     INVOICE_TEMPLATE = "facture.html"
+    CONTRACT_LAYOUT_MAP = CONTRACT_LAYOUT_MAP
     DEFAULT_CURRENCY = "FCFA"
 
     def __init__(self):
@@ -126,6 +144,8 @@ class PDFRenderer:
     def _get_layout_file(self, layout_style: str, doc_type: DocumentType) -> str:
         if doc_type == DocumentType.FACTURE:
             return self.INVOICE_TEMPLATE
+        if doc_type == DocumentType.CONTRAT:
+            return self.CONTRACT_LAYOUT_MAP.get(layout_style, "contrat.html")
         return self.QUOTE_LAYOUT_MAP.get(layout_style, "classic.html")
 
     @staticmethod
@@ -518,13 +538,52 @@ class PDFRenderer:
             "template": template,
             "user": user,
             "client": client,
-            "items": document.items,
+            "items": document.items or [],
             "totals": totals,
             "currency": currency_label(currency_code),
             "currency_code": currency_code,
             "source_quote_number": source_quote_number,
+            "reglement": _decode_contract_rules(getattr(document, "rules", None)),
+            "contract_title": contract_title(getattr(document, "layout_style", None)),
+            "accent": getattr(document, "primary_color", None)
+                or getattr(template, "primary_color", None)
+                or "#2563EB",
+            "signatures": self._build_signatures(document),
         }
         return context
+
+    @staticmethod
+    def _format_sign_date(value) -> str | None:
+        if not value:
+            return None
+        if isinstance(value, str):
+            try:
+                value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                return value
+        if getattr(value, "tzinfo", None):
+            value = value.replace(tzinfo=None)
+        try:
+            return value.strftime("%d/%m/%Y")
+        except AttributeError:
+            return None
+
+    @classmethod
+    def _build_signatures(cls, document: Document) -> dict:
+        client_name = getattr(document, "signature_name", None)
+        provider_name = getattr(document, "provider_signature_name", None)
+        revision = getattr(document, "signature_revision", 1) or 1
+        return {
+            "revision": revision,
+            "client": {
+                "name": client_name,
+                "date": cls._format_sign_date(getattr(document, "accepted_at", None)),
+            } if client_name else None,
+            "provider": {
+                "name": provider_name,
+                "date": cls._format_sign_date(getattr(document, "provider_signed_at", None)),
+            } if provider_name else None,
+        }
 
     async def render_html(
         self,
@@ -540,7 +599,8 @@ class PDFRenderer:
         Nécessite une session DB pour charger les relations (devis source, échéancier).
         """
         try:
-            layout_file = self._get_layout_file(template.layout_style, document.type)
+            layout_key = document.layout_style if document.type == DocumentType.CONTRAT else template.layout_style
+            layout_file = self._get_layout_file(layout_key, document.type)
             tmpl = self.env.get_template(layout_file)
 
             source_quote_number = await self._get_source_quote_number(db, document)
@@ -572,7 +632,8 @@ class PDFRenderer:
         Le suivi de paiement sera masqué (has_schedule = False par défaut).
         """
         try:
-            layout_file = self._get_layout_file(template.layout_style, document.type)
+            layout_key = document.layout_style if document.type == DocumentType.CONTRAT else template.layout_style
+            layout_file = self._get_layout_file(layout_key, document.type)
             tmpl = self.env.get_template(layout_file)
             context = self._build_context(document, template, user, client, currency)
             return tmpl.render(**context)
@@ -606,7 +667,11 @@ class PDFRenderer:
             id=uuid4(),
             type=doc_type,
             status=DocumentStatus.DRAFT if doc_type == DocumentType.DEVIS else DocumentStatus.SENT,
-            number="DEV-2026-001" if doc_type == DocumentType.DEVIS else "FACT-2026-001",
+            number=(
+                "DEV-2026-001" if doc_type == DocumentType.DEVIS
+                else "CTR-2026-001" if doc_type == DocumentType.CONTRAT
+                else "FACT-2026-001"
+            ),
             created_at=datetime.now(timezone.utc),
             due_date=datetime.now(timezone.utc),
             user_id=user.id,

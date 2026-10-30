@@ -24,6 +24,7 @@ export interface Milestone {
 
 export interface QuoteDraft {
     id?: string | null;              // UUID du document (si sauvegardé)
+    documentType?: "DEVIS" | "FACTURE" | "CONTRAT";
     projectId?: string | null;       // ID du projet lié (optionnel)
     clientId?: string;        // ID du client en DB
     clientName: string;
@@ -40,15 +41,21 @@ export interface QuoteDraft {
     hasVat: boolean;
     vatRate?: number;         // Taux de TVA par défaut
     isTaxExempt: boolean;
-    discountRate: number;
     items: QuoteLineItem[];
     paymentMode: 'simple' | 'schedule';
     paymentMilestones: Milestone[];
     notes?: string;
+    endDate?: string | null;
+    rules?: { title: string; body: string }[];
     internalNotes?: string;
     logoUrl?: string | null;
     brandColor?: string;
     isSaved?: boolean;        // Indique si le draft est sauvegardé en DB
     templateId?: string | null;  // ID du template sélectionné
     layoutStyle?: string;     // "classic" | "modern" | "minimal"
+    signatureName?: string | null;
+    acceptedAt?: string | null;
+    providerSignatureName?: string | null;
+    providerSignedAt?: string | null;
+    signatureRevision?: number;
 }

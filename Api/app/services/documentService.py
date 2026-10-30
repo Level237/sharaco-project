@@ -13,9 +13,11 @@ from datetime import datetime, timezone
 from app.services.templateService import TemplateService
 from app.services.billingSettingsService import BillingSettingsService
 from uuid import uuid4
+import json
 from app.models.client import Client
 from app.models.user import User
 from app.services.pdfRenderer import pdf_renderer
+from app.services.contractKinds import default_rules_for, normalize_contract_layout
 import logging
 from app.utils.datetime import to_naive_utc
 
@@ -25,34 +27,38 @@ logger = logging.getLogger(__name__)
 class DocumentService:
 
     @staticmethod
-    def clients_match(document_client_id: Optional[UUID], project_client_id: Optional[UUID]) -> bool:
-        if not document_client_id or not project_client_id:
-            return True
-        return str(document_client_id) == str(project_client_id)
+    def encode_rules(rules: Optional[list] = None) -> Optional[str]:
+        if not rules:
+            return None
+        cleaned = []
+        for rule in rules:
+            if isinstance(rule, dict):
+                title = (rule.get("title") or "").strip()
+                body = (rule.get("body") or "").strip()
+            else:
+                title = (getattr(rule, "title", None) or "").strip()
+                body = (getattr(rule, "body", None) or "").strip()
+            if title or body:
+                cleaned.append({"title": title, "body": body})
+        return json.dumps(cleaned, ensure_ascii=False) if cleaned else None
 
     @staticmethod
-    async def ensure_project_belongs_to_client(
-        db: AsyncSession,
-        project_id: UUID,
-        user_id: UUID,
-        client_id: Optional[UUID],
-    ):
-        from app.models.projet import Project
+    def decode_rules(raw: Optional[str] = None) -> list[dict]:
+        if not raw:
+            return []
+        try:
+            data = json.loads(raw)
+        except (TypeError, json.JSONDecodeError):
+            return []
+        if not isinstance(data, list):
+            return []
+        return [
+            {"title": str(item.get("title") or ""), "body": str(item.get("body") or "")}
+            for item in data
+            if isinstance(item, dict)
+        ]
 
-        result = await db.execute(
-            select(Project).where(
-                Project.id == project_id,
-                Project.user_id == user_id,
-            )
-        )
-        project = result.scalar_one_or_none()
-        if not project:
-            raise LookupError("Projet introuvable ou n'appartient pas à cet utilisateur")
-        if not DocumentService.clients_match(client_id, project.client_id):
-            raise ValueError(
-                "Ce projet appartient à un autre client. Un devis ne peut être associé qu'à un projet du même client."
-            )
-        return project
+
 
     @staticmethod
     async def create_from_quote(
@@ -215,6 +221,22 @@ class DocumentService:
         }
 
     @staticmethod
+    async def handle_contract_acceptance(db: AsyncSession, contract: Document) -> dict:
+        contract.status = DocumentStatus.ACCEPTED
+        contract.accepted_at = to_naive_utc(datetime.now(timezone.utc))
+        db.add(contract)
+        pdf_renderer.invalidate_document_cache(contract.id)
+        await db.flush()
+        await db.refresh(contract)
+        return {
+            "quote": contract,
+            "invoice": None,
+            "has_schedule": False,
+            "auto_sent": False,
+            "message": "Contrat signé.",
+        }
+
+    @staticmethod
     def _parse_trigger_date(value) -> datetime | None:
         if not value:
             return None
@@ -253,9 +275,20 @@ class DocumentService:
         show_tax_id: bool = True,
         reference: Optional[str] = None,
         payment_schedule: Optional[list[dict]] = None,
+        due_date: Optional[datetime] = None,
+        rules: Optional[list] = None,
+        notes: Optional[str] = None,
+        signature_name: Optional[str] = None,
+        accepted_at: Optional[datetime] = None,
+        provider_signature_name: Optional[str] = None,
+        provider_signed_at: Optional[datetime] = None,
+        signature_revision: int = 1,
     ) -> str:
         # ✅ CHANGÉ : default tax_rate à 0 au lieu de 20
-        items = items or [{"description": "Exemple", "quantity": 1, "unit_price_cents": 0, "tax_rate": 0}]
+        if items is None:
+            items = [{"description": "Exemple", "quantity": 1, "unit_price_cents": 0, "tax_rate": 0}]
+        if type == DocumentType.CONTRAT:
+            items = items or []
 
         if template_id:
             template = await TemplateService.get_by_id(db, template_id, user.id)
@@ -284,11 +317,20 @@ class DocumentService:
             id=doc_id,
             type=type,
             status=DocumentStatus.DRAFT,
-            number=reference or ("DEV-2026-001" if type == DocumentType.DEVIS else "FACT-2026-001"),
+            number=reference or DocumentService.preview_number(type),
             created_at=to_naive_utc(datetime.now(timezone.utc)),
-            due_date=None,
+            due_date=to_naive_utc(due_date),
+            notes=notes,
+            rules=DocumentService.encode_rules(rules),
+            layout_style=layout_style,
+            primary_color=primary_color,
             user_id=user.id,
             client_id=uuid4(),
+            signature_name=signature_name,
+            accepted_at=to_naive_utc(accepted_at) if accepted_at else None,
+            provider_signature_name=provider_signature_name,
+            provider_signed_at=to_naive_utc(provider_signed_at) if provider_signed_at else None,
+            signature_revision=signature_revision or 1,
         )
 
         fake_doc.items = [
@@ -355,8 +397,14 @@ class DocumentService:
         invoice_type: Optional[InvoiceType] = None,
         source_document_id: Optional[UUID] = None,
         origin: str = "manual",
+        rules: Optional[list] = None,
     ) -> Document:
         logger.info(f"🔨 create_document appelé avec document_id={document_id}, layout={layout_style}")
+
+        if type == DocumentType.CONTRAT:
+            layout_style = normalize_contract_layout(layout_style)
+            if not rules:
+                rules = default_rules_for(layout_style)
 
         if document_id:
             existing = await db.execute(
@@ -372,6 +420,8 @@ class DocumentService:
                 existing_doc.template_id = template_id
                 existing_doc.due_date = to_naive_utc(due_date)
                 existing_doc.notes = notes
+                if rules is not None:
+                    existing_doc.rules = DocumentService.encode_rules(rules)
                 existing_doc.project_id = project_id
                 existing_doc.invoice_type = invoice_type
                 existing_doc.source_document_id = source_document_id
@@ -421,6 +471,7 @@ class DocumentService:
             created_at=now_utc,
             due_date=due_date_utc,
             notes=notes,
+            rules=DocumentService.encode_rules(rules) if rules is not None else None,
             project_id=project_id,
             invoice_type=invoice_type,
             source_document_id=source_document_id,
@@ -501,17 +552,74 @@ class DocumentService:
         return document
 
     @staticmethod
+    def _contract_content_snapshot(document) -> tuple:
+        items = tuple(
+            (
+                getattr(item, "description", ""),
+                getattr(item, "quantity", 1),
+                getattr(item, "unit_price_cents", 0),
+                getattr(item, "tax_rate", 0),
+            )
+            for item in (document.items or [])
+        )
+        due = document.due_date
+        due_key = due.strftime("%Y-%m-%d") if hasattr(due, "strftime") else (str(due)[:10] if due else None)
+        layout = getattr(document, "layout_style", None)
+        if document.type == DocumentType.CONTRAT:
+            layout = normalize_contract_layout(layout)
+        return (
+            document.notes,
+            getattr(document, "rules", None),
+            layout,
+            due_key,
+            str(document.client_id) if document.client_id else None,
+            (getattr(document, "primary_color", None) or "").lower(),
+            items,
+        )
+
+    @staticmethod
+    def invalidate_contract_signatures(document) -> bool:
+        if document.type != DocumentType.CONTRAT:
+            return False
+        had_signature = bool(
+            document.signature_name
+            or getattr(document, "provider_signature_name", None)
+            or document.accepted_at
+            or document.status in (DocumentStatus.ACCEPTED, DocumentStatus.REFUSED)
+        )
+        if not had_signature:
+            return False
+        document.signature_name = None
+        document.accepted_at = None
+        document.provider_signature_name = None
+        document.provider_signed_at = None
+        document.refused_at = None
+        document.refusal_reason = None
+        document.signature_revision = (getattr(document, "signature_revision", 1) or 1) + 1
+        if document.status in (DocumentStatus.ACCEPTED, DocumentStatus.REFUSED):
+            document.status = DocumentStatus.DRAFT
+        return True
+
+    @staticmethod
     async def update_document(db, document, client_id=None, template_id=None, layout_style=None,
                                due_date=None, items=None, notes=None,
                                primary_color=None, secondary_color=None, accent_color=None,
                                background_color=None, text_color=None, font_family=None,
-                               show_bank_details=None, show_tax_id=None, project_id=None):
+                               show_bank_details=None, show_tax_id=None, project_id=None,
+                               source_document_id=None, clear_source_document_id=False,
+                               rules=None):
+        previous_snapshot = DocumentService._contract_content_snapshot(document)
         if client_id is not None: document.client_id = client_id
         if project_id is not None: document.project_id = project_id
+        if clear_source_document_id:
+            document.source_document_id = None
+        elif source_document_id is not None:
+            document.source_document_id = source_document_id
         if template_id is not None: document.template_id = template_id
         if layout_style is not None: document.layout_style = layout_style
         if due_date is not None: document.due_date = to_naive_utc(due_date)
         if notes is not None: document.notes = notes
+        if rules is not None: document.rules = DocumentService.encode_rules(rules)
         if primary_color is not None: document.primary_color = primary_color
         if secondary_color is not None: document.secondary_color = secondary_color
         if accent_color is not None: document.accent_color = accent_color
@@ -535,6 +643,13 @@ class DocumentService:
                     document_id=document.id,
                 )
                 db.add(item)
+        signatures_reset = False
+        if document.type == DocumentType.CONTRAT:
+            next_snapshot = DocumentService._contract_content_snapshot(document)
+            if next_snapshot != previous_snapshot:
+                signatures_reset = DocumentService.invalidate_contract_signatures(document)
+        setattr(document, "_signatures_reset", signatures_reset)
+        pdf_renderer.invalidate_document_cache(document.id)
         await db.commit()
         await db.refresh(document, ['items'])
         return document
@@ -581,9 +696,17 @@ class DocumentService:
     def calculate_totals(items):
         subtotal_cents = 0
         tax_total_cents = 0
-        for item in items:
-            line_subtotal = item.quantity * item.unit_price_cents
-            line_tax = int(line_subtotal * item.tax_rate / 100)
+        for item in items or []:
+            if isinstance(item, dict):
+                quantity = int(item.get("quantity") or 0)
+                unit_price_cents = int(item.get("unit_price_cents") or 0)
+                tax_rate = int(item.get("tax_rate") or 0)
+            else:
+                quantity = int(getattr(item, "quantity", 0) or 0)
+                unit_price_cents = int(getattr(item, "unit_price_cents", 0) or 0)
+                tax_rate = int(getattr(item, "tax_rate", 0) or 0)
+            line_subtotal = quantity * unit_price_cents
+            line_tax = int(line_subtotal * tax_rate / 100)
             subtotal_cents += line_subtotal
             tax_total_cents += line_tax
         return {
@@ -594,7 +717,7 @@ class DocumentService:
 
     @staticmethod
     async def _generate_number(db, type, user_id):
-        prefix = "DEV" if type == DocumentType.DEVIS else "FACT"
+        prefix = DocumentService.number_prefix(type)
         now_utc = to_naive_utc(datetime.now(timezone.utc))
         year = now_utc.year
         count_stmt = (
@@ -608,6 +731,36 @@ class DocumentService:
         result = await db.execute(count_stmt)
         count = result.scalar() or 0
         return f"{prefix}-{year}-{count + 1:03d}"
+
+    @staticmethod
+    def number_prefix(type: DocumentType) -> str:
+        if type == DocumentType.DEVIS:
+            return "DEV"
+        if type == DocumentType.CONTRAT:
+            return "CTR"
+        return "FACT"
+
+    @staticmethod
+    def preview_number(type: DocumentType) -> str:
+        return f"{DocumentService.number_prefix(type)}-2026-001"
+
+    @staticmethod
+    async def resolve_quote_contract_link(
+        db: AsyncSession,
+        user_id: UUID,
+        contract_id: UUID,
+        client_id: UUID,
+        project_id: Optional[UUID] = None,
+    ) -> Document:
+        """Le devis pointe vers un contrat du même projet. Le contrat ne pointe pas vers le devis."""
+        contract = await DocumentService.get_by_id(db, contract_id, user_id)
+        if not contract or contract.type != DocumentType.CONTRAT:
+            raise ValueError("Le contrat est introuvable")
+        if contract.client_id != client_id:
+            raise ValueError("Le contrat n'appartient pas à ce client")
+        if project_id and contract.project_id and contract.project_id != project_id:
+            raise ValueError("Le contrat n'appartient pas à ce projet")
+        return contract
 
     @staticmethod
     def _build_fallback_template(user_id: UUID, layout_style: str = "classic") -> DocumentTemplate:

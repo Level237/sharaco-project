@@ -34,6 +34,7 @@ export function ProjectDetailView({
     const { data: project, isPending, isError, refetch } = useProject(projectId || null)
     const deleteMutation = useDeleteProject()
     const [isPropertiesOpen, setIsPropertiesOpen] = useState(false)
+    const [newDocOpen, setNewDocOpen] = useState(false)
 
     const clientId = firstParam(clientIdProp) || project?.client_id || ""
 
@@ -91,7 +92,11 @@ export function ProjectDetailView({
                                 </div>
                             </div>
                             <div className="shrink-0">
-                                <NewDocumentMenu projectId={project.id} />
+                                <NewDocumentMenu
+                                    projectId={project.id}
+                                    open={newDocOpen}
+                                    onOpenChange={setNewDocOpen}
+                                />
                             </div>
                         </div>
                         <div className="flex flex-1 flex-col py-4">
@@ -100,17 +105,12 @@ export function ProjectDetailView({
                     </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent className="w-64 border-white/10 bg-[#111113] text-slate-200">
-                    <ContextMenuItem asChild className="cursor-pointer focus:bg-[#2563EB] focus:text-white">
-                        <Link href={`/dashboard/quotes/create?project_id=${project.id}`} className="flex w-full items-center">
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Nouveau devis
-                        </Link>
-                    </ContextMenuItem>
-                    <ContextMenuItem asChild className="cursor-pointer focus:bg-[#2563EB] focus:text-white">
-                        <Link href={`/dashboard/quotes/create?project_id=${project.id}&type=CONTRAT`} className="flex w-full items-center">
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Nouveau contrat
-                        </Link>
+                    <ContextMenuItem
+                        className="cursor-pointer focus:bg-[#2563EB] focus:text-white"
+                        onSelect={() => setTimeout(() => setNewDocOpen(true), 150)}
+                    >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Nouveau document
                     </ContextMenuItem>
                     <ContextMenuSeparator className="bg-white/10" />
                     <ContextMenuItem className="cursor-pointer focus:bg-[#2563EB] focus:text-white" onSelect={() => void refetch()}>

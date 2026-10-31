@@ -15,7 +15,15 @@ from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, Token,UserUpdate,PasswordUpdate
 from app.core.security import verify_password, create_access_token
 import logging
-from app.schemas.auth import RegisterRequest, RegisterResponse
+from app.schemas.auth import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    RegisterRequest,
+    RegisterResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
+)
+from app.services.passwordResetService import PasswordResetService
 from pydantic import BaseModel
 from app.core.oauth import oauth
 from app.core.limiter import limiter
@@ -84,6 +92,33 @@ async def register(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur lors de la création du compte"
         )
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+@limiter.limit("5/hour")
+async def forgot_password(
+    request: Request,
+    data: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Demande un lien de réinitialisation. Réponse identique que le compte existe ou non."""
+    message = await PasswordResetService.request_reset(db, data.email)
+    return ForgotPasswordResponse(message=message)
+
+
+@router.post("/reset-password", response_model=ResetPasswordResponse)
+@limiter.limit("10/minute")
+async def reset_password(
+    request: Request,
+    data: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Consomme un jeton à usage unique et enregistre le nouveau mot de passe."""
+    try:
+        await PasswordResetService.reset_password(db, data.token, data.new_password)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    return ResetPasswordResponse(message="Mot de passe mis à jour. Vous pouvez vous connecter.")
 
 
 @router.post("/login", response_model=Token)

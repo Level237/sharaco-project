@@ -43,6 +43,45 @@ class RegisterRequest(BaseModel):
         return v
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr = Field(..., description="Email du compte")
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        return v.strip().lower()
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., min_length=16, max_length=128)
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("token")
+    @classmethod
+    def strip_token(cls, v: str) -> str:
+        return v.strip()
+
+    @field_validator("new_password", mode="before")
+    @classmethod
+    def validate_password(cls, v):
+        if not isinstance(v, str):
+            raise ValueError("Le mot de passe doit être une chaîne")
+        v = v.strip()
+        if len(v) < 8:
+            raise ValueError("Le mot de passe doit contenir au moins 8 caractères")
+        if len(v) > 128:
+            raise ValueError("Le mot de passe est trop long (max 128 caractères)")
+        return v
+
+
+class ResetPasswordResponse(BaseModel):
+    message: str
+
+
 class RegisterResponse(BaseModel):
     """Réponse après inscription."""
     message: str

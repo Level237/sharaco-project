@@ -230,7 +230,7 @@ export function LoginForm() {
                                             <FormControl>
                                                 <Input
                                                     type={showPassword ? 'text' : 'password'}
-                                                    placeholder="••••••••"
+                                                    placeholder="Entrez votre mot de passe"
                                                     className="h-12 bg-zinc-900/50 border-zinc-800 text-white placeholder:text-zinc-600 focus:ring-sky-500 focus:border-sky-500 rounded-xl"
                                                     autoComplete="current-password"
                                                     disabled={loginMutation.isPending}
@@ -256,6 +256,14 @@ export function LoginForm() {
                                         'Se connecter'
                                     )}
                                 </Button>
+                                <p className="pt-1 text-center">
+                                    <Link
+                                        href={`/forgot-password?email=${encodeURIComponent(email)}`}
+                                        className="text-xs font-bold text-[#2563EB] hover:text-sky-400"
+                                    >
+                                        Mot de passe oublié ?
+                                    </Link>
+                                </p>
                             </form>
                         </Form>
                     </motion.div>

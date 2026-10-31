@@ -30,4 +30,12 @@ export const authApi = {
     exchangeOAuthRegistrationCode: async (code: string): Promise<{ temp_token: string; email: string; name: string }> => {
         return api.post('/api/v1/auth/oauth/registration-exchange', { code });
     },
+
+    forgotPassword: async (email: string): Promise<{ message: string }> => {
+        return api.post('/api/v1/auth/forgot-password', { email });
+    },
+
+    resetPassword: async (token: string, new_password: string): Promise<{ message: string }> => {
+        return api.post('/api/v1/auth/reset-password', { token, new_password });
+    },
 };

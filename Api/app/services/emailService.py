@@ -279,6 +279,23 @@ class EmailService:
         )
     
     @staticmethod
+    async def send_password_reset(
+        to_email: str,
+        reset_url: str,
+        user_name: str = "",
+    ) -> dict:
+        template = email_env.get_template("password_reset.html")
+        html = template.render(
+            to_name=user_name or "bonjour",
+            reset_url=reset_url,
+        )
+        return await EmailService._send_email(
+            to_email=to_email,
+            subject="Réinitialisez votre mot de passe Sharaco",
+            html_content=html,
+        )
+
+    @staticmethod
     async def send_notification(
         to_email: str,
         subject: str,

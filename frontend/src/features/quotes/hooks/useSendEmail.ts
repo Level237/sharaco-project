@@ -21,11 +21,19 @@ export function useSendEmail() {
     const { toast } = useToast();
 
     return useMutation({
-        mutationFn: async ({ documentId, data }: { documentId: string; data: SendEmailData }) => {
-            const response = await api.post<SendEmailResponse>(
-                `/api/v1/documents/${documentId}/send-email`,
-                data
-            );
+        mutationFn: async ({
+            documentId,
+            data,
+            kind = "document",
+        }: {
+            documentId: string;
+            data: SendEmailData;
+            kind?: "document" | "specification";
+        }) => {
+            const path = kind === "specification"
+                ? `/api/v1/specifications/${documentId}/send-email`
+                : `/api/v1/documents/${documentId}/send-email`;
+            const response = await api.post<SendEmailResponse>(path, data);
             return response;
         },
         onSuccess: (data) => {
@@ -33,6 +41,7 @@ export function useSendEmail() {
             queryClient.invalidateQueries({ queryKey: ['document'] });
             queryClient.invalidateQueries({ queryKey: ['documents'] });
             queryClient.invalidateQueries({ queryKey: ['project-tree'] });
+            queryClient.invalidateQueries({ queryKey: ['activity'] });
 
             toast({
                 title: 'Email envoyé !',

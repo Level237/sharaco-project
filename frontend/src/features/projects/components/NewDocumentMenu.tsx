@@ -9,6 +9,10 @@ import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { type ContractKind } from "@/features/contracts/kinds"
 import { contractEditHref } from "@/features/contracts/paths"
+import { specificationsApi } from "@/features/specifications/api/specificationsApi"
+import { specificationEditHref } from "@/features/specifications/paths"
+import type { SpecCover } from "@/features/specifications/covers"
+import type { SpecKind } from "@/features/specifications/kinds"
 import { NewDocumentPicker } from "./NewDocumentPicker"
 
 interface NewDocumentMenuProps {
@@ -54,12 +58,30 @@ export function NewDocumentMenu({
         }
     }
 
+    const createSpecification = async (payload: { kind: SpecKind; cover: SpecCover; color: string }) => {
+        setCreating(true)
+        try {
+            const spec = await specificationsApi.create({
+                project_id: projectId,
+                kind: payload.kind,
+                cover_style: payload.cover,
+                primary_color: payload.color,
+            })
+            router.push(specificationEditHref(spec.id))
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Impossible de créer le cahier des charges."
+            toast({ title: "Erreur", description: message, variant: "destructive" })
+            setCreating(false)
+        }
+    }
+
     const picker = (
         <NewDocumentPicker
             open={open}
             onOpenChange={setOpen}
             onSelectQuote={createQuote}
             onSelectContract={createContract}
+            onSelectSpecification={createSpecification}
             busy={creating}
         />
     )

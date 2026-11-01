@@ -29,6 +29,7 @@ from app.api.v1.activity import router as activity_router
 from app.api.v1.billing_settings import router as billing_settings_router
 from app.api.v1.payment_schedule import router as payment_schedule_router
 from app.api.v1.cron import router as cron_router  # ⚠️ à ajouter si pas fait
+from app.api.v1.specification import router as specification_router
 
 sentry_sdk.init(
     dsn="https://ca3962273c5362a943c64e025a581466@o4508954538082304.ingest.us.sentry.io/4512193670217728",
@@ -133,6 +134,7 @@ app.include_router(activity_router, prefix="/api/v1/activity", tags=["activity"]
 app.include_router(billing_settings_router, prefix="/api/v1/billing-settings", tags=["billing-settings"])
 app.include_router(payment_schedule_router, prefix="/api/v1/payment-schedule", tags=["payment-schedule"])
 app.include_router(cron_router, prefix="/api/v1/cron", tags=["cron"])  # ← AJOUTÉ
+app.include_router(specification_router, prefix="/api/v1/specifications", tags=["specifications"])
 
 
 @app.get("/")

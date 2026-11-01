@@ -14,6 +14,8 @@ from app.models.user import User
 from app.models.document import Document, DocumentStatus
 from app.models.projet import Project
 from app.models.client import Client
+from app.models.specification import Specification
+from app.services.specificationKinds import spec_title
 from sqlalchemy.orm import selectinload
 import logging
 
@@ -221,6 +223,69 @@ async def get_activity_feed(
                     "slate",
                     f"{'Facture créée' if is_invoice else 'Devis créé'} pour {client_name}",
                     doc.created_at,
+                )
+
+        latest_spec_event = func.greatest(
+            Specification.created_at,
+            func.coalesce(Specification.sent_at, Specification.created_at),
+        )
+        specs_query = await db.execute(
+            select(Specification, Project, Client)
+            .join(Project, Project.id == Specification.project_id)
+            .outerjoin(Client, Client.id == Project.client_id)
+            .where(Specification.user_id == current_user.id)
+            .order_by(latest_spec_event.desc())
+            .limit(limit)
+        )
+        for spec, project, client in specs_query.all():
+            client_name = client.name if client else "client"
+            spec_link = f"/dashboard/specifications/edit/{spec.id}"
+            kind_label = spec_title(spec.kind)
+
+            def append_spec(action, icon, color, subtitle, timestamp, event_status=None):
+                if action_filter and action != action_filter:
+                    return
+                if timestamp is None:
+                    timestamp = spec.created_at
+                activities.append({
+                    "id": str(spec.id),
+                    "type": "DOCUMENT",
+                    "action": action,
+                    "title": spec.number or spec.title or "Cahier des charges",
+                    "subtitle": subtitle,
+                    "icon": icon,
+                    "color": color,
+                    "link": spec_link,
+                    "timestamp": timestamp.isoformat(),
+                    "metadata": {
+                        "status": event_status or spec.status,
+                        "document_type": "CDC",
+                        "client_name": client_name,
+                        "client_id": str(project.client_id) if project and project.client_id else None,
+                        "project_id": str(spec.project_id),
+                        "kind": spec.kind,
+                        "kind_title": kind_label,
+                        "cover_style": spec.cover_style,
+                        "primary_color": spec.primary_color,
+                    },
+                })
+
+            append_spec(
+                "CREATED",
+                "book-open",
+                "blue",
+                f"Cahier des charges créé pour {client_name}",
+                spec.created_at,
+                event_status="DRAFT",
+            )
+            if spec.status == "SENT" or spec.sent_at:
+                append_spec(
+                    "SENT",
+                    "send",
+                    "amber",
+                    f"Cahier des charges envoyé à {client_name}",
+                    spec.sent_at or spec.updated_at or spec.created_at,
+                    event_status="SENT",
                 )
     
     # ═══════════════════════════════════════════════

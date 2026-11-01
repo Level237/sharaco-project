@@ -856,7 +856,7 @@ class PDFRenderer:
         await context.route("**/*", self._anti_ssrf_route_handler)
         return context
 
-    async def render_png_from_html(self, html_string: str) -> bytes:
+    async def render_png_from_html(self, html_string: str, full_page: bool = True) -> bytes:
         """Génère un PNG depuis une chaîne HTML en réutilisant le navigateur Chromium."""
         async with self._render_semaphore:
             browser = await self._ensure_browser()
@@ -872,7 +872,7 @@ class PDFRenderer:
                     await page.evaluate("document.fonts.ready")
                 except Exception:
                     pass
-                screenshot = await page.screenshot(full_page=True, type="png")
+                screenshot = await page.screenshot(full_page=full_page, type="png")
                 return screenshot
             except Exception as e:
                 if "Target page, context or browser has been closed" in str(e) or not browser.is_connected():
@@ -889,7 +889,7 @@ class PDFRenderer:
                 except Exception:
                     pass
 
-    async def render_pdf_from_html(self, html_string: str) -> BytesIO:
+    async def render_pdf_from_html(self, html_string: str, margin: dict | None = None) -> BytesIO:
         """Génère un PDF depuis une chaîne HTML via Chromium persistant."""
         async with self._render_semaphore:
             browser = await self._ensure_browser()
@@ -904,7 +904,8 @@ class PDFRenderer:
                 pdf_bytes = await page.pdf(
                     format="A4",
                     print_background=True,
-                    margin={"top": "15mm", "right": "20mm", "bottom": "15mm", "left": "20mm"},
+                    prefer_css_page_size=True,
+                    margin=margin or {"top": "15mm", "right": "20mm", "bottom": "15mm", "left": "20mm"},
                 )
                 pdf_buffer = BytesIO(pdf_bytes)
                 pdf_buffer.seek(0)

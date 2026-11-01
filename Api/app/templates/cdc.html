@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ spec.number or "CDC" }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 22mm 20mm 24mm 20mm;
+        }
+        @page :first {
+            margin: 0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Inter", "Segoe UI", sans-serif;
+            color: #1c1917;
+            background: #faf8f5;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            line-height: 1.6;
+        }
+
+        /* Cover page: full bleed on page 1 */
+        .cover {
+            width: 210mm;
+            height: 297mm;
+            background: #faf8f5;
+            position: relative;
+            overflow: hidden;
+            page-break-after: always;
+            break-after: page;
+        }
+
+        /* Dedicated TOC page */
+        .toc-page {
+            min-height: 245mm;
+            display: flex;
+            flex-direction: column;
+            page-break-after: always;
+            break-after: page;
+        }
+
+        /* Body flow across pages 3, 4, 5... with @page margins respected */
+        .body {
+            width: 100%;
+        }
+
+        @media screen {
+            body { background: #e7e5e4; padding: 16px 0; }
+            .cover, .toc-page, .body {
+                width: 210mm;
+                margin: 0 auto 18px;
+                background: #faf8f5;
+            }
+            .toc-page, .body {
+                padding: 22mm 20mm 24mm;
+                min-height: 297mm;
+            }
+        }
+
+        .meta-k { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; color: #78716c; }
+        .meta-v { font-size: 14px; font-weight: 600; margin-top: 3px; }
+        .eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700; }
+
+        /* spine */
+        .cover-spine .rail { position: absolute; inset: 0 auto 0 0; width: 28mm; background: {{ accent }}; }
+        .cover-spine .inner { padding: 34mm 22mm 26mm 44mm; height: 297mm; display: flex; flex-direction: column; }
+        .cover-spine h1 { font-size: 42px; line-height: 1.08; letter-spacing: -0.04em; max-width: 140mm; margin: 18px 0 12px; }
+        .cover-spine .kind { color: {{ accent }}; }
+        .cover-spine .foot { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px 28px; padding-top: 26px; border-top: 1px solid #e7e5e4; }
+
+        /* masthead */
+        .cover-masthead .head { background: {{ accent }}; color: #fffaf5; padding: 30mm 22mm 20mm; }
+        .cover-masthead h1 { font-size: 40px; letter-spacing: -0.04em; line-height: 1.08; margin-top: 14px; }
+        .cover-masthead .rest { padding: 22mm; display: grid; grid-template-columns: 1fr 1fr; gap: 22px 30px; }
+
+        /* folio */
+        .cover-folio { padding: 30mm 22mm; display: flex; flex-direction: column; height: 297mm; }
+        .cover-folio .rule { height: 8px; width: 42mm; background: {{ accent }}; margin: 22px 0 30px; }
+        .cover-folio h1 { font-size: 50px; letter-spacing: -0.05em; line-height: 1.0; max-width: 160mm; }
+        .cover-folio .foot { margin-top: auto; display: flex; justify-content: space-between; gap: 24px; border-top: 1px solid #e7e5e4; padding-top: 20px; }
+
+        /* panel */
+        .cover-panel { padding: 18mm; height: 297mm; display: flex; flex-direction: column; }
+        .cover-panel .hero { background: {{ accent }}; color: #fffaf5; border-radius: 8px; padding: 28mm 18mm 22mm; min-height: 155mm; display: flex; flex-direction: column; justify-content: flex-end; }
+        .cover-panel h1 { font-size: 40px; letter-spacing: -0.04em; line-height: 1.08; margin-top: 10px; }
+        .cover-panel .rest { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; padding: 18mm 4mm 0; }
+
+        /* ledger */
+        .cover-ledger { padding: 26mm 22mm; height: 297mm; }
+        .cover-ledger .dot { width: 14px; height: 14px; background: {{ accent }}; border-radius: 999px; }
+        .cover-ledger h1 { font-size: 36px; letter-spacing: -0.04em; margin: 18px 0 32px; line-height: 1.1; }
+        .cover-ledger table { width: 100%; border-collapse: collapse; }
+        .cover-ledger td { padding: 16px 0; border-bottom: 1px solid #e7e5e4; vertical-align: top; }
+        .cover-ledger td:first-child { width: 44mm; color: #78716c; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; }
+
+        /* Dedicated TOC page — generous spacing */
+        .toc-header {
+            border-bottom: 2px solid #1c1917;
+            padding-bottom: 18px;
+            margin-bottom: 34px;
+        }
+        .toc-title {
+            font-size: 30px;
+            letter-spacing: -0.03em;
+            font-weight: 800;
+        }
+        .toc-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .toc-part {
+            padding-bottom: 18px;
+            border-bottom: 1px solid #e7e5e4;
+            page-break-inside: avoid;
+        }
+        .toc-part-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 16px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .toc-part-num {
+            color: {{ accent }};
+            font-weight: 800;
+            margin-right: 10px;
+        }
+        .toc-subs {
+            margin-top: 10px;
+            padding-left: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+        .toc-sub-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+            color: #57534e;
+        }
+
+        /* Body sections — clear breathing room between major & minor blocks */
+        .sec-block {
+            margin-bottom: 42px;
+        }
+        .sec-block:last-child {
+            margin-bottom: 0;
+        }
+        .sec-head {
+            margin-bottom: 22px;
+            padding-bottom: 10px;
+            border-bottom: 1.5px solid #d6d3d1;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        h2.sec {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.25;
+            color: #1c1917;
+        }
+        .sec-num {
+            color: {{ accent }};
+            font-weight: 800;
+            font-size: 22px;
+            line-height: 1.25;
+            flex-shrink: 0;
+        }
+        .spacer-sm { height: 16px; }
+        .spacer-md { height: 28px; }
+        .spacer-lg { height: 44px; }
+        ul.spec-list, ol.spec-list {
+            margin: 8px 0 16px 1.4em;
+            padding: 0;
+            color: #44403c;
+            font-size: 12.5px;
+            line-height: 1.7;
+        }
+        ul.spec-list { list-style: disc; }
+        ol.spec-list { list-style: decimal; }
+        .spec-list li { margin: 4px 0; }
+        a.spec-link {
+            color: {{ accent }};
+            font-weight: 600;
+            font-size: 12.5px;
+            word-break: break-word;
+        }
+        figure.spec-image {
+            margin: 14px 0 20px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        figure.spec-image img {
+            display: block;
+            max-width: 100%;
+            max-height: 110mm;
+            height: auto;
+            object-fit: contain;
+            border: 1px solid #e7e5e4;
+        }
+        figure.spec-image figcaption {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #78716c;
+        }
+        .sub-block {
+            margin-top: 24px;
+            margin-bottom: 24px;
+            padding-left: 2px;
+        }
+        h3.sub {
+            font-size: 14.5px;
+            font-weight: 700;
+            margin: 0 0 12px;
+            color: #1c1917;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        p.block {
+            font-size: 12.5px;
+            line-height: 1.75;
+            color: #44403c;
+            margin: 0 0 14px;
+        }
+        table.grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 22px;
+            font-size: 11.5px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        table.grid th {
+            text-align: left;
+            background: {{ accent }};
+            color: #fffaf5;
+            padding: 10px 12px;
+            font-weight: 600;
+        }
+        table.grid td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e7e5e4;
+            vertical-align: top;
+            line-height: 1.55;
+        }
+        .brand {
+            position: absolute;
+            bottom: 12mm;
+            right: 16mm;
+            font-size: 10px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #a8a29e;
+        }
+    </style>
+</head>
+<body>
+{% set romans = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'] %}
+{% set company = user.company_name or user.full_name or "Sharaco" %}
+{% set client_name = client.name if client else "Client" %}
+{% set project_name = project.name if project else spec.title %}
+
+<section class="cover cover-{{ cover_style }}">
+    {% if cover_style == "spine" %}
+        <div class="rail"></div>
+        <div class="inner">
+            <div class="eyebrow kind">Cahier des charges</div>
+            <h1>{{ spec.title }}</h1>
+            <p class="meta-v" style="color:#57534e">{{ kind_title }} · {{ spec.number }} · v{{ spec.version }}</p>
+            <div class="foot">
+                <div><div class="meta-k">Client</div><div class="meta-v">{{ client_name }}</div></div>
+                <div><div class="meta-k">Projet</div><div class="meta-v">{{ project_name }}</div></div>
+                <div><div class="meta-k">Prestataire</div><div class="meta-v">{{ company }}</div></div>
+                <div><div class="meta-k">Date</div><div class="meta-v">{{ created_label }}</div></div>
+            </div>
+        </div>
+    {% elif cover_style == "masthead" %}
+        <div class="head">
+            <div class="eyebrow">Cahier des charges</div>
+            <h1>{{ spec.title }}</h1>
+        </div>
+        <div class="rest">
+            <div><div class="meta-k">Client</div><div class="meta-v">{{ client_name }}</div></div>
+            <div><div class="meta-k">Projet</div><div class="meta-v">{{ project_name }}</div></div>
+            <div><div class="meta-k">Référence</div><div class="meta-v">{{ spec.number }} · v{{ spec.version }}</div></div>
+            <div><div class="meta-k">Prestataire</div><div class="meta-v">{{ company }}</div></div>
+        </div>
+    {% elif cover_style == "folio" %}
+        <div class="eyebrow" style="color: {{ accent }}">Cahier des charges</div>
+        <div class="rule"></div>
+        <h1>{{ spec.title }}</h1>
+        <p style="margin-top:16px;color:#57534e">{{ kind_title }}</p>
+        <div class="foot">
+            <div><div class="meta-k">Pour</div><div class="meta-v">{{ client_name }}</div></div>
+            <div><div class="meta-k">Projet</div><div class="meta-v">{{ project_name }}</div></div>
+            <div><div class="meta-k">{{ spec.number }}</div><div class="meta-v">{{ created_label }}</div></div>
+        </div>
+    {% elif cover_style == "panel" %}
+        <div class="hero">
+            <div class="eyebrow">Cahier des charges</div>
+            <h1>{{ spec.title }}</h1>
+        </div>
+        <div class="rest">
+            <div><div class="meta-k">Client</div><div class="meta-v">{{ client_name }}</div></div>
+            <div><div class="meta-k">Projet</div><div class="meta-v">{{ project_name }}</div></div>
+            <div><div class="meta-k">Réf.</div><div class="meta-v">{{ spec.number }}</div></div>
+        </div>
+    {% else %}
+        <div style="display:flex;align-items:center;gap:10px">
+            <div class="dot"></div>
+            <div class="eyebrow">Cahier des charges</div>
+        </div>
+        <h1>{{ spec.title }}</h1>
+        <table>
+            <tr><td>Client</td><td>{{ client_name }}</td></tr>
+            <tr><td>Projet</td><td>{{ project_name }}</td></tr>
+            <tr><td>Type</td><td>{{ kind_title }}</td></tr>
+            <tr><td>Référence</td><td>{{ spec.number }} · v{{ spec.version }}</td></tr>
+            <tr><td>Prestataire</td><td>{{ company }}</td></tr>
+            <tr><td>Date</td><td>{{ created_label }}</td></tr>
+        </table>
+    {% endif %}
+    <div class="brand">Sharaco</div>
+</section>
+
+<section class="toc-page">
+    <div class="toc-header">
+        <h2 class="toc-title">Sommaire</h2>
+    </div>
+    <div class="toc-list">
+        {% for section in sections %}
+        {% set r = romans[loop.index0] if loop.index0 < romans|length else loop.index %}
+        <div class="toc-part">
+            <div class="toc-part-head">
+                <span><span class="toc-part-num">{{ r }}.</span>{{ section.title }}</span>
+                <span style="font-size:11px;color:#78716c;font-weight:500">{{ section.subsections|length }} point{{ 's' if section.subsections|length > 1 else '' }}</span>
+            </div>
+            {% if section.subsections %}
+            <div class="toc-subs">
+                {% for sub in section.subsections %}
+                <div class="toc-sub-row">
+                    <span>{{ loop.index }}. {{ sub.title }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="body">
+    {% for section in sections %}
+    <div class="sec-block">
+        <div class="sec-head">
+            <h2 class="sec">
+                <span class="sec-num">{{ romans[loop.index0] if loop.index0 < romans|length else loop.index }}.</span>
+                <span>{{ section.title }}</span>
+            </h2>
+        </div>
+        {% for sub in section.subsections %}
+        <div class="sub-block">
+            <h3 class="sub">{{ loop.index }}. {{ sub.title }}</h3>
+            {% for block in sub.blocks %}
+                {% if block.type == "spacer" %}
+                    <div class="spacer-{{ block.size or 'md' }}"></div>
+                {% elif block.type == "table" %}
+                    <table class="grid">
+                        <thead>
+                            <tr>
+                                {% for h in block.headers or [] %}<th>{{ h }}</th>{% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in block.rows or [] %}
+                            <tr>
+                                {% for cell in row %}<td>{{ inline_html(cell or "") | safe }}</td>{% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% elif block.type == "list" %}
+                    {% set list_items = block.get('items') or [] %}
+                    {% if block.style == "number" %}
+                    <ol class="spec-list">
+                        {% for item in list_items %}
+                        <li>{{ inline_html(item or "") | safe }}</li>
+                        {% endfor %}
+                    </ol>
+                    {% else %}
+                    <ul class="spec-list">
+                        {% for item in list_items %}
+                        <li>{{ inline_html(item or "") | safe }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                {% elif block.type == "link" %}
+                    {% set href = safe_href(block.url) %}
+                    {% if href %}
+                    <p class="block"><a class="spec-link" href="{{ href | safe }}">{{ inline_html(block.label or block.url) | safe }}</a></p>
+                    {% else %}
+                    <p class="block">{{ inline_html(block.label or "") | safe }}</p>
+                    {% endif %}
+                {% elif block.type == "image" %}
+                    {% set href = safe_href(block.url) %}
+                    {% if href %}
+                    <figure class="spec-image">
+                        <img src="{{ href | safe }}" alt="{{ block.caption or 'Illustration' }}">
+                        {% if block.caption %}<figcaption>{{ inline_html(block.caption) | safe }}</figcaption>{% endif %}
+                    </figure>
+                    {% endif %}
+                {% else %}
+                    <p class="block">{{ inline_html(block.text or "") | safe }}</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</section>
+</body>
+</html>

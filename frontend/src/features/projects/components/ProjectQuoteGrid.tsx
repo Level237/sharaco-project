@@ -8,6 +8,7 @@ import { FolderCard } from "./FolderCard"
 import { InvoiceGrid } from "./InvoiceGrid"
 import { NewDocumentMenu } from "./NewDocumentMenu"
 import { ContractCard } from "./ContractCard"
+import { SpecificationCard } from "@/features/specifications/components/SpecificationCard"
 
 interface ProjectQuoteGridProps {
     tree: ProjectTreeResponse;
@@ -103,6 +104,19 @@ export function ProjectQuoteGrid({ tree, projectId, onRefresh }: ProjectQuoteGri
                         <ContractCard
                             key={contract.id}
                             contract={contract}
+                            variants={cardVariants}
+                            onRefresh={onRefresh}
+                            clientEmail={tree.client_email}
+                            clientName={tree.client_name}
+                        />
+                    ))}
+                </AnimatePresence>
+
+                <AnimatePresence mode="popLayout">
+                    {(tree.specifications || []).map((spec) => (
+                        <SpecificationCard
+                            key={spec.id}
+                            spec={spec}
                             variants={cardVariants}
                             onRefresh={onRefresh}
                             clientEmail={tree.client_email}

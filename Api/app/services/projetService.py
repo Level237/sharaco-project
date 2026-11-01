@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 from app.models.payment_schedule import PaymentSchedule
 from app.models.projet import Project, ProjectAttachment, ProjectStatus
 from app.models.document import Document, DocumentType, DocumentStatus, DocumentItem
+from app.models.specification import Specification
 from app.utils.datetime import to_naive_utc
 from app.models.client import Client
 from app.services.documentService import DocumentService
@@ -409,9 +410,20 @@ class ProjectService:
         )
         contracts_result = await db.execute(contracts_stmt)
         contracts = list(contracts_result.scalars().all())
+
+        specs_stmt = (
+            select(Specification)
+            .where(
+                Specification.project_id == project_id,
+                Specification.user_id == user_id,
+            )
+            .order_by(Specification.created_at.desc())
+        )
+        specs_result = await db.execute(specs_stmt)
+        specifications = list(specs_result.scalars().all())
         
         logger.info(
-            f"🔍 Projet {project_id}: {len(quotes)} devis, {len(contracts)} contrats, {len(invoices)} factures"
+            f"🔍 Projet {project_id}: {len(quotes)} devis, {len(contracts)} contrats, {len(specifications)} CDC, {len(invoices)} factures"
         )
         
         # ═══════════════════════════════════════════════════════════
@@ -592,6 +604,7 @@ class ProjectService:
             "total_pending": total_pending,
             "quote_count": len(quotes),
             "contract_count": len(contracts),
+            "specification_count": len(specifications),
             "invoice_count": invoice_count,
             "paid_invoice_count": paid_invoice_count,
             "overdue_invoice_count": overdue_invoice_count,
@@ -617,6 +630,19 @@ class ProjectService:
                     "layout_style": c.layout_style,
                 }
                 for c in contracts
+            ],
+            "specifications": [
+                {
+                    "id": s.id,
+                    "number": s.number,
+                    "title": s.title,
+                    "kind": s.kind,
+                    "cover_style": s.cover_style,
+                    "primary_color": s.primary_color,
+                    "status": s.status,
+                    "created_at": s.created_at,
+                }
+                for s in specifications
             ],
             "standalone_invoices": standalone_data,
             "summary": project_summary,

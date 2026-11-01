@@ -88,6 +88,17 @@ export interface ProjectTreeContract {
     layout_style?: string | null;
 }
 
+export interface ProjectTreeSpecification {
+    id: string;
+    number?: string | null;
+    title: string;
+    kind: string;
+    cover_style: string;
+    primary_color: string;
+    status: string;
+    created_at: string;
+}
+
 export interface ProjectTreeStandaloneInvoice {
     id: string;
     number?: string | null;
@@ -105,6 +116,7 @@ export interface ProjectTreeSummary {
     total_pending: number;
     quote_count: number;
     contract_count?: number;
+    specification_count?: number;
     invoice_count: number;
     paid_invoice_count: number;
     overdue_invoice_count: number;
@@ -120,6 +132,7 @@ export interface ProjectTreeResponse {
     client_email?: string | null;
     quotes: ProjectTreeQuote[];
     contracts?: ProjectTreeContract[];
+    specifications?: ProjectTreeSpecification[];
     standalone_invoices: ProjectTreeStandaloneInvoice[];
     summary: ProjectTreeSummary;
 }

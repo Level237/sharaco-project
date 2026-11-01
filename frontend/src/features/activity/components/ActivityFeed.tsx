@@ -4,8 +4,9 @@
 import { useActivity, ActivityItem } from "../hooks/useActivity";
 import {
     Folder, File, CheckCircle2, XCircle, Send, Eye,
-    Loader2, Search, Banknote, CreditCard, Wallet, ScrollText
+    Loader2, Search, Banknote, CreditCard, Wallet, ScrollText, BookOpen
 } from "lucide-react";
+import { SpecActivityThumb } from "./SpecActivityThumb";
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ const iconMap: Record<string, any> = {
     "credit-card": CreditCard,
     wallet: Wallet,
     "scroll-text": ScrollText,
+    "book-open": BookOpen,
 };
 
 const colorMap: Record<string, { icon: string; text: string; glow: string; border: string; badge?: string }> = {
@@ -198,6 +200,7 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
                                         const isPaid = activity.action === 'PAID';
                                         const isInvoice = activity.metadata?.document_type === "FACTURE";
                                         const isContract = activity.metadata?.document_type === "CONTRAT";
+                                        const isCdc = activity.metadata?.document_type === "CDC";
                                         const docId = activity.link ? activity.link.split('/').pop() : undefined;
                                         const amountCents = activity.metadata?.amount_cents || 0;
                                         const previewLayout = isContract
@@ -225,10 +228,17 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
                                                         {isDocument && docId && (
                                                             <div className="relative w-12 sm:w-14 aspect-[4/5] rounded-md overflow-hidden border border-white/10 shadow-sm bg-zinc-950 group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-200">
                                                                 <div className="w-full h-full relative pointer-events-none">
-                                                                    <DocumentPreview
-                                                                        documentId={docId}
-                                                                        layoutStyle={previewLayout}
-                                                                    />
+                                                                    {isCdc ? (
+                                                                        <SpecActivityThumb
+                                                                            specId={docId}
+                                                                            color={activity.metadata?.primary_color}
+                                                                        />
+                                                                    ) : (
+                                                                        <DocumentPreview
+                                                                            documentId={docId}
+                                                                            layoutStyle={previewLayout}
+                                                                        />
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         )}
@@ -295,6 +305,14 @@ export function ActivityFeed({ limit = 20, compact = false }: ActivityFeedProps)
                                                                     <ScrollText className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-[#2563EB]" />
                                                                     <span className="text-[9px] sm:text-[10px] font-bold text-[#2563EB] uppercase tracking-wider">
                                                                         Contrat
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            {isCdc && (
+                                                                <div className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 rounded-md bg-[#2563EB]/10 border border-[#2563EB]/20">
+                                                                    <BookOpen className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-[#2563EB]" />
+                                                                    <span className="text-[9px] sm:text-[10px] font-bold text-[#2563EB] uppercase tracking-wider">
+                                                                        Cahier des charges
                                                                     </span>
                                                                 </div>
                                                             )}

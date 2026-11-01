@@ -25,7 +25,8 @@ interface SendEmailModalProps {
     clientEmail?: string;
     clientName?: string;
     onSent?: () => void;
-    documentLabel?: "devis" | "facture" | "contrat";
+    documentLabel?: "devis" | "facture" | "contrat" | "cahier des charges";
+    sendKind?: "document" | "specification";
 }
 
 export function SendEmailModal({
@@ -36,7 +37,8 @@ export function SendEmailModal({
     clientEmail,
     clientName,
     onSent,
-    documentLabel = "devis"
+    documentLabel = "devis",
+    sendKind = "document",
 }: SendEmailModalProps) {
     const sendEmailMutation = useSendEmail();
 
@@ -88,6 +90,7 @@ export function SendEmailModal({
                     custom_message: customMessage || undefined,
                     override_email: email !== clientEmail ? email : undefined,
                 },
+                kind: sendKind,
             });
 
             setIsSuccess(true);
@@ -195,8 +198,9 @@ export function SendEmailModal({
                                 <div className="flex gap-3">
 
                                     <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
-                                        Le client recevra un email avec un lien pour consulter {documentLabel === "facture" ? "la" : "le"} {documentLabel} en ligne.
-                                        Le statut {documentLabel === "facture" ? "de la" : "du"} {documentLabel} sera automatiquement mis à jour en <span className="font-semibold">&quot;Envoyé&quot;</span>.
+                                        {sendKind === "specification"
+                                            ? "Le client recevra un email avec le cahier des charges en PDF. Le statut passera automatiquement à « Envoyé »."
+                                            : `Le client recevra un email avec un lien pour consulter ${documentLabel === "facture" ? "la" : "le"} ${documentLabel} en ligne. Le statut ${documentLabel === "facture" ? "de la" : "du"} ${documentLabel} sera automatiquement mis à jour en « Envoyé ».`}
                                     </p>
                                 </div>
                             </div>

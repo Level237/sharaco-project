@@ -20,7 +20,7 @@ export function ProjectDocuments({ projectId }: ProjectDocumentsProps) {
         );
     }
 
-    if (!tree || (tree.quotes.length === 0 && (tree.contracts || []).length === 0 && tree.standalone_invoices.length === 0)) {
+    if (!tree || (tree.quotes.length === 0 && (tree.contracts || []).length === 0 && (tree.specifications || []).length === 0 && tree.standalone_invoices.length === 0)) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center h-full min-h-[400px] text-center p-6">
                 <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 border border-[#2563EB]/20 flex items-center justify-center mb-4">
@@ -30,7 +30,7 @@ export function ProjectDocuments({ projectId }: ProjectDocumentsProps) {
                     Le projet est vide
                 </h3>
                 <p className="text-sm text-slate-400 max-w-sm mb-6">
-                    Aucun document n&apos;est encore associé à ce projet. Créez un devis ou un contrat.
+                    Aucun document n&apos;est encore associé à ce projet. Créez un devis, un contrat ou un cahier des charges.
                 </p>
                 <NewDocumentMenu projectId={projectId} variant="empty" />
             </div>

@@ -65,6 +65,17 @@ class ProjectTreeContract(BaseModel):
     layout_style: Optional[str] = None
 
 
+class ProjectTreeSpecification(BaseModel):
+    id: UUID
+    number: Optional[str] = None
+    title: str
+    kind: str
+    cover_style: str
+    primary_color: str
+    status: str
+    created_at: datetime
+
+
 class ProjectTreeStandaloneInvoice(BaseModel):
     """Facture non liée à un devis (si ex.)."""
     id: UUID
@@ -84,6 +95,7 @@ class ProjectTreeSummary(BaseModel):
     total_pending: int
     quote_count: int
     contract_count: int = 0
+    specification_count: int = 0
     invoice_count: int
     paid_invoice_count: int
     overdue_invoice_count: int
@@ -100,5 +112,6 @@ class ProjectTreeResponse(BaseModel):
     client_email: Optional[str] = None
     quotes: List[ProjectTreeQuote] = []
     contracts: List[ProjectTreeContract] = []
+    specifications: List[ProjectTreeSpecification] = []
     standalone_invoices: List[ProjectTreeStandaloneInvoice] = []
     summary: ProjectTreeSummary

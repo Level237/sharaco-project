@@ -1,5 +1,6 @@
 # app/services/emailService.py
 import asyncio
+import base64
 import resend
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
@@ -27,6 +28,7 @@ class EmailService:
         to_email: str,
         subject: str,
         html_content: str,
+        attachments: list | None = None,
     ) -> dict:
         """Envoie via Resend API."""
         try:
@@ -39,6 +41,8 @@ class EmailService:
                 "subject": subject,
                 "html": html_content,
             }
+            if attachments:
+                email_data["attachments"] = attachments
             
             response = await asyncio.to_thread(resend.Emails.send, email_data)
             email_id = response.get("id") if isinstance(response, dict) else response.id
@@ -72,10 +76,12 @@ class EmailService:
         to_email: str,
         subject: str,
         html_content: str,
+        attachments: list | None = None,
     ) -> dict:
         """Envoie via SMTP classique."""
         try:
             import smtplib
+            from email.mime.application import MIMEApplication
             from email.mime.text import MIMEText
             from email.mime.multipart import MIMEMultipart
             
@@ -84,6 +90,15 @@ class EmailService:
             msg["To"] = to_email
             msg["Subject"] = subject
             msg.attach(MIMEText(html_content, "html", "utf-8"))
+            if attachments:
+                for item in attachments:
+                    raw = item.get("content")
+                    filename = item.get("filename") or "document.pdf"
+                    if not raw:
+                        continue
+                    part = MIMEApplication(base64.b64decode(raw), _subtype="pdf")
+                    part.add_header("Content-Disposition", "attachment", filename=filename)
+                    msg.attach(part)
             
             def _send_sync():
                 with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
@@ -124,19 +139,24 @@ class EmailService:
         to_email: str,
         subject: str,
         html_content: str,
+        attachments: list | None = None,
     ) -> dict:
         """Dispatch vers le bon provider selon la config."""
         if settings.EMAIL_PROVIDER == "resend":
             if not settings.RESEND_API_KEY:
                 logger.error("❌ RESEND_API_KEY non configuré")
                 return {"success": False, "error": "Resend API key missing"}
-            return await EmailService._send_via_resend(to_email, subject, html_content)
+            return await EmailService._send_via_resend(
+                to_email, subject, html_content, attachments=attachments
+            )
         
         elif settings.EMAIL_PROVIDER == "smtp":
             if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
                 logger.error("❌ SMTP credentials non configurés")
                 return {"success": False, "error": "SMTP credentials missing"}
-            return await EmailService._send_via_smtp(to_email, subject, html_content)
+            return await EmailService._send_via_smtp(
+                to_email, subject, html_content, attachments=attachments
+            )
         
         else:
             logger.error(f"❌ Provider inconnu: {settings.EMAIL_PROVIDER}")
@@ -233,6 +253,42 @@ class EmailService:
             to_email=to_email,
             subject=f"Contrat {document_number} de {user_company}",
             html_content=html,
+        )
+
+    @staticmethod
+    async def send_cdc(
+        to_email: str,
+        client_name: str,
+        document_number: str,
+        title: str,
+        user_name: str = "",
+        user_company: str = "",
+        custom_message: str = "",
+        pdf_bytes: bytes | None = None,
+        pdf_filename: str = "cdc.pdf",
+    ) -> dict:
+        """Envoie un cahier des charges, PDF en pièce jointe si fourni."""
+        template = email_env.get_template("cdc.html")
+        html = template.render(
+            to_name=client_name,
+            document_number=document_number,
+            title=title,
+            user_name=user_name,
+            user_company=user_company,
+            custom_message=custom_message,
+            has_pdf=bool(pdf_bytes),
+        )
+        attachments = None
+        if pdf_bytes:
+            attachments = [{
+                "filename": pdf_filename,
+                "content": base64.b64encode(pdf_bytes).decode("ascii"),
+            }]
+        return await EmailService._send_email(
+            to_email=to_email,
+            subject=f"Cahier des charges {document_number} de {user_company}",
+            html_content=html,
+            attachments=attachments,
         )
 
     # ═══════════════════════════════════════════════════════════════

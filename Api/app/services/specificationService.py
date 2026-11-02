@@ -18,6 +18,7 @@ from app.models.projet import Project
 from app.models.specification import Specification
 from app.models.user import User
 from app.services.pdfRenderer import pdf_renderer
+from app.services.specificationPaging import build_page_map, css_content
 from app.services.specificationKinds import (
     default_sections_for,
     normalize_spec_color,
@@ -161,6 +162,7 @@ class SpecificationService:
         user = await db.get(User, spec.user_id)
         client = project.client if project else None
         sections = decode_sections(spec.sections)
+        page_map = build_page_map(sections)
         return {
             "spec": spec,
             "project": project,
@@ -171,6 +173,8 @@ class SpecificationService:
             "cover_style": spec.cover_style,
             "sections": sections,
             "created_label": spec.created_at.strftime("%d/%m/%Y") if spec.created_at else "",
+            "page_map": page_map,
+            "footer_title": css_content(spec.title or spec.number or "Cahier des charges"),
         }
 
     @staticmethod
@@ -223,6 +227,7 @@ class SpecificationService:
             primary_color=normalize_spec_color(payload.get("primary_color")),
             created_at=datetime.now(timezone.utc),
         )
+        sections = dump_sections(payload.get("sections"))
         tmpl = pdf_renderer.env.get_template("cdc.html")
         return tmpl.render(
             spec=spec,
@@ -232,8 +237,10 @@ class SpecificationService:
             kind_title=spec_title(kind),
             accent=spec.primary_color,
             cover_style=spec.cover_style,
-            sections=dump_sections(payload.get("sections")),
+            sections=sections,
             created_label=spec.created_at.strftime("%d/%m/%Y"),
+            page_map=build_page_map(sections),
+            footer_title=css_content(spec.title or spec.number or "Cahier des charges"),
             inline_html=inline_html,
             safe_href=safe_href,
         )

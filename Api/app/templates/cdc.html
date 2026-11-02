@@ -6,10 +6,24 @@
     <style>
         @page {
             size: A4;
-            margin: 22mm 20mm 24mm 20mm;
+            margin: 18mm 18mm 22mm 18mm;
+            @bottom-left {
+                content: "{{ footer_title }}";
+                font-family: "Inter", "Segoe UI", sans-serif;
+                font-size: 9px;
+                color: #78716c;
+            }
+            @bottom-right {
+                content: counter(page) " / " counter(pages);
+                font-family: "Inter", "Segoe UI", sans-serif;
+                font-size: 9px;
+                color: #78716c;
+            }
         }
         @page :first {
             margin: 0;
+            @bottom-left { content: none; }
+            @bottom-right { content: none; }
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,8 +48,7 @@
         }
 
         /* Dedicated TOC page */
-        .toc-page {
-            min-height: 245mm;
+        .toc-sheet {
             display: flex;
             flex-direction: column;
             page-break-after: always;
@@ -49,12 +62,12 @@
 
         @media screen {
             body { background: #e7e5e4; padding: 16px 0; }
-            .cover, .toc-page, .body {
+            .cover, .toc-sheet, .body {
                 width: 210mm;
                 margin: 0 auto 18px;
                 background: #faf8f5;
             }
-            .toc-page, .body {
+            .toc-sheet, .body {
                 padding: 22mm 20mm 24mm;
                 min-height: 297mm;
             }
@@ -96,52 +109,52 @@
         .cover-ledger td { padding: 16px 0; border-bottom: 1px solid #e7e5e4; vertical-align: top; }
         .cover-ledger td:first-child { width: 44mm; color: #78716c; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; }
 
-        /* Dedicated TOC page — generous spacing */
-        .toc-header {
-            border-bottom: 2px solid #1c1917;
-            padding-bottom: 18px;
-            margin-bottom: 34px;
-        }
         .toc-title {
-            font-size: 30px;
+            font-size: 28px;
             letter-spacing: -0.03em;
             font-weight: 800;
+            color: {{ accent }};
+            margin: 0 0 28px;
         }
-        .toc-list {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-        .toc-part {
-            padding-bottom: 18px;
-            border-bottom: 1px solid #e7e5e4;
-            page-break-inside: avoid;
-        }
-        .toc-part-head {
+        .toc-row {
             display: flex;
             align-items: baseline;
-            justify-content: space-between;
-            gap: 16px;
-            font-size: 16px;
+            gap: 8px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .toc-row.part {
+            margin-top: 14px;
+            font-size: 13.5px;
             font-weight: 700;
+            color: #1c1917;
         }
-        .toc-part-num {
-            color: {{ accent }};
-            font-weight: 800;
-            margin-right: 10px;
-        }
-        .toc-subs {
-            margin-top: 10px;
-            padding-left: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
-        }
-        .toc-sub-row {
-            display: flex;
-            justify-content: space-between;
+        .toc-row.part:first-child { margin-top: 0; }
+        .toc-row.sub {
+            margin-top: 4px;
+            padding-left: 22px;
             font-size: 12.5px;
-            color: #57534e;
+            font-weight: 400;
+            color: #44403c;
+        }
+        .toc-label { white-space: nowrap; }
+        .toc-num { font-weight: 700; margin-right: 6px; }
+        .toc-row.part .toc-num { color: {{ accent }}; }
+        .toc-dots {
+            flex: 1;
+            border-bottom: 1px dotted #c4c0bb;
+            min-width: 16px;
+            transform: translateY(-5px);
+        }
+        .toc-pagenum {
+            font-variant-numeric: tabular-nums;
+            font-size: 12.5px;
+            color: #1c1917;
+            padding-left: 8px;
+        }
+        h2.sec, h3.sub, table.grid, figure.spec-image {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
 
         /* Body sections — clear breathing room between major & minor blocks */
@@ -332,35 +345,30 @@
     <div class="brand">Sharaco</div>
 </section>
 
-<section class="toc-page">
-    <div class="toc-header">
-        <h2 class="toc-title">Sommaire</h2>
+{% set sp = page_map.section_pages if page_map else {} %}
+{% set ssp = page_map.subsection_pages if page_map else {} %}
+<section class="toc-sheet">
+    <h2 class="toc-title">Sommaire</h2>
+    {% for section in sections %}
+    {% set r = romans[loop.index0] if loop.index0 < romans|length else loop.index %}
+    <div class="toc-row part">
+        <span class="toc-label"><span class="toc-num">{{ r }}.</span>{{ section.title }}</span>
+        <span class="toc-dots"></span>
+        <span class="toc-pagenum">{{ sp.get(section.id|string, page_map.body_start if page_map else 3) }}</span>
     </div>
-    <div class="toc-list">
-        {% for section in sections %}
-        {% set r = romans[loop.index0] if loop.index0 < romans|length else loop.index %}
-        <div class="toc-part">
-            <div class="toc-part-head">
-                <span><span class="toc-part-num">{{ r }}.</span>{{ section.title }}</span>
-                <span style="font-size:11px;color:#78716c;font-weight:500">{{ section.subsections|length }} point{{ 's' if section.subsections|length > 1 else '' }}</span>
-            </div>
-            {% if section.subsections %}
-            <div class="toc-subs">
-                {% for sub in section.subsections %}
-                <div class="toc-sub-row">
-                    <span>{{ loop.index }}. {{ sub.title }}</span>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-        {% endfor %}
+    {% for sub in section.subsections %}
+    <div class="toc-row sub">
+        <span class="toc-label">{{ loop.index }}. {{ sub.title }}</span>
+        <span class="toc-dots"></span>
+        <span class="toc-pagenum">{{ ssp.get(sub.id|string, sp.get(section.id|string, page_map.body_start if page_map else 3)) }}</span>
     </div>
+    {% endfor %}
+    {% endfor %}
 </section>
 
 <section class="body">
     {% for section in sections %}
-    <div class="sec-block">
+    <div class="sec-block" id="sec-{{ section.id }}">
         <div class="sec-head">
             <h2 class="sec">
                 <span class="sec-num">{{ romans[loop.index0] if loop.index0 < romans|length else loop.index }}.</span>

@@ -6,7 +6,74 @@ import { specKindMeta } from "../kinds"
 import type { SpecBlock, SpecSection, SpecSpacerSize, SpecSubsection, SpecificationDraft } from "../types"
 import { useLocalText } from "../hooks/useLocalText"
 import { isHttpUrl } from "../urls"
+import { A4_HEIGHT, paginateDraft, type BodyUnit, type TocEntry } from "../paging"
 import { roman } from "./SpecSidebar"
+
+function PageFooter({ title, page, total }: { title: string; page: number; total: number }) {
+    return (
+        <div className="mt-auto flex items-end justify-between gap-8 pt-10 text-[11px] leading-none text-[#78716c]">
+            <span className="min-w-0 truncate">{title}</span>
+            <span className="shrink-0 tabular-nums">
+                {page} / {total}
+            </span>
+        </div>
+    )
+}
+
+function SheetFrame({
+    children,
+    footer,
+    className,
+}: {
+    children: ReactNode
+    footer?: ReactNode
+    className?: string
+}) {
+    return (
+        <section
+            className={`relative flex w-full flex-col overflow-hidden rounded-sm bg-[#faf8f5] px-20 pb-14 pt-16 text-[#1c1917] shadow-2xl shadow-black/25 ${className || ""}`}
+            style={{ minHeight: A4_HEIGHT }}
+        >
+            <div className="flex-1">{children}</div>
+            {footer}
+        </section>
+    )
+}
+
+function TocLeader({
+    label,
+    page,
+    accent,
+    part = false,
+    onJump,
+}: {
+    label: ReactNode
+    page: number
+    accent: string
+    part?: boolean
+    onJump?: () => void
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onJump}
+            className={`flex w-full items-baseline gap-2 text-left ${part ? "mt-3.5 first:mt-0" : "mt-1 pl-5"}`}
+        >
+            <span
+                className={`max-w-[72%] shrink-0 ${part ? "text-[13.5px] font-bold text-[#1c1917]" : "text-[12.5px] font-normal text-[#44403c]"}`}
+            >
+                {label}
+            </span>
+            <span className="min-w-4 flex-1 translate-y-[-5px] border-b border-dotted border-[#c4c0bb]" />
+            <span
+                className="shrink-0 tabular-nums text-[12.5px] text-[#1c1917]"
+                style={part ? { color: accent } : undefined}
+            >
+                {page}
+            </span>
+        </button>
+    )
+}
 
 function sid() {
     return crypto.randomUUID()
@@ -182,6 +249,8 @@ export function SpecLivePreview({
     const kindMeta = specKindMeta(draft.kind)
     const accent = draft.primaryColor || "#2563EB"
     const todayLabel = new Date().toLocaleDateString("fr-FR")
+    const plan = paginateDraft(draft, !readOnly)
+    const docTitle = draft.title || draft.number || "Cahier des charges"
 
     const updateSection = (sectionId: string, updater: (s: SpecSection) => SpecSection) => {
         onChange({
@@ -253,9 +322,6 @@ export function SpecLivePreview({
 
     return (
         <div className="mx-auto flex w-[820px] flex-col gap-14">
-            {/* ═══════════════════════════════════════════════════════════
-                PAGE 1 — COUVERTURE
-            ═══════════════════════════════════════════════════════════ */}
             <div id="spec-node-cover" onFocusCapture={() => onFocusItem?.("cover")} className="scroll-mt-20">
                 <div className="mb-2.5 flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">
                     <span>Page 1 · Couverture</span>
@@ -272,293 +338,75 @@ export function SpecLivePreview({
                 />
             </div>
 
-            {/* ═══════════════════════════════════════════════════════════
-                PAGE 2 — SOMMAIRE DÉDIÉ (ÉDITABLE)
-            ═══════════════════════════════════════════════════════════ */}
-            <div id="spec-node-toc" onFocusCapture={() => onFocusItem?.("toc")} className="scroll-mt-20">
-                <div className="mb-2.5 flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">
-                    <span>Page 2 · Sommaire</span>
-                    <span>{readOnly ? "Aperçu final" : "Cliquez sur un titre pour le renommer"}</span>
-                </div>
-                <TocSheet
-                    draft={draft}
-                    accent={accent}
-                    readOnly={readOnly}
-                    onUpdateSection={updateSection}
-                    onMoveSection={moveSection}
-                    onRemoveSection={removeSection}
-                    onAddSection={() =>
-                        onChange({
-                            sections: [...draft.sections, createDefaultSection(draft.sections.length)],
-                        })
-                    }
-                    onAddSubsection={addSubsection}
-                    onUpdateSubsection={updateSubsection}
-                    onRemoveSubsection={removeSubsection}
-                    onJump={onJump}
-                />
-            </div>
-
-            {/* ═══════════════════════════════════════════════════════════
-                PAGE 3+ — CORPS DU CAHIER DES CHARGES
-            ═══════════════════════════════════════════════════════════ */}
-            <div>
-                <div className="mb-2.5 flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">
-                    <span>Page 3 · Développement des clauses et tableaux</span>
-                    <span>{draft.sections.length} grandes parties</span>
-                </div>
-
-                <section className="relative min-h-[1120px] w-full rounded-sm bg-[#faf8f5] px-20 py-20 text-[#1c1917] shadow-2xl shadow-black/25">
-                    <div className="space-y-16">
-                        {draft.sections.map((section, sIdx) => (
-                            <div
-                                key={section.id}
-                                id={`spec-node-${section.id}`}
-                                onFocusCapture={() => onFocusItem?.(section.id)}
-                                className="group/section scroll-mt-24"
-                            >
-                                <div className="flex items-baseline gap-2.5 border-b border-[#d6d3d1] pb-3.5">
-                                    <span
-                                        className="shrink-0 text-[22px] font-extrabold leading-[1.25] tracking-[-0.03em]"
-                                        style={{ color: accent }}
-                                    >
-                                        {roman(sIdx)}.
-                                    </span>
-                                    {readOnly ? (
-                                        <h2 className="text-[22px] font-extrabold leading-[1.25] tracking-[-0.03em] text-[#1c1917]">
-                                            {section.title}
-                                        </h2>
-                                    ) : (
-                                        <DeferredTextInput
-                                            value={section.title}
-                                            transform={stripLeadingRoman}
-                                            onCommit={(title) =>
-                                                updateSection(section.id, (s) => ({ ...s, title }))
-                                            }
-                                            placeholder="Titre de la grande partie"
-                                            className="w-full bg-transparent text-[22px] font-extrabold leading-[1.25] tracking-[-0.03em] text-[#1c1917] outline-none placeholder:text-[#a8a29e]"
-                                        />
-                                    )}
-                                    {!readOnly && draft.sections.length > 1 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => removeSection(section.id)}
-                                            title="Supprimer cette partie"
-                                            className="rounded p-1 text-[#a8a29e] opacity-0 transition-opacity hover:text-rose-600 group-hover/section:opacity-100"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="mt-7 space-y-8 pl-4">
-                                    {section.subsections.map((sub, subIdx) => (
-                                        <div
-                                            key={sub.id}
-                                            id={`spec-node-${sub.id}`}
-                                            onFocusCapture={() => onFocusItem?.(sub.id)}
-                                            className={
-                                                readOnly
-                                                    ? "scroll-mt-24 py-1"
-                                                    : "group/sub scroll-mt-24 rounded-lg border border-transparent p-3.5 transition-colors hover:border-[#e7e5e4] focus-within:border-[#d6d3d1] focus-within:bg-white/70"
-                                            }
-                                        >
-                                            <div className="mb-3 flex items-baseline gap-2.5">
-                                                <span className="shrink-0 text-[15px] font-bold text-[#57534e]">
-                                                    {subIdx + 1}.
-                                                </span>
-                                                {readOnly ? (
-                                                    <h3 className="text-[15px] font-bold text-[#1c1917]">
-                                                        {sub.title}
-                                                    </h3>
-                                                ) : (
-                                                    <DeferredTextInput
-                                                        value={sub.title}
-                                                        onCommit={(title) =>
-                                                            updateSubsection(section.id, sub.id, (item) => ({
-                                                                ...item,
-                                                                title,
-                                                            }))
-                                                        }
-                                                        placeholder="Titre de la sous-section"
-                                                        className="w-full bg-transparent text-[15px] font-bold text-[#1c1917] outline-none placeholder:text-[#a8a29e]"
-                                                    />
-                                                )}
-                                                {!readOnly && section.subsections.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            removeSubsection(section.id, sub.id)
-                                                        }
-                                                        title="Supprimer la sous-section"
-                                                        className="rounded p-1 text-[#a8a29e] opacity-0 transition-opacity hover:text-rose-600 group-hover/sub:opacity-100"
-                                                    >
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            {!readOnly && (
-                                                <InlineInsertBar
-                                                    allowSpacer={sub.blocks[0]?.type !== "spacer"}
-                                                    accent={accent}
-                                                    onAddParagraph={() =>
-                                                        insertBlockAt(section.id, sub.id, 0, emptyParagraph())
-                                                    }
-                                                    onAddTable={(presetId) =>
-                                                        insertBlockAt(
-                                                            section.id,
-                                                            sub.id,
-                                                            0,
-                                                            buildTableFromPreset(presetId)
-                                                        )
-                                                    }
-                                                    onAddList={(style) =>
-                                                        insertBlockAt(section.id, sub.id, 0, emptyList(style))
-                                                    }
-                                                    onAddLink={() =>
-                                                        insertBlockAt(section.id, sub.id, 0, emptyLink())
-                                                    }
-                                                    onAddImage={() =>
-                                                        insertBlockAt(section.id, sub.id, 0, emptyImage())
-                                                    }
-                                                    onAddSpacer={(size) =>
-                                                        insertBlockAt(
-                                                            section.id,
-                                                            sub.id,
-                                                            0,
-                                                            createSpacer(size)
-                                                        )
-                                                    }
-                                                />
-                                            )}
-
-                                            <div className="space-y-3">
-                                                {sub.blocks.map((block, bIdx) => {
-                                                    const nextBlock = sub.blocks[bIdx + 1]
-                                                    const canAddSpacerAfter =
-                                                        block.type !== "spacer" &&
-                                                        nextBlock?.type !== "spacer"
-
-                                                    return (
-                                                        <div key={`${sub.id}-${bIdx}`} className="space-y-2">
-                                                            <BlockCanvas
-                                                                block={block}
-                                                                accent={accent}
-                                                                readOnly={readOnly}
-                                                                canRemove={sub.blocks.length > 1}
-                                                                onChange={(updated) =>
-                                                                    updateSubsection(
-                                                                        section.id,
-                                                                        sub.id,
-                                                                        (item) => ({
-                                                                            ...item,
-                                                                            blocks: item.blocks.map(
-                                                                                (b, i) =>
-                                                                                    i === bIdx ? updated : b
-                                                                            ),
-                                                                        })
-                                                                    )
-                                                                }
-                                                                onRemove={() =>
-                                                                    updateSubsection(
-                                                                        section.id,
-                                                                        sub.id,
-                                                                        (item) => ({
-                                                                            ...item,
-                                                                            blocks:
-                                                                                item.blocks.length > 1
-                                                                                    ? item.blocks.filter(
-                                                                                          (_, i) => i !== bIdx
-                                                                                      )
-                                                                                    : item.blocks,
-                                                                        })
-                                                                    )
-                                                                }
-                                                            />
-
-                                                            {!readOnly && (
-                                                                <InlineInsertBar
-                                                                    allowSpacer={canAddSpacerAfter}
-                                                                    accent={accent}
-                                                                    isLast={bIdx === sub.blocks.length - 1}
-                                                                    onAddParagraph={() =>
-                                                                        insertBlockAt(
-                                                                            section.id,
-                                                                            sub.id,
-                                                                            bIdx + 1,
-                                                                            emptyParagraph()
-                                                                        )
-                                                                    }
-                                                                    onAddTable={(presetId) =>
-                                                                        insertBlockAt(
-                                                                            section.id,
-                                                                            sub.id,
-                                                                            bIdx + 1,
-                                                                            buildTableFromPreset(presetId)
-                                                                        )
-                                                                    }
-                                                                    onAddList={(style) =>
-                                                                        insertBlockAt(
-                                                                            section.id,
-                                                                            sub.id,
-                                                                            bIdx + 1,
-                                                                            emptyList(style)
-                                                                        )
-                                                                    }
-                                                                    onAddLink={() =>
-                                                                        insertBlockAt(
-                                                                            section.id,
-                                                                            sub.id,
-                                                                            bIdx + 1,
-                                                                            emptyLink()
-                                                                        )
-                                                                    }
-                                                                    onAddImage={() =>
-                                                                        insertBlockAt(
-                                                                            section.id,
-                                                                            sub.id,
-                                                                            bIdx + 1,
-                                                                            emptyImage()
-                                                                        )
-                                                                    }
-                                                                    onAddSpacer={(size) =>
-                                                                        insertBlockAt(
-                                                                            section.id,
-                                                                            sub.id,
-                                                                            bIdx + 1,
-                                                                            createSpacer(size)
-                                                                        )
-                                                                    }
-                                                                />
-                                                            )}
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                    {!readOnly && (
-                                        <button
-                                            type="button"
-                                            onClick={() => addSubsection(section.id)}
-                                            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-[#57534e] transition-colors hover:bg-[#e7e5e4]/70 hover:text-[#1c1917]"
-                                        >
-                                            <Plus className="h-3.5 w-3.5" />
-                                            Ajouter une sous-section ({section.subsections.length + 1}.)
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
+            {plan.tocPages.map((entries, tocIdx) => {
+                const pageNo = plan.tocStart + tocIdx
+                return (
+                    <div
+                        key={`toc-${tocIdx}`}
+                        id={tocIdx === 0 ? "spec-node-toc" : undefined}
+                        onFocusCapture={() => onFocusItem?.("toc")}
+                        className="scroll-mt-20"
+                    >
+                        <div className="mb-2.5 flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">
+                            <span>Page {pageNo} · Sommaire</span>
+                            <span>
+                                {readOnly ? "Aperçu final" : "Cliquez sur un titre pour le renommer"}
+                            </span>
+                        </div>
+                        <TocSheet
+                            draft={draft}
+                            accent={accent}
+                            entries={entries}
+                            page={pageNo}
+                            total={plan.total}
+                            isFirst={tocIdx === 0}
+                            isLast={tocIdx === plan.tocPages.length - 1}
+                            readOnly={readOnly}
+                            onUpdateSection={updateSection}
+                            onMoveSection={moveSection}
+                            onRemoveSection={removeSection}
+                            onAddSection={() =>
+                                onChange({
+                                    sections: [...draft.sections, createDefaultSection(draft.sections.length)],
+                                })
+                            }
+                            onAddSubsection={addSubsection}
+                            onUpdateSubsection={updateSubsection}
+                            onRemoveSubsection={removeSubsection}
+                            onJump={onJump}
+                        />
                     </div>
+                )
+            })}
 
-                    {!readOnly && (
-                        <div className="mt-16 border-t border-dashed border-[#d6d3d1] pt-8">
-                            <button
-                                type="button"
-                                onClick={() =>
+            {plan.bodyPages.map((units, bodyIdx) => {
+                const pageNo = plan.bodyStart + bodyIdx
+                const isLastBody = bodyIdx === plan.bodyPages.length - 1
+                return (
+                    <div key={`body-${bodyIdx}`} className="scroll-mt-20">
+                        <div className="mb-2.5 flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">
+                            <span>Page {pageNo} · Corps du document</span>
+                            <span>
+                                {pageNo} / {plan.total}
+                            </span>
+                        </div>
+                        <SheetFrame
+                            footer={<PageFooter title={docTitle} page={pageNo} total={plan.total} />}
+                        >
+                            <BodyPageCanvas
+                                draft={draft}
+                                units={units}
+                                accent={accent}
+                                readOnly={readOnly}
+                                isLastPage={isLastBody}
+                                onFocusItem={onFocusItem}
+                                updateSection={updateSection}
+                                removeSection={removeSection}
+                                updateSubsection={updateSubsection}
+                                removeSubsection={removeSubsection}
+                                addSubsection={addSubsection}
+                                insertBlockAt={insertBlockAt}
+                                onAddSection={() =>
                                     onChange({
                                         sections: [
                                             ...draft.sections,
@@ -566,14 +414,320 @@ export function SpecLivePreview({
                                         ],
                                     })
                                 }
-                                className="inline-flex items-center gap-2 rounded-lg border border-[#d6d3d1] bg-white px-3.5 py-2 text-xs font-semibold text-[#1c1917] shadow-sm transition-colors hover:bg-[#f5f3ef]"
-                            >
-                                <Plus className="h-3.5 w-3.5" style={{ color: accent }} />
-                                Nouvelle grande partie ({roman(draft.sections.length)}.)
-                            </button>
+                            />
+                        </SheetFrame>
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+function BodyPageCanvas({
+    draft,
+    units,
+    accent,
+    readOnly,
+    isLastPage,
+    onFocusItem,
+    updateSection,
+    removeSection,
+    updateSubsection,
+    removeSubsection,
+    addSubsection,
+    insertBlockAt,
+    onAddSection,
+}: {
+    draft: SpecificationDraft
+    units: BodyUnit[]
+    accent: string
+    readOnly: boolean
+    isLastPage: boolean
+    onFocusItem?: (id: string) => void
+    updateSection: (sectionId: string, updater: (s: SpecSection) => SpecSection) => void
+    removeSection: (sectionId: string) => void
+    updateSubsection: (
+        sectionId: string,
+        subId: string,
+        updater: (sub: SpecSubsection) => SpecSubsection
+    ) => void
+    removeSubsection: (sectionId: string, subId: string) => void
+    addSubsection: (sectionId: string, atIndex?: number) => void
+    insertBlockAt: (sectionId: string, subId: string, index: number, newBlock: SpecBlock) => void
+    onAddSection: () => void
+}) {
+    const groups: BodyUnit[][] = []
+    for (const unit of units) {
+        const last = groups[groups.length - 1]
+        const sameSub =
+            last &&
+            unit.kind !== "sec-head" &&
+            last[0].kind !== "sec-head" &&
+            "subId" in last[0] &&
+            "subId" in unit &&
+            last[0].subId === unit.subId
+        if (sameSub) last.push(unit)
+        else groups.push([unit])
+    }
+
+    return (
+        <div className="space-y-8">
+            {groups.map((group, gIdx) => {
+                const head = group[0]
+                if (head.kind === "sec-head") {
+                    const section = draft.sections[head.sIdx]
+                    if (!section) return null
+                    const lastOfSection =
+                        !units.some(
+                            (u, i) =>
+                                i > units.indexOf(head) &&
+                                ((u.kind === "sub-head" && u.sectionId === section.id) ||
+                                    (u.kind === "block" && u.sectionId === section.id))
+                        ) && !group.slice(1).length
+                    return (
+                        <div
+                            key={`${section.id}-head-${gIdx}`}
+                            id={`spec-node-${section.id}`}
+                            onFocusCapture={() => onFocusItem?.(section.id)}
+                            className="group/section scroll-mt-24"
+                        >
+                            <div className="flex items-baseline gap-2.5 border-b border-[#d6d3d1] pb-3.5">
+                                <span
+                                    className="shrink-0 text-[22px] font-extrabold leading-[1.25] tracking-[-0.03em]"
+                                    style={{ color: accent }}
+                                >
+                                    {roman(head.sIdx)}.
+                                </span>
+                                {readOnly ? (
+                                    <h2 className="text-[22px] font-extrabold leading-[1.25] tracking-[-0.03em] text-[#1c1917]">
+                                        {section.title}
+                                    </h2>
+                                ) : (
+                                    <DeferredTextInput
+                                        value={section.title}
+                                        transform={stripLeadingRoman}
+                                        onCommit={(title) =>
+                                            updateSection(section.id, (s) => ({ ...s, title }))
+                                        }
+                                        placeholder="Titre de la grande partie"
+                                        className="w-full bg-transparent text-[22px] font-extrabold leading-[1.25] tracking-[-0.03em] text-[#1c1917] outline-none placeholder:text-[#a8a29e]"
+                                    />
+                                )}
+                                {!readOnly && draft.sections.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeSection(section.id)}
+                                        title="Supprimer cette partie"
+                                        className="rounded p-1 text-[#a8a29e] opacity-0 transition-opacity hover:text-rose-600 group-hover/section:opacity-100"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
+                            {!readOnly && lastOfSection && (
+                                <button
+                                    type="button"
+                                    onClick={() => addSubsection(section.id)}
+                                    className="mt-4 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-[#57534e] hover:bg-[#e7e5e4]/70 hover:text-[#1c1917]"
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Ajouter une sous-section
+                                </button>
+                            )}
                         </div>
+                    )
+                }
+
+                const section = draft.sections[head.sIdx]
+                const sub = section?.subsections.find((item) =>
+                    head.kind === "sec-head" ? false : item.id === head.subId
+                )
+                if (!section || !sub) return null
+                const showHead = group.some((u) => u.kind === "sub-head")
+                const blockUnits = group.filter((u): u is Extract<BodyUnit, { kind: "block" }> => u.kind === "block")
+                const lastBlockOnPage = blockUnits[blockUnits.length - 1]
+                const isEndOfSub =
+                    lastBlockOnPage && lastBlockOnPage.bIdx === sub.blocks.length - 1
+                const isEndOfSection = isEndOfSub && head.subIdx === section.subsections.length - 1
+
+                return (
+                    <div key={`${sub.id}-${gIdx}`} className="pl-4">
+                        <SubsectionSlice
+                            section={section}
+                            sub={sub}
+                            subIdx={head.subIdx}
+                            accent={accent}
+                            readOnly={readOnly}
+                            showHead={showHead}
+                            blockIndexes={blockUnits.map((u) => u.bIdx)}
+                            startInsert={showHead}
+                            endInsert={!!isEndOfSub}
+                            onFocusItem={onFocusItem}
+                            updateSubsection={updateSubsection}
+                            removeSubsection={removeSubsection}
+                            insertBlockAt={insertBlockAt}
+                        />
+                        {!readOnly && isEndOfSection && (
+                            <button
+                                type="button"
+                                onClick={() => addSubsection(section.id)}
+                                className="mt-4 inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-[#57534e] hover:bg-[#e7e5e4]/70 hover:text-[#1c1917]"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                                Ajouter une sous-section ({section.subsections.length + 1}.)
+                            </button>
+                        )}
+                    </div>
+                )
+            })}
+
+            {!readOnly && isLastPage && (
+                <div className="border-t border-dashed border-[#d6d3d1] pt-6">
+                    <button
+                        type="button"
+                        onClick={onAddSection}
+                        className="inline-flex items-center gap-2 rounded-lg border border-[#d6d3d1] bg-white px-3.5 py-2 text-xs font-semibold text-[#1c1917] shadow-sm hover:bg-[#f5f3ef]"
+                    >
+                        <Plus className="h-3.5 w-3.5" style={{ color: accent }} />
+                        Nouvelle grande partie ({roman(draft.sections.length)}.)
+                    </button>
+                </div>
+            )}
+        </div>
+    )
+}
+
+function SubsectionSlice({
+    section,
+    sub,
+    subIdx,
+    accent,
+    readOnly,
+    showHead,
+    blockIndexes,
+    startInsert,
+    endInsert,
+    onFocusItem,
+    updateSubsection,
+    removeSubsection,
+    insertBlockAt,
+}: {
+    section: SpecSection
+    sub: SpecSubsection
+    subIdx: number
+    accent: string
+    readOnly: boolean
+    showHead: boolean
+    blockIndexes: number[]
+    startInsert: boolean
+    endInsert: boolean
+    onFocusItem?: (id: string) => void
+    updateSubsection: (
+        sectionId: string,
+        subId: string,
+        updater: (sub: SpecSubsection) => SpecSubsection
+    ) => void
+    removeSubsection: (sectionId: string, subId: string) => void
+    insertBlockAt: (sectionId: string, subId: string, index: number, newBlock: SpecBlock) => void
+}) {
+    const insert = (index: number, block: SpecBlock) => insertBlockAt(section.id, sub.id, index, block)
+    return (
+        <div
+            id={showHead ? `spec-node-${sub.id}` : undefined}
+            onFocusCapture={() => onFocusItem?.(sub.id)}
+            className={
+                readOnly
+                    ? "scroll-mt-24 py-1"
+                    : "group/sub scroll-mt-24 rounded-lg border border-transparent p-3.5 transition-colors hover:border-[#e7e5e4] focus-within:border-[#d6d3d1] focus-within:bg-white/70"
+            }
+        >
+            {showHead && (
+                <div className="mb-3 flex items-baseline gap-2.5">
+                    <span className="shrink-0 text-[15px] font-bold text-[#57534e]">{subIdx + 1}.</span>
+                    {readOnly ? (
+                        <h3 className="text-[15px] font-bold text-[#1c1917]">{sub.title}</h3>
+                    ) : (
+                        <DeferredTextInput
+                            value={sub.title}
+                            onCommit={(title) =>
+                                updateSubsection(section.id, sub.id, (item) => ({ ...item, title }))
+                            }
+                            placeholder="Titre de la sous-section"
+                            className="w-full bg-transparent text-[15px] font-bold text-[#1c1917] outline-none placeholder:text-[#a8a29e]"
+                        />
                     )}
-                </section>
+                    {!readOnly && section.subsections.length > 1 && (
+                        <button
+                            type="button"
+                            onClick={() => removeSubsection(section.id, sub.id)}
+                            title="Supprimer la sous-section"
+                            className="rounded p-1 text-[#a8a29e] opacity-0 transition-opacity hover:text-rose-600 group-hover/sub:opacity-100"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {!readOnly && startInsert && (
+                <InlineInsertBar
+                    allowSpacer={sub.blocks[0]?.type !== "spacer"}
+                    accent={accent}
+                    onAddParagraph={() => insert(0, emptyParagraph())}
+                    onAddTable={(presetId) => insert(0, buildTableFromPreset(presetId))}
+                    onAddList={(style) => insert(0, emptyList(style))}
+                    onAddLink={() => insert(0, emptyLink())}
+                    onAddImage={() => insert(0, emptyImage())}
+                    onAddSpacer={(size) => insert(0, createSpacer(size))}
+                />
+            )}
+
+            <div className="space-y-3">
+                {blockIndexes.map((bIdx) => {
+                    const block = sub.blocks[bIdx]
+                    if (!block) return null
+                    const nextBlock = sub.blocks[bIdx + 1]
+                    const canAddSpacerAfter = block.type !== "spacer" && nextBlock?.type !== "spacer"
+                    const showInsert = !readOnly && (endInsert || blockIndexes.includes(bIdx + 1))
+                    return (
+                        <div key={`${sub.id}-${bIdx}`} className="space-y-2">
+                            <BlockCanvas
+                                block={block}
+                                accent={accent}
+                                readOnly={readOnly}
+                                canRemove={sub.blocks.length > 1}
+                                onChange={(updated) =>
+                                    updateSubsection(section.id, sub.id, (item) => ({
+                                        ...item,
+                                        blocks: item.blocks.map((b, i) => (i === bIdx ? updated : b)),
+                                    }))
+                                }
+                                onRemove={() =>
+                                    updateSubsection(section.id, sub.id, (item) => ({
+                                        ...item,
+                                        blocks:
+                                            item.blocks.length > 1
+                                                ? item.blocks.filter((_, i) => i !== bIdx)
+                                                : item.blocks,
+                                    }))
+                                }
+                            />
+                            {showInsert && (
+                                <InlineInsertBar
+                                    allowSpacer={canAddSpacerAfter}
+                                    accent={accent}
+                                    isLast={bIdx === sub.blocks.length - 1}
+                                    onAddParagraph={() => insert(bIdx + 1, emptyParagraph())}
+                                    onAddTable={(presetId) => insert(bIdx + 1, buildTableFromPreset(presetId))}
+                                    onAddList={(style) => insert(bIdx + 1, emptyList(style))}
+                                    onAddLink={() => insert(bIdx + 1, emptyLink())}
+                                    onAddImage={() => insert(bIdx + 1, emptyImage())}
+                                    onAddSpacer={(size) => insert(bIdx + 1, createSpacer(size))}
+                                />
+                            )}
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )
@@ -582,6 +736,11 @@ export function SpecLivePreview({
 function TocSheet({
     draft,
     accent,
+    entries,
+    page,
+    total,
+    isFirst,
+    isLast,
     readOnly = false,
     onUpdateSection,
     onMoveSection,
@@ -594,6 +753,11 @@ function TocSheet({
 }: {
     draft: SpecificationDraft
     accent: string
+    entries: TocEntry[]
+    page: number
+    total: number
+    isFirst: boolean
+    isLast: boolean
     readOnly?: boolean
     onUpdateSection: (id: string, updater: (s: SpecSection) => SpecSection) => void
     onMoveSection: (index: number, direction: -1 | 1) => void
@@ -608,171 +772,170 @@ function TocSheet({
     onRemoveSubsection: (sectionId: string, subId: string) => void
     onJump?: (id: string) => void
 }) {
-    if (readOnly) {
-        return (
-            <section className="relative flex min-h-[1040px] w-full flex-col rounded-sm bg-[#faf8f5] px-20 py-20 text-[#1c1917] shadow-2xl shadow-black/25">
-                <div className="border-b-2 border-[#1c1917] pb-5">
-                    <h2 className="text-3xl font-extrabold tracking-[-0.03em]">Sommaire</h2>
-                </div>
-                <div className="mt-8 flex-1 space-y-6">
-                    {draft.sections.map((section, sIdx) => (
-                        <div key={section.id} className="border-b border-[#e7e5e4] pb-4">
-                            <div className="flex items-baseline justify-between gap-4 text-base font-bold">
-                                <span>
-                                    <span className="mr-2.5 font-extrabold" style={{ color: accent }}>
-                                        {roman(sIdx)}.
-                                    </span>
-                                    {section.title}
-                                </span>
-                                <span className="text-xs font-medium text-[#78716c]">
-                                    {section.subsections.length} point
-                                    {section.subsections.length > 1 ? "s" : ""}
-                                </span>
-                            </div>
-                            {section.subsections.length > 0 && (
-                                <div className="mt-2.5 space-y-1.5 pl-6 text-[13px] text-[#57534e]">
-                                    {section.subsections.map((sub, subIdx) => (
-                                        <div key={sub.id}>
-                                            {subIdx + 1}. {sub.title}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </section>
-        )
-    }
+    const title = draft.title || draft.number || "Cahier des charges"
+    const shownSectionIds = new Set(entries.filter((e) => e.kind === "part").map((e) => e.sectionId))
+    entries.forEach((e) => {
+        if (e.kind === "sub") shownSectionIds.add(e.sectionId)
+    })
 
     return (
-        <section className="relative flex min-h-[1040px] w-full flex-col rounded-sm bg-[#faf8f5] px-20 py-20 text-[#1c1917] shadow-2xl shadow-black/25">
-            <div className="border-b-2 border-[#1c1917] pb-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h2 className="text-3xl font-bold tracking-[-0.03em]">Sommaire</h2>
-                    <span className="text-xs text-[#78716c]">
-                        {draft.sections.length} grandes parties
-                    </span>
-                </div>
-            </div>
-
-            <div className="mt-8 flex-1 space-y-6">
-                {draft.sections.map((section, sIdx) => (
-                    <div
-                        key={section.id}
-                        className="group/toc rounded-lg border border-[#e7e5e4] bg-white/70 p-3.5 transition-colors hover:border-[#d6d3d1]"
-                    >
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => onJump?.(section.id)}
-                                title="Aller au contenu de cette partie"
-                                className="shrink-0 font-mono text-sm font-extrabold hover:underline"
-                                style={{ color: accent }}
-                            >
-                                {roman(sIdx)}.
-                            </button>
-                            <DeferredTextInput
-                                value={section.title}
-                                transform={stripLeadingRoman}
-                                onCommit={(title) =>
-                                    onUpdateSection(section.id, (s) => ({ ...s, title }))
-                                }
-                                placeholder="Titre de la grande partie"
-                                className="min-w-0 flex-1 bg-transparent text-sm font-bold text-[#1c1917] outline-none placeholder:text-[#a8a29e] sm:text-[15px]"
-                            />
-                            <div className="flex items-center gap-0.5">
-                                <button
-                                    type="button"
-                                    disabled={sIdx === 0}
-                                    onClick={() => onMoveSection(sIdx, -1)}
-                                    title="Monter cette partie"
-                                    className="rounded p-1 text-[#78716c] hover:bg-[#e7e5e4] hover:text-[#1c1917] disabled:opacity-25"
-                                >
-                                    <ArrowUp className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    disabled={sIdx === draft.sections.length - 1}
-                                    onClick={() => onMoveSection(sIdx, 1)}
-                                    title="Descendre cette partie"
-                                    className="rounded p-1 text-[#78716c] hover:bg-[#e7e5e4] hover:text-[#1c1917] disabled:opacity-25"
-                                >
-                                    <ArrowDown className="h-3.5 w-3.5" />
-                                </button>
-                                {draft.sections.length > 1 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => onRemoveSection(section.id)}
-                                        title="Supprimer cette grande partie"
-                                        className="rounded p-1 text-[#a8a29e] hover:bg-rose-50 hover:text-rose-600"
-                                    >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="mt-2.5 space-y-1.5 border-l-2 border-[#e7e5e4] pl-3 ml-2">
-                            {section.subsections.map((sub, subIdx) => (
-                                <div key={sub.id} className="flex items-center gap-2 text-xs">
-                                    <button
-                                        type="button"
-                                        onClick={() => onJump?.(sub.id)}
-                                        className="shrink-0 font-mono text-[11px] font-semibold text-[#78716c] hover:text-[#1c1917]"
-                                    >
-                                        {subIdx + 1}.
-                                    </button>
+        <SheetFrame footer={<PageFooter title={title} page={page} total={total} />}>
+            {isFirst && (
+                <h2 className="mb-7 text-[28px] font-extrabold tracking-[-0.03em]" style={{ color: accent }}>
+                    Sommaire
+                </h2>
+            )}
+            <div>
+                {entries.map((entry) => {
+                    if (entry.kind === "part") {
+                        const section = draft.sections[entry.sIdx]
+                        if (!section) return null
+                        if (readOnly) {
+                            return (
+                                <TocLeader
+                                    key={section.id}
+                                    part
+                                    accent={accent}
+                                    page={entry.page}
+                                    onJump={() => onJump?.(section.id)}
+                                    label={
+                                        <>
+                                            <span className="mr-1.5 font-extrabold" style={{ color: accent }}>
+                                                {roman(entry.sIdx)}.
+                                            </span>
+                                            {section.title}
+                                        </>
+                                    }
+                                />
+                            )
+                        }
+                        return (
+                            <div key={section.id} className="group/toc mt-3.5 first:mt-0">
+                                <div className="flex items-baseline gap-2">
+                                    <span className="shrink-0 text-[13.5px] font-extrabold" style={{ color: accent }}>
+                                        {roman(entry.sIdx)}.
+                                    </span>
                                     <DeferredTextInput
-                                        value={sub.title}
-                                        onCommit={(title) =>
-                                            onUpdateSubsection(section.id, sub.id, (item) => ({
-                                                ...item,
-                                                title,
-                                            }))
+                                        value={section.title}
+                                        transform={stripLeadingRoman}
+                                        onCommit={(next) =>
+                                            onUpdateSection(section.id, (s) => ({ ...s, title: next }))
                                         }
-                                        placeholder="Sous-section"
-                                        className="min-w-0 flex-1 bg-transparent text-xs text-[#44403c] outline-none placeholder:text-[#a8a29e] focus:text-[#1c1917]"
+                                        placeholder="Titre de la grande partie"
+                                        className="max-w-[58%] min-w-0 bg-transparent text-[13.5px] font-bold text-[#1c1917] outline-none placeholder:text-[#a8a29e]"
                                     />
-                                    {section.subsections.length > 1 && (
+                                    <span className="min-w-4 flex-1 translate-y-[-5px] border-b border-dotted border-[#c4c0bb]" />
+                                    <span className="shrink-0 tabular-nums text-[12.5px] text-[#1c1917]">
+                                        {entry.page}
+                                    </span>
+                                    <div className="flex items-center gap-0.5 opacity-0 group-hover/toc:opacity-100">
                                         <button
                                             type="button"
-                                            onClick={() => onRemoveSubsection(section.id, sub.id)}
-                                            title="Retirer cette sous-section"
-                                            className="rounded p-0.5 text-[#a8a29e] opacity-0 hover:text-rose-600 group-hover/toc:opacity-100"
+                                            disabled={entry.sIdx === 0}
+                                            onClick={() => onMoveSection(entry.sIdx, -1)}
+                                            className="rounded p-0.5 text-[#78716c] hover:text-[#1c1917] disabled:opacity-25"
                                         >
-                                            ×
+                                            <ArrowUp className="h-3 w-3" />
                                         </button>
-                                    )}
+                                        <button
+                                            type="button"
+                                            disabled={entry.sIdx === draft.sections.length - 1}
+                                            onClick={() => onMoveSection(entry.sIdx, 1)}
+                                            className="rounded p-0.5 text-[#78716c] hover:text-[#1c1917] disabled:opacity-25"
+                                        >
+                                            <ArrowDown className="h-3 w-3" />
+                                        </button>
+                                        {draft.sections.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => onRemoveSection(section.id)}
+                                                className="rounded p-0.5 text-[#a8a29e] hover:text-rose-600"
+                                            >
+                                                <Trash2 className="h-3 w-3" />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                            ))}
-                            <button
-                                type="button"
-                                onClick={() => onAddSubsection(section.id)}
-                                className="inline-flex items-center gap-1 pt-1 text-[11px] font-medium text-[#78716c] hover:text-[#1c1917]"
-                            >
-                                <Plus className="h-3 w-3" />
-                                Ajouter un sous-point ({section.subsections.length + 1}.)
-                            </button>
+                            </div>
+                        )
+                    }
+
+                    const section = draft.sections[entry.sIdx]
+                    const sub = section?.subsections[entry.subIdx]
+                    if (!section || !sub) return null
+                    if (readOnly) {
+                        return (
+                            <TocLeader
+                                key={sub.id}
+                                accent={accent}
+                                page={entry.page}
+                                onJump={() => onJump?.(sub.id)}
+                                label={`${entry.subIdx + 1}. ${sub.title}`}
+                            />
+                        )
+                    }
+                    return (
+                        <div key={sub.id} className="group/tocsub mt-1 flex items-baseline gap-2 pl-5">
+                            <span className="shrink-0 text-[12.5px] text-[#44403c]">{entry.subIdx + 1}.</span>
+                            <DeferredTextInput
+                                value={sub.title}
+                                onCommit={(title) =>
+                                    onUpdateSubsection(section.id, sub.id, (item) => ({ ...item, title }))
+                                }
+                                placeholder="Sous-section"
+                                className="max-w-[58%] min-w-0 bg-transparent text-[12.5px] text-[#44403c] outline-none placeholder:text-[#a8a29e]"
+                            />
+                            <span className="min-w-4 flex-1 translate-y-[-5px] border-b border-dotted border-[#c4c0bb]" />
+                            <span className="shrink-0 tabular-nums text-[12.5px] text-[#1c1917]">
+                                {entry.page}
+                            </span>
+                            {section.subsections.length > 1 && (
+                                <button
+                                    type="button"
+                                    onClick={() => onRemoveSubsection(section.id, sub.id)}
+                                    className="rounded p-0.5 text-[#a8a29e] opacity-0 hover:text-rose-600 group-hover/tocsub:opacity-100"
+                                >
+                                    ×
+                                </button>
+                            )}
                         </div>
-                    </div>
-                ))}
+                    )
+                })}
             </div>
 
-            <div className="mt-6 flex items-center justify-between border-t border-[#e7e5e4] pt-4">
-                <button
-                    type="button"
-                    onClick={onAddSection}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#d6d3d1] bg-white px-3 py-1.5 text-xs font-semibold text-[#1c1917] shadow-sm hover:bg-[#f5f3ef]"
-                >
-                    <Plus className="h-3.5 w-3.5" style={{ color: accent }} />
-                    Ajouter une grande partie au sommaire ({roman(draft.sections.length)}.)
-                </button>
-                <span className="text-[10px] uppercase tracking-[0.18em] text-[#a8a29e]">
-                    {draft.number || "CDC"} · Sommaire
-                </span>
-            </div>
-        </section>
+            {!readOnly &&
+                [...shownSectionIds].map((sectionId) => {
+                    const section = draft.sections.find((s) => s.id === sectionId)
+                    if (!section) return null
+                    const lastSub = section.subsections[section.subsections.length - 1]
+                    const showsLastSub = entries.some((e) => e.kind === "sub" && e.subId === lastSub?.id)
+                    if (!showsLastSub && lastSub) return null
+                    return (
+                        <button
+                            key={`add-sub-${sectionId}`}
+                            type="button"
+                            onClick={() => onAddSubsection(section.id)}
+                            className="mt-1.5 inline-flex items-center gap-1 pl-5 text-[11px] font-medium text-[#78716c] hover:text-[#1c1917]"
+                        >
+                            <Plus className="h-3 w-3" />
+                            Ajouter un sous-point
+                        </button>
+                    )
+                })}
+
+            {!readOnly && isLast && (
+                <div className="mt-8">
+                    <button
+                        type="button"
+                        onClick={onAddSection}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#d6d3d1] bg-white px-3 py-1.5 text-xs font-semibold text-[#1c1917] shadow-sm hover:bg-[#f5f3ef]"
+                    >
+                        <Plus className="h-3.5 w-3.5" style={{ color: accent }} />
+                        Ajouter une grande partie ({roman(draft.sections.length)}.)
+                    </button>
+                </div>
+            )}
+        </SheetFrame>
     )
 }
 
@@ -982,9 +1145,12 @@ function CoverSheet({
     const style = draft.coverStyle
 
     return (
-        <section className="relative min-h-[960px] w-full overflow-hidden rounded-sm bg-[#faf8f5] text-[#1c1917] shadow-2xl shadow-black/25">
+        <section
+            className="relative w-full overflow-hidden rounded-sm bg-[#faf8f5] text-[#1c1917] shadow-2xl shadow-black/25"
+            style={{ minHeight: A4_HEIGHT }}
+        >
             {style === "spine" && (
-                <div className="flex min-h-[960px] flex-col">
+                <div className="flex flex-col" style={{ minHeight: A4_HEIGHT }}>
                     <div
                         className="absolute inset-y-0 left-0 w-20"
                         style={{ background: accent }}
@@ -1016,7 +1182,7 @@ function CoverSheet({
             )}
 
             {style === "masthead" && (
-                <div className="flex min-h-[960px] flex-col">
+                <div className="flex flex-col" style={{ minHeight: A4_HEIGHT }}>
                     <div
                         className="px-16 pb-16 pt-24 text-[#fffaf5]"
                         style={{ background: accent }}
@@ -1042,7 +1208,7 @@ function CoverSheet({
             )}
 
             {style === "folio" && (
-                <div className="flex min-h-[960px] flex-col px-16 py-24">
+                <div className="flex flex-col px-16 py-24" style={{ minHeight: A4_HEIGHT }}>
                     <div
                         className="text-[11px] font-bold uppercase tracking-[0.22em]"
                         style={{ color: accent }}
@@ -1066,7 +1232,7 @@ function CoverSheet({
             )}
 
             {style === "panel" && (
-                <div className="flex min-h-[960px] flex-col p-14">
+                <div className="flex flex-col p-14" style={{ minHeight: A4_HEIGHT }}>
                     <div
                         className="flex min-h-[480px] flex-col justify-end rounded-lg p-12 text-[#fffaf5]"
                         style={{ background: accent }}
@@ -1091,7 +1257,7 @@ function CoverSheet({
             )}
 
             {style === "ledger" && (
-                <div className="flex min-h-[960px] flex-col px-16 py-20">
+                <div className="flex flex-col px-16 py-20" style={{ minHeight: A4_HEIGHT }}>
                     <div className="flex items-center gap-2.5">
                         <div className="h-3.5 w-3.5 rounded-full" style={{ background: accent }} />
                         <div className="text-[11px] font-bold uppercase tracking-[0.22em]">

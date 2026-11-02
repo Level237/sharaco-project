@@ -323,7 +323,7 @@ export function SpecLivePreview({
     return (
         <div className="mx-auto flex w-[820px] flex-col gap-14">
             <div id="spec-node-cover" onFocusCapture={() => onFocusItem?.("cover")} className="scroll-mt-20">
-                <div className="mb-2.5 flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">
+                <div className="mb-2.5 flex items-center justify-between px-1 text-[12px]  uppercase  text-stone-500">
                     <span>Page 1 · Couverture</span>
                     <span>{draft.number || "CDC"}</span>
                 </div>
@@ -347,7 +347,7 @@ export function SpecLivePreview({
                         onFocusCapture={() => onFocusItem?.("toc")}
                         className="scroll-mt-20"
                     >
-                        <div className="mb-2.5 flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">
+                        <div className="mb-2.5 flex items-center justify-between px-1 text-[12px]  uppercase  text-stone-500">
                             <span>Page {pageNo} · Sommaire</span>
                             <span>
                                 {readOnly ? "Aperçu final" : "Cliquez sur un titre pour le renommer"}
@@ -384,7 +384,7 @@ export function SpecLivePreview({
                 const isLastBody = bodyIdx === plan.bodyPages.length - 1
                 return (
                     <div key={`body-${bodyIdx}`} className="scroll-mt-20">
-                        <div className="mb-2.5 flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-stone-500">
+                        <div className="    mb-2.5 flex items-center justify-between px-1 text-[12px]  uppercase  text-stone-500">
                             <span>Page {pageNo} · Corps du document</span>
                             <span>
                                 {pageNo} / {plan.total}

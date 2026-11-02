@@ -539,9 +539,7 @@ function BodyPageCanvas({
                 }
 
                 const section = draft.sections[head.sIdx]
-                const sub = section?.subsections.find((item) =>
-                    head.kind === "sec-head" ? false : item.id === head.subId
-                )
+                const sub = section?.subsections.find((item) => item.id === head.subId)
                 if (!section || !sub) return null
                 const showHead = group.some((u) => u.kind === "sub-head")
                 const blockUnits = group.filter((u): u is Extract<BodyUnit, { kind: "block" }> => u.kind === "block")

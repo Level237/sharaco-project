@@ -1,5 +1,5 @@
 // features/projects/api/projectsApi.ts
-import { api } from '@/lib/api';
+import { api, API_URL } from '@/lib/api';
 import type { Project, ProjectCreate, ProjectUpdate, ProjectAttachmentCreate, ProjectAttachment, ProjectTreeResponse } from '../types';
 
 export const projectsApi = {
@@ -89,4 +89,43 @@ export const projectsApi = {
     deleteAttachment: async (attachmentId: string): Promise<void> => {
         return api.delete<void>(`/api/v1/projects/attachments/${attachmentId}`);
     },
+
+    getShare: async (projectId: string): Promise<ProjectShare> => {
+        return api.get<ProjectShare>(`/api/v1/projects/${projectId}/share`);
+    },
+
+    updateShare: async (projectId: string, enabled: boolean): Promise<ProjectShare> => {
+        return api.put<ProjectShare>(`/api/v1/projects/${projectId}/share`, { enabled });
+    },
 };
+
+export type ProjectShare = {
+    enabled: boolean;
+    share_token?: string | null;
+    share_path?: string | null;
+};
+
+export type SharedWorkspaceItem = {
+    id: string;
+    kind: "DEVIS" | "FACTURE" | "CONTRAT" | "CDC" | string;
+    title: string;
+    status: string;
+    href?: string | null;
+    pdf_url?: string | null;
+    preview_url?: string | null;
+};
+
+export type SharedWorkspace = {
+    project_name: string;
+    client_name?: string | null;
+    company_name?: string | null;
+    items: SharedWorkspaceItem[];
+};
+
+export async function fetchSharedWorkspace(token: string): Promise<SharedWorkspace> {
+    const res = await fetch(`${API_URL}/api/v1/projects/shared/${token}`);
+    if (!res.ok) {
+        throw new Error("Espace projet introuvable");
+    }
+    return res.json();
+}

@@ -4,6 +4,7 @@ from typing import Optional, List
 from uuid import UUID, uuid4
 from datetime import datetime, timezone
 from enum import Enum
+import secrets
 
 
 def _utcnow_naive() -> datetime:
@@ -47,6 +48,15 @@ class Project(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utcnow_naive)
     updated_at: datetime = Field(default_factory=_utcnow_naive)
     
+    share_token: Optional[str] = Field(
+        default=None,
+        index=True,
+        unique=True,
+        max_length=64,
+        description="Token public de l'espace projet",
+    )
+    share_enabled: bool = Field(default=False, description="Lien d'espace projet actif")
+
     user_id: UUID = Field(foreign_key="user.id")
     owner: "User" = Relationship(back_populates="projects")
     
@@ -62,6 +72,10 @@ class Project(SQLModel, table=True):
     
     def set_status(self, status: ProjectStatus):
         self.status = status.value
+
+    @staticmethod
+    def generate_share_token() -> str:
+        return secrets.token_urlsafe(32)
 
 
 class ProjectAttachment(SQLModel, table=True):

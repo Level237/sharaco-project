@@ -123,89 +123,92 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
         ACCEPTED: { label: "Acceptée", color: "text-emerald-500", dot: "bg-emerald-500" },
     }[invoice.status] || { label: invoice.status, color: "text-slate-500", dot: "bg-slate-400" }
 
+    const sendLabel = isSent ? "Relance" : "Envoyer"
+
+    const actionButtons = (
+        <>
+            <Button
+                onClick={handleOpenEmailModal}
+                disabled={isPaid}
+                className={cn(
+                    "h-11 w-full font-medium",
+                    isPaid
+                        ? "bg-slate-800 text-slate-500"
+                        : "bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
+                )}
+            >
+                <Mail className="h-4 w-4" />
+                {sendLabel}
+            </Button>
+
+            {!isPaid && (
+                <Button
+                    onClick={handleMarkAsPaid}
+                    disabled={isMarkingPaid}
+                    variant="outline"
+                    className="h-11 w-full border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5"
+                >
+                    {isMarkingPaid ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
+                    ) : null}
+                    Marquer comme payée
+                </Button>
+            )}
+
+            <Button
+                variant="outline"
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="h-11 w-full border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5"
+            >
+                {isDownloading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
+                ) : (
+                    <Download className="h-4 w-4" />
+                )}
+                Télécharger le PDF
+            </Button>
+        </>
+    )
+
     return (
         <>
-            <div className="min-w-0 text-slate-100">
-                <header className="flex flex-col gap-4 border-b border-white/10 pb-5">
-                    <div className="flex items-start gap-3">
-                        <Link
-                            href="/dashboard/invoices"
-                            aria-label="Retour aux factures"
-                            className="mt-0.5 shrink-0 text-slate-400 transition-colors duration-200 hover:text-slate-100"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
-                        <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                <h1 className="min-w-0 truncate text-base font-semibold tracking-tight sm:text-lg">
-                                    Facture {invoice.number || "Sans numéro"}
-                                </h1>
-                                <span className={cn("inline-flex shrink-0 items-center gap-2 text-xs font-medium", statusConfig.color)}>
-                                    <span className={cn(
-                                        "inline-flex h-2 w-2 rounded-full",
-                                        statusConfig.dot,
-                                        (invoice.status === "SENT" || invoice.status === "OVERDUE") && "animate-pulse"
-                                    )} />
-                                    {statusConfig.label}
-                                </span>
-                            </div>
-                            <p className="mt-0.5 truncate text-sm text-slate-400">
-                                {invoice.client?.name || "Client inconnu"}
-                            </p>
+            <div className="mx-auto w-full max-w-[1080px] text-slate-100">
+                <header className="flex items-start gap-3 border-b border-white/10 pb-5">
+                    <Link
+                        href="/dashboard/invoices"
+                        aria-label="Retour aux factures"
+                        className="mt-0.5 shrink-0 text-slate-400 transition-colors duration-200 hover:text-slate-100"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <h1 className="min-w-0 truncate text-base font-semibold tracking-tight sm:text-lg">
+                                Facture {invoice.number || "Sans numéro"}
+                            </h1>
+                            <span className={cn("inline-flex shrink-0 items-center gap-2 text-xs font-medium", statusConfig.color)}>
+                                <span className={cn(
+                                    "inline-flex h-2 w-2 rounded-full",
+                                    statusConfig.dot,
+                                    (invoice.status === "SENT" || invoice.status === "OVERDUE") && "animate-pulse"
+                                )} />
+                                {statusConfig.label}
+                            </span>
                         </div>
-                    </div>
-
-                    <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2", !isPaid && "lg:grid-cols-3")}>
-                        <Button
-                            onClick={handleOpenEmailModal}
-                            disabled={isPaid}
-                            className={cn(
-                                "h-11 w-full rounded-none font-medium",
-                                isPaid
-                                    ? "bg-slate-800 text-slate-500"
-                                    : "bg-[#2563EB] text-white hover:bg-[#1d4ed8]"
-                            )}
-                        >
-                            <Mail className="h-4 w-4" />
-                            {isSent ? "Renvoyer par email" : "Envoyer une relance"}
-                        </Button>
-
-                        {!isPaid && (
-                            <Button
-                                onClick={handleMarkAsPaid}
-                                disabled={isMarkingPaid}
-                                variant="outline"
-                                className="h-11 w-full rounded-none border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5"
-                            >
-                                {isMarkingPaid ? (
-                                    <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
-                                ) : null}
-                                Marquer comme payée
-                            </Button>
-                        )}
-
-                        <Button
-                            variant="outline"
-                            onClick={handleDownload}
-                            disabled={isDownloading}
-                            className={cn(
-                                "h-11 w-full rounded-none border-white/10 bg-transparent font-medium text-slate-100 hover:bg-white/5",
-                                !isPaid && "sm:col-span-2 lg:col-span-1"
-                            )}
-                        >
-                            {isDownloading ? (
-                                <Loader2 className="h-4 w-4 animate-spin text-[#2563EB]" />
-                            ) : (
-                                <Download className="h-4 w-4" />
-                            )}
-                            Télécharger le PDF
-                        </Button>
+                        <p className="mt-0.5 truncate text-sm text-slate-400">
+                            {invoice.client?.name || "Client inconnu"}
+                        </p>
                     </div>
                 </header>
 
-                <div className="mt-6 grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10">
+                <div className="mt-4 grid grid-cols-1 gap-2 lg:hidden">
+                    {actionButtons}
+                </div>
+
+                <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-10">
                     <div className="min-w-0">
-                        <div className="mx-auto w-full max-w-[650px] overflow-hidden border border-white/10 bg-slate-900 p-1.5 sm:p-2">
+                        <div className="overflow-hidden rounded-lg border border-white/10 bg-slate-900 p-1.5 sm:p-2">
                             <DocumentPreview
                                 documentId={invoiceId}
                                 layoutStyle={invoice.layout_style || "modern"}
@@ -213,25 +216,34 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                         </div>
                     </div>
 
-                    <aside className="flex min-w-0 flex-col gap-8">
-                        <section>
+                    <aside className="flex min-w-0 flex-col gap-4">
+                        <section className="hidden rounded-lg border border-white/10 bg-white/[0.03] p-4 lg:block">
+                            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                Actions
+                            </h2>
+                            <div className="flex flex-col gap-2">
+                                {actionButtons}
+                            </div>
+                        </section>
+
+                        <section className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
                             <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                 Montants
                             </h2>
                             <div className="text-sm">
-                                <div className="flex items-baseline justify-between gap-4 border-b border-white/10 py-3">
+                                <div className="flex items-baseline justify-between gap-4 border-b border-white/10 py-2.5">
                                     <span className="text-slate-400">Sous-total</span>
                                     <span suppressHydrationWarning className="shrink-0 tabular-nums font-medium">
                                         {formatCurrency(invoice.subtotal_cents || 0)}
                                     </span>
                                 </div>
-                                <div className="flex items-baseline justify-between gap-4 border-b border-white/10 py-3">
+                                <div className="flex items-baseline justify-between gap-4 border-b border-white/10 py-2.5">
                                     <span className="text-slate-400">TVA</span>
                                     <span suppressHydrationWarning className="shrink-0 tabular-nums font-medium">
                                         {formatCurrency(invoice.tax_total_cents || 0)}
                                     </span>
                                 </div>
-                                <div className="flex items-baseline justify-between gap-4 pt-4">
+                                <div className="flex items-baseline justify-between gap-4 pt-3">
                                     <span className="font-semibold">Total</span>
                                     <span suppressHydrationWarning className="shrink-0 text-lg font-semibold tabular-nums tracking-tight">
                                         {formatCurrency(invoice.total_cents || invoice.grand_total_cents || 0)}
@@ -240,7 +252,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                             </div>
 
                             {invoice.due_date && (
-                                <div className="mt-4 border border-white/10 bg-white/[0.03] p-3">
+                                <div className="mt-4 border-t border-white/10 pt-3">
                                     <div className="mb-1 text-xs text-slate-500">Échéance</div>
                                     <div
                                         suppressHydrationWarning
@@ -262,25 +274,23 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                             )}
                         </section>
 
-                        <section>
+                        <section className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
                             <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                                 Client
                             </h2>
-                            <div className="border border-white/10 bg-white/[0.03] p-4">
-                                <div className="mb-1 truncate text-sm font-semibold">
-                                    {invoice.client?.name || "Client"}
-                                </div>
-                                <div className="space-y-1.5 text-xs text-slate-400">
-                                    {invoice.client?.email && (
-                                        <div className="flex min-w-0 items-start gap-2">
-                                            <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                                            <span className="min-w-0 break-all">{invoice.client.email}</span>
-                                        </div>
-                                    )}
-                                    {invoice.client?.phone && (
-                                        <div className="break-all">{invoice.client.phone}</div>
-                                    )}
-                                </div>
+                            <div className="truncate text-sm font-semibold">
+                                {invoice.client?.name || "Client"}
+                            </div>
+                            <div className="mt-1.5 space-y-1.5 text-xs text-slate-400">
+                                {invoice.client?.email && (
+                                    <div className="flex min-w-0 items-start gap-2">
+                                        <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                        <span className="min-w-0 break-all">{invoice.client.email}</span>
+                                    </div>
+                                )}
+                                {invoice.client?.phone && (
+                                    <div className="break-all">{invoice.client.phone}</div>
+                                )}
                             </div>
                         </section>
                     </aside>

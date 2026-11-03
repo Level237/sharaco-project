@@ -112,6 +112,33 @@ class ProjectListRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ProjectShareRead(BaseModel):
+    enabled: bool
+    share_token: Optional[str] = None
+    share_path: Optional[str] = None
+
+
+class ProjectShareUpdate(BaseModel):
+    enabled: bool
+
+
+class SharedWorkspaceItem(BaseModel):
+    id: UUID
+    kind: str
+    title: str
+    status: str
+    href: Optional[str] = None
+    pdf_url: Optional[str] = None
+    preview_url: Optional[str] = None
+
+
+class SharedWorkspaceRead(BaseModel):
+    project_name: str
+    client_name: Optional[str] = None
+    company_name: Optional[str] = None
+    items: List[SharedWorkspaceItem]
+
+
 class ProjectAttachmentCreate(BaseModel):
     """Création d'un attachment."""
     name: str = Field(..., min_length=1, max_length=255)

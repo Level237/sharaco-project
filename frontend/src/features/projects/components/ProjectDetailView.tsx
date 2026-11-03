@@ -4,7 +4,8 @@ import { useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { ProjectDocuments } from "@/features/projects/components/ProjectDocuments"
 import { NewDocumentMenu } from "@/features/projects/components/NewDocumentMenu"
-import { Loader2, ArrowLeft, Trash2, PlusCircle, Settings, RefreshCw } from "lucide-react"
+import { Loader2, ArrowLeft, Trash2, PlusCircle, Settings, RefreshCw, Share2 } from "lucide-react"
+import { ProjectShareModal } from "@/features/projects/components/ProjectShareModal"
 import Link from "next/link"
 import { useDeleteProject, useProject } from "@/features/projects/hooks/useProject"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu"
@@ -35,6 +36,7 @@ export function ProjectDetailView({
     const deleteMutation = useDeleteProject()
     const [isPropertiesOpen, setIsPropertiesOpen] = useState(false)
     const [newDocOpen, setNewDocOpen] = useState(false)
+    const [shareOpen, setShareOpen] = useState(false)
 
     const clientId = firstParam(clientIdProp) || project?.client_id || ""
 
@@ -91,12 +93,20 @@ export function ProjectDetailView({
                                     <span className="truncate px-2 py-1 text-slate-200">{project.name}</span>
                                 </div>
                             </div>
-                            <div className="shrink-0">
+                            <div className="flex shrink-0 items-center gap-1">
                                 <NewDocumentMenu
                                     projectId={project.id}
                                     open={newDocOpen}
                                     onOpenChange={setNewDocOpen}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShareOpen(true)}
+                                    className="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-medium text-slate-200 hover:bg-white/10"
+                                >
+                                    <Share2 className="h-3.5 w-3.5" />
+                                    <span className="hidden sm:inline">Partager</span>
+                                </button>
                             </div>
                         </div>
                         <div className="flex flex-1 flex-col py-4">
@@ -120,6 +130,13 @@ export function ProjectDetailView({
                     <ContextMenuSeparator className="bg-white/10" />
                     <ContextMenuItem
                         className="cursor-pointer focus:bg-[#2563EB] focus:text-white"
+                        onSelect={() => setTimeout(() => setShareOpen(true), 150)}
+                    >
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Partager le projet
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                        className="cursor-pointer focus:bg-[#2563EB] focus:text-white"
                         onSelect={() => setTimeout(() => setIsPropertiesOpen(true), 150)}
                     >
                         <Settings className="mr-2 h-4 w-4" />
@@ -138,6 +155,12 @@ export function ProjectDetailView({
                 project={project}
                 open={isPropertiesOpen}
                 onOpenChange={setIsPropertiesOpen}
+            />
+            <ProjectShareModal
+                projectId={project.id}
+                projectName={project.name}
+                open={shareOpen}
+                onOpenChange={setShareOpen}
             />
         </>
     )

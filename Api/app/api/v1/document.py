@@ -1792,6 +1792,80 @@ async def preview_shared_document(
     )
 
     return HTMLResponse(content=html_content)
+
+
+@router.get("/shared/{token}/preview.png")
+@limiter.limit("30/minute")
+async def get_shared_document_preview_png(
+    request: Request,
+    token: str,
+    width: Optional[int] = Query(None, ge=100, le=1600),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Document)
+        .options(
+            selectinload(Document.items),
+            selectinload(Document.payment_schedule),
+            selectinload(Document.client),
+            selectinload(Document.owner),
+            selectinload(Document.template),
+        )
+        .where(Document.share_token == token)
+    )
+    document = result.scalar_one_or_none()
+    if not document:
+        raise HTTPException(status_code=404, detail="Document introuvable")
+    if not document.share_enabled:
+        raise HTTPException(status_code=403, detail="Partage désactivé")
+    if document.share_expires_at:
+        now = to_naive_utc(datetime.now(timezone.utc))
+        if now > document.share_expires_at:
+            raise HTTPException(status_code=410, detail="Lien expiré")
+
+    owner = document.owner
+    client = document.client
+    if not owner or not client:
+        raise HTTPException(status_code=404, detail="Document introuvable")
+
+    template = await _get_document_template(db, document, owner)
+    content_hash = pdf_renderer.compute_render_hash(
+        document=document,
+        template=template,
+        user=owner,
+        client=client,
+        items=document.items,
+        schedule=document.payment_schedule,
+    )
+    etag = f'"{content_hash}"' if not width else f'"{content_hash}_w{width}"'
+    if_none_match = request.headers.get("if-none-match")
+    if if_none_match and (if_none_match == etag or if_none_match == f"W/{etag}"):
+        return Response(
+            status_code=status.HTTP_304_NOT_MODIFIED,
+            headers={"ETag": etag, "Cache-Control": "public, max-age=300"},
+        )
+
+    png_bytes = await pdf_renderer.get_or_render_document_png(
+        db=db,
+        document=document,
+        template=template,
+        user=owner,
+        client=client,
+        content_hash=content_hash,
+        width=width,
+    )
+    return Response(
+        content=png_bytes,
+        media_type="image/png",
+        headers={
+            "ETag": etag,
+            "Cache-Control": "public, max-age=300",
+            "Content-Disposition": f'inline; filename="preview-{document.id}.png"',
+            "Content-Length": str(len(png_bytes)),
+        },
+    )
+
+
 # ============================================================
 # 📄 PREVIEW PNG
 # ============================================================

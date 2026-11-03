@@ -14,6 +14,15 @@ from uuid import UUID
 from typing import Optional, List
 import logging
 
+SHARED_DOC_STATUSES = {
+    DocumentStatus.SENT,
+    DocumentStatus.VIEWED,
+    DocumentStatus.ACCEPTED,
+    DocumentStatus.REFUSED,
+    DocumentStatus.PAID,
+    DocumentStatus.OVERDUE,
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -812,3 +821,157 @@ class ProjectService:
         await db.commit()
         
         logger.info(f"✅ Attachment supprimé: {attachment_id}")
+
+    @staticmethod
+    async def ensure_share_token(db: AsyncSession, project: Project) -> str:
+        if project.share_token:
+            return project.share_token
+        project.share_token = Project.generate_share_token()
+        db.add(project)
+        await db.commit()
+        await db.refresh(project)
+        return project.share_token
+
+    @staticmethod
+    async def set_share_enabled(
+        db: AsyncSession,
+        project_id: UUID,
+        user_id: UUID,
+        enabled: bool,
+    ) -> Project:
+        project = await ProjectService.get_by_id(db, project_id, user_id)
+        if not project:
+            raise ValueError("Projet introuvable")
+        if not project.share_token:
+            project.share_token = Project.generate_share_token()
+        project.share_enabled = enabled
+        if enabled:
+            await ProjectService._ensure_sent_docs_have_links(db, project.id)
+        db.add(project)
+        await db.commit()
+        await db.refresh(project)
+        return project
+
+    @staticmethod
+    async def _ensure_sent_docs_have_links(db: AsyncSession, project_id: UUID) -> None:
+        result = await db.execute(
+            select(Document).where(
+                Document.project_id == project_id,
+                Document.status != DocumentStatus.DRAFT,
+            )
+        )
+        for doc in result.scalars().all():
+            if ProjectService._prepare_doc_public_link(doc):
+                db.add(doc)
+
+    @staticmethod
+    def _prepare_doc_public_link(doc: Document) -> bool:
+        changed = False
+        if not doc.share_token:
+            doc.share_token = Document.generate_share_token()
+            changed = True
+        if not doc.share_enabled:
+            doc.share_enabled = True
+            changed = True
+        if doc.share_expires_at is not None:
+            doc.share_expires_at = None
+            changed = True
+        return changed
+
+    @staticmethod
+    async def get_shared_workspace(db: AsyncSession, token: str) -> Optional[dict]:
+        result = await db.execute(
+            select(Project)
+            .options(
+                selectinload(Project.client),
+                selectinload(Project.owner),
+                selectinload(Project.documents),
+            )
+            .where(Project.share_token == token, Project.share_enabled.is_(True))
+        )
+        project = result.scalar_one_or_none()
+        if not project:
+            return None
+
+        spec_result = await db.execute(
+            select(Specification).where(
+                Specification.project_id == project.id,
+                Specification.status == "SENT",
+            )
+        )
+        specs = spec_result.scalars().all()
+
+        items: list[dict] = []
+        docs_dirty = False
+        for doc in project.documents:
+            if doc.status not in SHARED_DOC_STATUSES:
+                continue
+            if ProjectService._prepare_doc_public_link(doc):
+                db.add(doc)
+                docs_dirty = True
+            kind = doc.type.value if hasattr(doc.type, "value") else str(doc.type)
+            title = doc.number or {
+                "FACTURE": "Facture",
+                "CONTRAT": "Contrat",
+                "DEVIS": "Devis",
+            }.get(kind, "Document")
+            items.append(
+                {
+                    "id": doc.id,
+                    "kind": kind,
+                    "title": title,
+                    "status": doc.status.value if hasattr(doc.status, "value") else str(doc.status),
+                    "href": f"/view/{doc.share_token}",
+                    "pdf_url": None,
+                    "preview_url": f"/api/v1/documents/shared/{doc.share_token}/preview.png",
+                }
+            )
+        if docs_dirty:
+            await db.commit()
+
+        for spec in specs:
+            items.append(
+                {
+                    "id": spec.id,
+                    "kind": "CDC",
+                    "title": spec.title or spec.number or "Cahier des charges",
+                    "status": spec.status,
+                    "href": None,
+                    "pdf_url": f"/api/v1/projects/shared/{token}/specifications/{spec.id}/pdf",
+                    "preview_url": f"/api/v1/projects/shared/{token}/specifications/{spec.id}/preview.png",
+                }
+            )
+
+        owner = project.owner
+        client = project.client
+        return {
+            "project_name": project.name,
+            "client_name": getattr(client, "name", None) if client else None,
+            "company_name": (
+                (getattr(owner, "company_name", None) or getattr(owner, "full_name", None))
+                if owner
+                else None
+            ),
+            "items": items,
+        }
+
+    @staticmethod
+    async def get_shared_specification(
+        db: AsyncSession,
+        token: str,
+        spec_id: UUID,
+    ) -> Optional[Specification]:
+        result = await db.execute(
+            select(Project).where(Project.share_token == token, Project.share_enabled.is_(True))
+        )
+        project = result.scalar_one_or_none()
+        if not project:
+            return None
+        spec_result = await db.execute(
+            select(Specification).where(
+                Specification.id == spec_id,
+                Specification.project_id == project.id,
+                Specification.status == "SENT",
+            )
+        )
+        return spec_result.scalar_one_or_none()

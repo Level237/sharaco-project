@@ -1,10 +1,10 @@
 # app/api/v1/project.py
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from uuid import UUID
-from app.schemas.project_tree import ProjectTreeResponse
 from app.schemas.project_tree import ProjectTreeResponse
 from typing import Optional
 from app.db.engine import get_db
@@ -13,6 +13,8 @@ from app.models.user import User
 from app.models.document import Document, DocumentType, DocumentStatus,DocumentItem
 from app.models.client import Client
 from app.services.projetService import ProjectService
+from app.services.specificationService import SpecificationService
+from app.api.v1.specification import _pdf_filename
 from app.schemas.projet import (
     ProjectCreate,
     ProjectRead,
@@ -20,6 +22,9 @@ from app.schemas.projet import (
     ProjectListRead,
     ProjectAttachmentCreate,
     ProjectAttachmentRead,
+    ProjectShareRead,
+    ProjectShareUpdate,
+    SharedWorkspaceRead,
 )
 
 from app.schemas.document import (
@@ -33,6 +38,93 @@ import logging
 
 router = APIRouter(tags=["projects"])
 logger = logging.getLogger(__name__)
+
+
+def _share_read(project) -> ProjectShareRead:
+    token = project.share_token
+    return ProjectShareRead(
+        enabled=bool(project.share_enabled),
+        share_token=token,
+        share_path=f"/espace/{token}" if token else None,
+    )
+
+
+@router.get("/shared/{token}", response_model=SharedWorkspaceRead)
+async def get_shared_workspace(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    workspace = await ProjectService.get_shared_workspace(db, token)
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Espace projet introuvable")
+    return workspace
+
+
+@router.get("/shared/{token}/specifications/{spec_id}/pdf")
+async def get_shared_specification_pdf(
+    token: str,
+    spec_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    spec = await ProjectService.get_shared_specification(db, token, spec_id)
+    if not spec:
+        raise HTTPException(status_code=404, detail="Cahier des charges introuvable")
+    pdf_buffer = await SpecificationService.render_pdf(db, spec)
+    filename = _pdf_filename(spec)
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"inline; filename={filename}"},
+    )
+
+
+@router.get("/shared/{token}/specifications/{spec_id}/preview.png")
+async def get_shared_specification_preview_png(
+    token: str,
+    spec_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    spec = await ProjectService.get_shared_specification(db, token, spec_id)
+    if not spec:
+        raise HTTPException(status_code=404, detail="Cahier des charges introuvable")
+    png_bytes = await SpecificationService.render_png(db, spec)
+    return Response(
+        content=png_bytes,
+        media_type="image/png",
+        headers={
+            "Cache-Control": "public, max-age=300",
+            "Content-Disposition": f'inline; filename="preview-{spec_id}.png"',
+        },
+    )
+
+
+@router.get("/{project_id}/share", response_model=ProjectShareRead)
+async def get_project_share(
+    project_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    project = await ProjectService.get_by_id(db, project_id, current_user.id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Projet introuvable")
+    await ProjectService.ensure_share_token(db, project)
+    return _share_read(project)
+
+
+@router.put("/{project_id}/share", response_model=ProjectShareRead)
+async def update_project_share(
+    project_id: UUID,
+    payload: ProjectShareUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        project = await ProjectService.set_share_enabled(
+            db, project_id, current_user.id, payload.enabled
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return _share_read(project)
 
 
 @router.get("/{project_id}/tree", response_model=ProjectTreeResponse)

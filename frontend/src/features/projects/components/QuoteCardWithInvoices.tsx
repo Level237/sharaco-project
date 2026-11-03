@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/features/quotes/lib/formatCurrency"
 
 import { quotesApi } from "@/features/quotes/api/quotesApi"
+import { canEditQuote, quoteEditHref } from "@/features/quotes/paths"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { ProjectTreeQuote } from "../types"
@@ -100,12 +101,14 @@ export function QuoteCardWithInvoices({ quote, variants, onExpand, onRefresh }: 
                                     Visualiser
                                 </Link>
                             </DropdownMenuItem>
+                            {canEditQuote(quote.status) && (
                             <DropdownMenuItem asChild className="cursor-pointer">
-                                <Link href={`/dashboard/quotes/create/${quote.id}`}>
+                                <Link href={quoteEditHref(quote.id)}>
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Modifier
                                 </Link>
                             </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem className="cursor-pointer" onClick={handleDownloadPdf}>
                                 <FileDown className="mr-2 h-4 w-4 text-blue-500" />
                                 Télécharger PDF

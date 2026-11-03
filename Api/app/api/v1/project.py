@@ -24,6 +24,7 @@ from app.schemas.projet import (
     ProjectAttachmentRead,
     ProjectShareRead,
     ProjectShareUpdate,
+    ProjectShareEmailRequest,
     SharedWorkspaceRead,
 )
 
@@ -124,6 +125,28 @@ async def update_project_share(
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    return _share_read(project)
+
+
+@router.post("/{project_id}/share/email", response_model=ProjectShareRead)
+async def send_project_share_email(
+    project_id: UUID,
+    payload: ProjectShareEmailRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        project = await ProjectService.send_share_email(
+            db=db,
+            project_id=project_id,
+            user=current_user,
+            to_email=str(payload.email),
+            custom_message=payload.custom_message,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
     return _share_read(project)
 
 

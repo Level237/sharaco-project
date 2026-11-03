@@ -97,6 +97,13 @@ export const projectsApi = {
     updateShare: async (projectId: string, enabled: boolean): Promise<ProjectShare> => {
         return api.put<ProjectShare>(`/api/v1/projects/${projectId}/share`, { enabled });
     },
+
+    sendShareEmail: async (
+        projectId: string,
+        data: { email: string; custom_message?: string }
+    ): Promise<ProjectShare> => {
+        return api.post<ProjectShare>(`/api/v1/projects/${projectId}/share/email`, data);
+    },
 };
 
 export type ProjectShare = {

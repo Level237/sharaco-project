@@ -159,6 +159,8 @@ export function ProjectDetailView({
             <ProjectShareModal
                 projectId={project.id}
                 projectName={project.name}
+                clientEmail={project.client?.email}
+                clientName={project.client?.name || project.client_name}
                 open={shareOpen}
                 onOpenChange={setShareOpen}
             />

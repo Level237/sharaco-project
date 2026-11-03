@@ -13,6 +13,7 @@ import { useDownloadPdf } from "@/features/templates/hooks/useDownloadPdf";
 import { quotesApi } from "@/features/quotes/api/quotesApi";
 import { clientsApi } from "@/features/clients/api/clientsApi";
 import { useRouter } from "next/navigation";
+import { quoteDetailHref } from "@/features/quotes/paths";
 import { useAutoSave } from "../../hooks/useAutoSave";
 import { useDocumentUpdate } from "../../hooks/useDocumentUpdate";
 import { useBeforeUnload } from "../../hooks/useBeforeUnload";
@@ -141,11 +142,18 @@ export function Editor({ templateId, documentId }: EditorProps) {
         }
 
         const loadDocument = async () => {
+            let redirected = false;
             try {
                 setIsLoading(true);
                 setLoadError(null);
 
                 const doc = await quotesApi.getById(documentId);
+
+                if ((doc.type || "DEVIS") === "DEVIS" && doc.status === "ACCEPTED") {
+                    redirected = true;
+                    router.replace(quoteDetailHref(documentId));
+                    return;
+                }
 
                 let clientData = { name: "", email: "", phone: "", address: "" };
                 try {
@@ -229,7 +237,7 @@ export function Editor({ templateId, documentId }: EditorProps) {
                     setLoadError(error.message);
                 }
             } finally {
-                setIsLoading(false);
+                if (!redirected) setIsLoading(false);
             }
         };
 

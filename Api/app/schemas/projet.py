@@ -1,5 +1,5 @@
 # app/schemas/project.py
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -120,6 +120,11 @@ class ProjectShareRead(BaseModel):
 
 class ProjectShareUpdate(BaseModel):
     enabled: bool
+
+
+class ProjectShareEmailRequest(BaseModel):
+    email: EmailStr
+    custom_message: Optional[str] = Field(default=None, max_length=2000)
 
 
 class SharedWorkspaceItem(BaseModel):

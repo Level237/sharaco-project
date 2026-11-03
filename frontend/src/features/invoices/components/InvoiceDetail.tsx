@@ -206,9 +206,9 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                     {actionButtons}
                 </div>
 
-                <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-10">
-                    <div className="min-w-0">
-                        <div className="overflow-hidden rounded-lg border border-white/10 bg-slate-900 p-1.5 sm:p-2">
+                <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_290px] lg:gap-10">
+                    <div className="min-w-0 max-sm:ml-44">
+                        <div className="overflow-hidden rounded-lg border  border-white/10 bg-slate-900 p-1.5 sm:p-2">
                             <DocumentPreview
                                 documentId={invoiceId}
                                 layoutStyle={invoice.layout_style || "modern"}
@@ -218,7 +218,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
 
                     <aside className="flex min-w-0 flex-col gap-4">
                         <section className="hidden rounded-lg border border-white/10 bg-white/[0.03] p-4 lg:block">
-                            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            <h2 className="mb-3 text-[11px] font-semibold uppercase  text-slate-500">
                                 Actions
                             </h2>
                             <div className="flex flex-col gap-2">
@@ -227,7 +227,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                         </section>
 
                         <section className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
-                            <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            <h2 className="mb-3 text-[11px] font-semibold uppercase  text-slate-500">
                                 Montants
                             </h2>
                             <div className="text-sm">

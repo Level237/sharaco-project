@@ -14,6 +14,7 @@ import Link from "next/link";
 import { SendEmailModal } from "@/features/quotes/components/sendEmailModal";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { canEditQuote, quoteEditHref } from "@/features/quotes/paths";
 
 interface QuoteDetail {
     id?: string;
@@ -361,16 +362,18 @@ export default function QuoteDetailPage() {
                             </Button>
                         </div>
 
-                        {/* Modifier + Supprimer (stack mobile, horizontal desktop) */}
+                        {(canEditQuote(quote.status) || quote.status === "DRAFT") && (
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full mt-3 sm:mt-4">
+                            {canEditQuote(quote.status) && (
                             <Button
-                                onClick={() => router.push(`/dashboard/quotes/create/${quoteId}`)}
+                                onClick={() => router.push(quoteEditHref(quoteId))}
                                 variant="outline"
                                 className="flex-1 h-11 sm:h-12 gap-2 rounded-md border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 shadow-sm transition-all duration-200 text-xs sm:text-sm"
                             >
                                 
                                 <span>Modifier le devis</span>
                             </Button>
+                            )}
 
                             {quote.status === "DRAFT" && (
                                 <Button
@@ -384,6 +387,7 @@ export default function QuoteDetailPage() {
                                 </Button>
                             )}
                         </div>
+                        )}
                     </div>
 
                     <SendEmailModal

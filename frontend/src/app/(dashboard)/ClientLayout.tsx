@@ -1,13 +1,23 @@
 // app/dashboard/layout.tsx
 "use client"
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { usePathname } from "next/navigation"
 import Sidebar from "@/features/navigation/components/Sidebar"
 import { syncCurrencyWithLocation } from "@/features/auth/lib/syncCurrency"
 import { Toaster } from "@/components/ui/toaster"
 
+function isFullScreenEditor(pathname: string) {
+    if (pathname.startsWith("/dashboard/quotes/create")) return true
+    if (pathname.startsWith("/dashboard/contracts/edit")) return true
+    if (pathname.startsWith("/dashboard/specifications/edit")) return true
+    if (pathname.startsWith("/dashboard/templates/preview")) return true
+    return /^\/dashboard\/quotes\/[^/]+\/edit\/?$/.test(pathname)
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname()
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(false)
+    const fullScreenEditor = isFullScreenEditor(pathname)
 
     React.useEffect(() => {
         syncCurrencyWithLocation().catch(() => {})
@@ -38,6 +48,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         return () => window.removeEventListener('resize', handleResize)
     }, [])
+
+    if (fullScreenEditor) {
+        return (
+            <div className="dark flex h-[100dvh] overflow-hidden bg-slate-950 text-slate-50">
+                <main className="relative h-full w-full flex-1">
+                    {children}
+                    <Toaster />
+                </main>
+            </div>
+        )
+    }
 
     return (
         <div className="dark flex min-h-[100dvh] overflow-x-hidden bg-slate-950 text-slate-50">

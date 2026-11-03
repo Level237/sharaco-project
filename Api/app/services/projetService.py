@@ -8,8 +8,11 @@ from app.models.projet import Project, ProjectAttachment, ProjectStatus
 from app.models.document import Document, DocumentType, DocumentStatus, DocumentItem
 from app.models.specification import Specification
 from app.utils.datetime import to_naive_utc
+from app.core.config import settings
 from app.models.client import Client
+from app.models.user import User
 from app.services.documentService import DocumentService
+from app.services.emailService import EmailService
 from uuid import UUID
 from typing import Optional, List
 import logging
@@ -850,6 +853,30 @@ class ProjectService:
         db.add(project)
         await db.commit()
         await db.refresh(project)
+        return project
+
+    @staticmethod
+    async def send_share_email(
+        db: AsyncSession,
+        project_id: UUID,
+        user: User,
+        to_email: str,
+        custom_message: Optional[str] = None,
+    ) -> Project:
+        project = await ProjectService.set_share_enabled(db, project_id, user.id, True)
+        share_url = f"{settings.FRONTEND_URL.rstrip('/')}/espace/{project.share_token}"
+        client_name = getattr(project.client, "name", None) if project.client else to_email
+        result = await EmailService.send_project_share(
+            to_email=to_email,
+            client_name=client_name or to_email,
+            project_name=project.name,
+            share_url=share_url,
+            user_name=user.full_name or user.company_name or "",
+            user_company=user.company_name or "Sharaco",
+            custom_message=custom_message or "",
+        )
+        if not result.get("success"):
+            raise RuntimeError(result.get("error") or "Impossible d'envoyer l'email")
         return project
 
     @staticmethod

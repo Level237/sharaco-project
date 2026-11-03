@@ -291,6 +291,32 @@ class EmailService:
             attachments=attachments,
         )
 
+    @staticmethod
+    async def send_project_share(
+        to_email: str,
+        client_name: str,
+        project_name: str,
+        share_url: str,
+        user_name: str = "",
+        user_company: str = "",
+        custom_message: str = "",
+    ) -> dict:
+        template = email_env.get_template("project_share.html")
+        html = template.render(
+            to_name=client_name,
+            project_name=project_name,
+            share_url=share_url,
+            user_name=user_name,
+            user_company=user_company,
+            custom_message=custom_message,
+        )
+        company = user_company or "Sharaco"
+        return await EmailService._send_email(
+            to_email=to_email,
+            subject=f"{company} partage le projet « {project_name} »",
+            html_content=html,
+        )
+
     # ═══════════════════════════════════════════════════════════════
     # ✅ NOUVEAU : Email de prévention pour factures arrivant à échéance
     # ═══════════════════════════════════════════════════════════════

@@ -1,11 +1,13 @@
-// app/dashboard/quotes/[id]/page.tsx
+"use client"
 
-import { Editor } from "@/features/quotes/components/QuoteBuilder/Editor";
+import { useParams } from "next/navigation"
+import { Editor } from "@/features/quotes/components/QuoteBuilder/Editor"
 
+export default function EditQuotePage() {
+    const params = useParams<{ id: string }>()
+    const documentId = typeof params.id === "string" ? params.id : ""
 
-export default async function EditQuotePage({ params }: { params: Promise<{ id: string }> }) {
-    // documentId fourni → Mode édition
-    const resolvedParams = await params;
-    console.log(resolvedParams.id);
-    return <Editor documentId={resolvedParams.id} />
+    if (!documentId) return null
+
+    return <Editor documentId={documentId} />
 }

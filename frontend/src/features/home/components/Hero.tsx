@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Sparkles, BarChart3, Users, CheckCircle, ArrowRight, Menu, X, Rocket, Zap, Globe, ShieldCheck, Mail, Star, AlertTriangle, Clock, EyeOff, UserX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { SwitchTheme } from '@/components/ui/switch-theme'
-import Image from 'next/image'
 import Logo from '@/components/ui/logo'
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import { PublicTemplateModal } from '@/features/home/components/PublicTemplateModal';
+import { HomeAccountMenu } from '@/features/home/components/HomeAccountMenu'
 import { useAuthStore } from '@/store/auth-store'
 import { useCurrentUser } from '@/features/auth/hooks/useAuth'
 
@@ -58,11 +56,11 @@ export default function Hero() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
-  const router = useRouter()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const storeUser = useAuthStore((state) => state.user)
   const { data: profile } = useCurrentUser()
-  const signedIn = Boolean(isAuthenticated && (profile || storeUser))
+  const user = profile || storeUser
+  const signedIn = Boolean(isAuthenticated && user)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -96,35 +94,31 @@ export default function Hero() {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-6">
-            <Link href="/nouvelle-facture" className="text-sm font-semibold text-slate-300 transition-colors hover:text-white">
-              Créer une facture
-            </Link>
+          <div className="hidden lg:flex items-center gap-5">
             {signedIn ? (
-              <Link href="/dashboard/invoices" className="text-sm font-semibold text-slate-300 transition-colors hover:text-white">
-                Mes factures
-              </Link>
+              <HomeAccountMenu user={user} />
             ) : (
               <>
                 <Link href="/login" className="text-sm font-semibold text-slate-300 transition-colors hover:text-white">
                   Connexion
                 </Link>
                 <Link href="/register">
-                  <button className="bg-[#2563EB] text-white  px-6 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-[#1d4ed8] cursor-pointer shadow-md">
-                    Créer un compte
+                  <button className="bg-[#2563EB] text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-[#1d4ed8] cursor-pointer shadow-md">
+                    Créer mon compte
                   </button>
                 </Link>
               </>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center gap-4">
-            
+          {/* Mobile Actions */}
+          <div className="lg:hidden flex items-center gap-3">
+            {signedIn ? <HomeAccountMenu user={user} /> : null}
             <button
               type="button"
               className="p-2 text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Menu"
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -150,33 +144,20 @@ export default function Hero() {
               ))}
             </div>
 
-            <div className="mt-6 flex flex-col gap-3">
-              <Link href="/nouvelle-facture" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                <Button className="h-11 w-full rounded-lg text-base font-bold bg-[#2563EB] hover:bg-[#1d4ed8] text-white">
-                  Créer une facture
-                </Button>
-              </Link>
-              {signedIn ? (
-                <Link href="/dashboard/invoices" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+            {!signedIn ? (
+              <div className="mt-6 flex flex-col gap-3">
+                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
                   <Button variant="outline" className="h-11 w-full rounded-lg border-slate-700 bg-transparent text-base font-bold text-white hover:bg-white/5">
-                    Mes factures
+                    Connexion
                   </Button>
                 </Link>
-              ) : (
-                <>
-                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                    <Button variant="outline" className="h-11 w-full rounded-lg border-slate-700 bg-transparent text-base font-bold text-white hover:bg-white/5">
-                      Connexion
-                    </Button>
-                  </Link>
-                  <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                    <Button className="w-full h-11 rounded-lg text-base font-bold bg-[#2563EB] hover:bg-[#1d4ed8] text-white">
-                      Commencer gratuitement
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
+                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                  <Button className="w-full h-11 rounded-lg text-base font-bold bg-[#2563EB] hover:bg-[#1d4ed8] text-white">
+                    Créer mon compte
+                  </Button>
+                </Link>
+              </div>
+            ) : null}
           </div>
         </div>
       </header>

@@ -62,7 +62,6 @@ export function LoginForm() {
 
         try {
             const exists = await verifyIfEmailExistMutation.mutateAsync(email);
-            console.log(exists)
             if (exists) {
                 form.setValue('email', email);
                 setStep('password');

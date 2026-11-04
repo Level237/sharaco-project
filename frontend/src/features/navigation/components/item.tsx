@@ -7,7 +7,6 @@ export const Item: React.FC<{ menu: string, icon: any, id: number, items: any }>
 
   const handleVisible = () => {
     setVisible(!isVisible)
-    console.log(isVisible)
   }
   return (
     <>

@@ -3,6 +3,20 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
 const require = createRequire(import.meta.url);
+const isDev = process.env.NODE_ENV !== "production";
+
+const cspDirectives = [
+  "default-src 'self'",
+  // unsafe-eval: nécessaire au bundler Next en dev ; retiré en production.
+  isDev ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'" : "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  isDev
+    ? "img-src 'self' data: blob: https: http://localhost:8000"
+    : "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  isDev ? "connect-src 'self' http://localhost:8000 https:" : "connect-src 'self' https:",
+  "frame-ancestors 'none'",
+];
 
 const securityHeaders = [
   {
@@ -23,15 +37,7 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https: http://localhost:8000",
-      "font-src 'self' data:",
-      "connect-src 'self' http://localhost:8000 https:",
-      "frame-ancestors 'none'",
-    ].join("; "),
+    value: cspDirectives.join("; "),
   },
 ];
 

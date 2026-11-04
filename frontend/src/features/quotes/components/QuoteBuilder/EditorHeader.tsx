@@ -79,9 +79,7 @@ export function EditorHeader({
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
-    const handleEmailSent = () => {
-        console.log("Email envoyé avec succès");
-    };
+    const handleEmailSent = () => {};
 
     return (
         <>

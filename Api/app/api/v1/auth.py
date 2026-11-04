@@ -202,6 +202,7 @@ def _google_browser_redirect_uri() -> str:
 
 
 @router.get("/google/login")
+@limiter.limit("20/minute")
 async def google_login(request: Request):
     """Redirige l'utilisateur vers la page de connexion Google."""
     return await oauth.google.authorize_redirect(request, _google_browser_redirect_uri())
@@ -223,6 +224,7 @@ async def exchange_oauth_registration_code(request: Request, payload: OAuthExcha
 
 
 @router.get("/google/callback")
+@limiter.limit("20/minute")
 async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
     try:
         result = await AuthService.handle_google_callback(request, db)

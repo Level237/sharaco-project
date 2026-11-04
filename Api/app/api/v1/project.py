@@ -1,5 +1,5 @@
 # app/api/v1/project.py
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -35,6 +35,7 @@ from app.schemas.document import (
 
 from app.models.document import Document, DocumentItem
 from app.services.documentService import DocumentService
+from app.core.limiter import limiter
 import logging
 
 router = APIRouter(tags=["projects"])
@@ -51,7 +52,9 @@ def _share_read(project) -> ProjectShareRead:
 
 
 @router.get("/shared/{token}", response_model=SharedWorkspaceRead)
+@limiter.limit("30/minute")
 async def get_shared_workspace(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db),
 ):
@@ -62,7 +65,9 @@ async def get_shared_workspace(
 
 
 @router.get("/shared/{token}/specifications/{spec_id}/pdf")
+@limiter.limit("15/minute")
 async def get_shared_specification_pdf(
+    request: Request,
     token: str,
     spec_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -80,7 +85,9 @@ async def get_shared_specification_pdf(
 
 
 @router.get("/shared/{token}/specifications/{spec_id}/preview.png")
+@limiter.limit("15/minute")
 async def get_shared_specification_preview_png(
+    request: Request,
     token: str,
     spec_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -129,7 +136,9 @@ async def update_project_share(
 
 
 @router.post("/{project_id}/share/email", response_model=ProjectShareRead)
+@limiter.limit("10/hour")
 async def send_project_share_email(
+    request: Request,
     project_id: UUID,
     payload: ProjectShareEmailRequest,
     current_user: User = Depends(get_current_user),

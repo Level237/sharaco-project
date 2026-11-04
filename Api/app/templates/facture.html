@@ -365,7 +365,7 @@
                 {% if user.address %}{{ user.address | replace('\n', '<br>') | safe }}<br>{% endif %}
                 {% if user.email %}{{ user.email }}<br>{% endif %}
                 {% if user.phone %}{{ user.phone }}<br>{% endif %}
-                {% if user.tax_id %}SIRET : {{ user.tax_id }}{% endif %}
+                {% if template and template.show_tax_id and user.tax_id %}SIRET : {{ user.tax_id }}{% endif %}
             </div>
         </div>
         <div class="party">
@@ -430,7 +430,7 @@
     <!-- ═══════ MENTIONS LÉGALES ═══════ -->
     <div class="legal-footer">
         <strong>{{ user.company_name or '' }}</strong>
-        {% if user.tax_id %} — SIRET {{ user.tax_id }}{% endif %}
+        {% if template and template.show_tax_id and user.tax_id %} — SIRET {{ user.tax_id }}{% endif %}
         {% if user.vat_number %} — TVA {{ user.vat_number }}{% endif %}
         <br>
         {% if currency_code == "EUR" %}

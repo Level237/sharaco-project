@@ -906,6 +906,18 @@ class ProjectService:
         return changed
 
     @staticmethod
+    def _is_doc_publicly_listed(doc: Document) -> bool:
+        if doc.status not in SHARED_DOC_STATUSES:
+            return False
+        if not doc.share_enabled or not doc.share_token:
+            return False
+        if doc.share_expires_at is not None:
+            now = to_naive_utc(datetime.now(timezone.utc))
+            if now > doc.share_expires_at:
+                return False
+        return True
+
+    @staticmethod
     async def get_shared_workspace(db: AsyncSession, token: str) -> Optional[dict]:
         result = await db.execute(
             select(Project)
@@ -929,13 +941,9 @@ class ProjectService:
         specs = spec_result.scalars().all()
 
         items: list[dict] = []
-        docs_dirty = False
         for doc in project.documents:
-            if doc.status not in SHARED_DOC_STATUSES:
+            if not ProjectService._is_doc_publicly_listed(doc):
                 continue
-            if ProjectService._prepare_doc_public_link(doc):
-                db.add(doc)
-                docs_dirty = True
             kind = doc.type.value if hasattr(doc.type, "value") else str(doc.type)
             title = doc.number or {
                 "FACTURE": "Facture",
@@ -953,8 +961,6 @@ class ProjectService:
                     "preview_url": f"/api/v1/documents/shared/{doc.share_token}/preview.png",
                 }
             )
-        if docs_dirty:
-            await db.commit()
 
         for spec in specs:
             items.append(

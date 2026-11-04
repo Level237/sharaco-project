@@ -309,10 +309,6 @@ async def get_overdue_alert(
     )
     soon_result = await db.execute(soon_stmt)
     soon_invoices = list(soon_result.scalars().all())
-    
-    print("----------------------------------------")
-
-    print(soon_invoices)
     due_soon_cents = 0
     for inv in soon_invoices:
         subtotal = sum(i.quantity * i.unit_price_cents for i in inv.items)

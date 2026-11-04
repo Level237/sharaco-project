@@ -88,14 +88,10 @@ export function useAutoSave({ draft, enabled = true }: UseAutoSaveProps) {
     show_tax_id: true,
 };
 
-            console.log('✨ CREATE - Payload:', payload);
-
             const response = await quotesApi.create({
                 ...payload,
                 id: undefined,
             } as any);
-
-            console.log('✅ CREATE réussi, ID:', response.id);
 
             if (response?.id) {
                 setDocumentId(response.id);

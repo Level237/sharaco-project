@@ -1065,12 +1065,16 @@ async def get_public_invoice(
         } if document.client else None,
         # ─── Émetteur (pro) ───
         "company": {
-            "name": getattr(document.owner, "company_name", None) if document.owner else None,
-            "email": getattr(document.owner, "email", None) if document.owner else None,
-            "phone": getattr(document.owner, "phone", None) if document.owner else None,
-            "address": getattr(document.owner, "address", None) if document.owner else None,
-            "tax_id": getattr(document.owner, "tax_id", None) if document.owner else None,
-            "payment_info": getattr(document.owner, "payment_info", None) if document.owner else None,
+            "name": getattr(document.owner, "company_name", None),
+            "email": getattr(document.owner, "email", None),
+            "phone": getattr(document.owner, "phone", None),
+            "address": getattr(document.owner, "address", None),
+            **({
+                "tax_id": getattr(document.owner, "tax_id", None),
+            } if getattr(document, "show_tax_id", True) else {}),
+            **({
+                "payment_info": getattr(document.owner, "payment_info", None),
+            } if getattr(document, "show_bank_details", True) else {}),
         } if document.owner else None,
         # ─── Items ───
         "items": [

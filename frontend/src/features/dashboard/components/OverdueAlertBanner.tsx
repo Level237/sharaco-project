@@ -26,7 +26,6 @@ export function OverdueAlertBanner() {
             try {
                 const response = await api.get<AlertData>("/api/v1/dashboard/overdue-alert");
                 setData(response);
-                console.log("Overdue alert data:", response);
             } catch (err) {
                 console.error(err);
             } finally {

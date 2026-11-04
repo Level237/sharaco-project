@@ -75,11 +75,7 @@ export function useDocumentUpdate({ draft, documentId, onUpdateSuccess }: UseDoc
             show_tax_id: true,
         };
 
-        console.log('🔄 UPDATE - Payload:', payload);
-
         const response = await quotesApi.update(documentIdRef.current, payload);
-
-        console.log('✅ UPDATE réussi:', response.id);
 
         setLastUpdatedAt(new Date());
         setUpdateStatus('updated');

@@ -21,6 +21,7 @@ export interface PublicInvoiceDraft {
     issuerAddress: string
     issuerCity: string
     issuerTaxId: string
+    clientId: string | null
     clientName: string
     clientEmail: string
     clientPhone: string
@@ -64,6 +65,7 @@ export function defaultPublicInvoiceDraft(): PublicInvoiceDraft {
         issuerAddress: "",
         issuerCity: "",
         issuerTaxId: "",
+        clientId: null,
         clientName: "",
         clientEmail: "",
         clientPhone: "",

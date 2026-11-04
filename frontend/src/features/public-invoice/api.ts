@@ -84,12 +84,15 @@ export async function savePublicInvoiceDraft(draft: PublicInvoiceDraft): Promise
     const error = validatePublicInvoiceDraft(draft)
     if (error) throw new Error(error)
 
-    const client = await clientsApi.create({
+    const payload = {
         name: draft.clientName.trim(),
         email: draft.clientEmail.trim() || undefined,
         phone: (draft.clientPhone || draft.clientMobile).trim() || undefined,
         address: joinAddress(draft.clientAddress, draft.clientCity) || undefined,
-    })
+    }
+    const client = draft.clientId
+        ? await clientsApi.update(draft.clientId, payload)
+        : await clientsApi.create(payload)
 
     const document = await invoicesApi.create({
         type: "FACTURE",

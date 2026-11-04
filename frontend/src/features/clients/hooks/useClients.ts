@@ -4,10 +4,11 @@ import type { ClientCreate, ClientUpdate } from '../types';
 import { ApiError } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
-export function useClients(skip = 0, limit = 50) {
+export function useClients(skip = 0, limit = 50, options?: { enabled?: boolean }) {
     return useQuery({
         queryKey: ['clients', skip, limit],
         queryFn: () => clientsApi.getAll(skip, limit),
+        enabled: options?.enabled ?? true,
     });
 }
 

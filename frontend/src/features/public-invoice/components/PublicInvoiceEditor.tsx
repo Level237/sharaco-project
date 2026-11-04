@@ -36,6 +36,7 @@ import {
     validatePublicInvoiceDraft,
 } from "../api"
 import { PublicInvoicePreview } from "./PublicInvoicePreview"
+import { InvoiceClientPicker } from "./InvoiceClientPicker"
 import { SignaturePad } from "./SignaturePad"
 
 interface PublicInvoiceEditorProps {
@@ -404,12 +405,20 @@ export function PublicInvoiceEditor({ mode }: PublicInvoiceEditorProps) {
                                             <h2 className="mb-3 text-sm font-bold text-slate-200">
                                                 Facturé à
                                             </h2>
+                                            {signedIn ? (
+                                                <InvoiceClientPicker
+                                                    selectedId={draft.clientId}
+                                                    onSelect={(patch) => update(patch)}
+                                                />
+                                            ) : null}
                                             <InlineField
                                                 label="Nom"
                                                 placeholder="Nom du client"
                                                 value={draft.clientName}
                                                 clearable={Boolean(draft.clientName)}
-                                                onClear={() => update({ clientName: "" })}
+                                                onClear={() =>
+                                                    update({ clientName: "", clientId: null })
+                                                }
                                                 onChange={(v) => update({ clientName: v })}
                                             />
                                             <InlineField

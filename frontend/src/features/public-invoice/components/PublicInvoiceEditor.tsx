@@ -239,12 +239,7 @@ export function PublicInvoiceEditor({ mode }: PublicInvoiceEditorProps) {
                             </Link>
                         ) : (
                             <>
-                                <Link
-                                    href={`/login?next=${encodeURIComponent(PUBLIC_INVOICE_PATH)}`}
-                                    className="rounded-md px-3 py-1.5 font-semibold text-slate-300 transition-colors hover:text-white"
-                                >
-                                    Connexion
-                                </Link>
+                               
                                 <Link
                                     href={`/register?next=${encodeURIComponent(PUBLIC_INVOICE_PATH)}`}
                                     className="rounded-md bg-[#2563EB] px-3.5 py-1.5 font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
@@ -496,12 +491,34 @@ export function PublicInvoiceEditor({ mode }: PublicInvoiceEditorProps) {
                                         </div>
 
                                         <div className="divide-y divide-dashed divide-white/10">
-                                            {draft.items.map((item) => {
+                                            {draft.items.map((item, index) => {
                                                 const lineTotal =
                                                     Math.max(0, Number(item.unitPrice) || 0) *
                                                     Math.max(1, Number(item.quantity) || 1)
                                                 return (
                                                     <div key={item.id} className="py-3.5 first:pt-1">
+                                                        <div className="mb-2.5 flex items-center justify-between sm:hidden">
+                                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                                                Ligne {index + 1}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                disabled={draft.items.length === 1}
+                                                                onClick={() =>
+                                                                    setDraft((prev) => ({
+                                                                        ...prev,
+                                                                        items: prev.items.filter(
+                                                                            (row) => row.id !== item.id
+                                                                        ),
+                                                                    }))
+                                                                }
+                                                                className="flex h-8 w-8 items-center justify-center rounded border border-white/10 bg-[#131722] text-slate-400 disabled:opacity-40"
+                                                                aria-label="Supprimer la ligne"
+                                                            >
+                                                                <X className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        </div>
+
                                                         <div className="grid grid-cols-1 items-start gap-2.5 sm:grid-cols-[34px_minmax(0,1fr)_120px_76px_130px_42px]">
                                                             <button
                                                                 type="button"
@@ -514,13 +531,16 @@ export function PublicInvoiceEditor({ mode }: PublicInvoiceEditorProps) {
                                                                         ),
                                                                     }))
                                                                 }
-                                                                className="flex h-9 w-8 items-center justify-center rounded border border-white/10 bg-[#131722] text-slate-400 transition-colors hover:border-rose-500/40 hover:text-rose-400 disabled:opacity-40"
+                                                                className="hidden h-9 w-8 items-center justify-center rounded border border-white/10 bg-[#131722] text-slate-400 transition-colors hover:border-rose-500/40 hover:text-rose-400 disabled:opacity-40 sm:flex"
                                                                 aria-label="Supprimer la ligne"
                                                             >
                                                                 <X className="h-3.5 w-3.5" />
                                                             </button>
 
-                                                            <div className="space-y-2">
+                                                            <div className="space-y-1.5">
+                                                                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:hidden">
+                                                                    Description
+                                                                </label>
                                                                 <Input
                                                                     value={item.description}
                                                                     placeholder="Désignation de la prestation (ex. Conception Phase 1)"
@@ -550,51 +570,80 @@ export function PublicInvoiceEditor({ mode }: PublicInvoiceEditorProps) {
                                                                 </div>
                                                             </div>
 
-                                                            <Input
-                                                                type="number"
-                                                                min={0}
-                                                                value={item.unitPrice}
-                                                                onChange={(e) =>
-                                                                    setItem(item.id, {
-                                                                        unitPrice: Number(e.target.value),
-                                                                    })
-                                                                }
-                                                                className={`${FIELD} text-right font-medium`}
-                                                            />
+                                                            <div className="grid grid-cols-2 gap-2.5 sm:contents">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:hidden">
+                                                                        Prix
+                                                                    </label>
+                                                                    <Input
+                                                                        type="number"
+                                                                        min={0}
+                                                                        aria-label="Prix"
+                                                                        value={item.unitPrice}
+                                                                        onChange={(e) =>
+                                                                            setItem(item.id, {
+                                                                                unitPrice: Number(e.target.value),
+                                                                            })
+                                                                        }
+                                                                        className={`${FIELD} text-right font-medium`}
+                                                                    />
+                                                                </div>
 
-                                                            <Input
-                                                                type="number"
-                                                                min={1}
-                                                                value={item.quantity}
-                                                                onChange={(e) =>
-                                                                    setItem(item.id, {
-                                                                        quantity: Number(e.target.value),
-                                                                    })
-                                                                }
-                                                                className={`${FIELD} text-right font-medium`}
-                                                            />
-
-                                                            <div className="flex h-9 items-center justify-end text-xs font-semibold text-slate-200">
-                                                                {formatMoney(lineTotal, draft.currency)}
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:hidden">
+                                                                        Quantité
+                                                                    </label>
+                                                                    <Input
+                                                                        type="number"
+                                                                        min={1}
+                                                                        aria-label="Quantité"
+                                                                        value={item.quantity}
+                                                                        onChange={(e) =>
+                                                                            setItem(item.id, {
+                                                                                quantity: Number(e.target.value),
+                                                                            })
+                                                                        }
+                                                                        className={`${FIELD} text-right font-medium`}
+                                                                    />
+                                                                </div>
                                                             </div>
 
-                                                            <div className="flex h-9 items-center justify-center">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        setItem(item.id, {
-                                                                            taxable: !item.taxable,
-                                                                        })
-                                                                    }
-                                                                    className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
-                                                                        item.taxable
-                                                                            ? "border-[#2563EB] bg-[#2563EB] text-white"
-                                                                            : "border-white/20 bg-[#131722] text-transparent"
-                                                                    }`}
-                                                                    aria-label="Taxe applicable"
-                                                                >
-                                                                    <Check className="h-3.5 w-3.5" />
-                                                                </button>
+                                                            <div className="grid grid-cols-2 items-end gap-2.5 sm:contents">
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:hidden">
+                                                                        Montant
+                                                                    </label>
+                                                                    <div className="flex h-9 items-center justify-end text-xs font-semibold text-slate-200 sm:justify-end">
+                                                                        {formatMoney(lineTotal, draft.currency)}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="space-y-1">
+                                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 sm:hidden">
+                                                                        Taxes
+                                                                    </label>
+                                                                    <div className="flex h-9 items-center sm:justify-center">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                setItem(item.id, {
+                                                                                    taxable: !item.taxable,
+                                                                                })
+                                                                            }
+                                                                            className={`flex h-5 w-5 items-center justify-center rounded border transition-colors ${
+                                                                                item.taxable
+                                                                                    ? "border-[#2563EB] bg-[#2563EB] text-white"
+                                                                                    : "border-white/20 bg-[#131722] text-transparent"
+                                                                            }`}
+                                                                            aria-label="Taxe applicable"
+                                                                        >
+                                                                            <Check className="h-3.5 w-3.5" />
+                                                                        </button>
+                                                                        <span className="ml-2 text-[11px] text-slate-400 sm:hidden">
+                                                                            {item.taxable ? "Oui" : "Non"}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +24,7 @@ import { useLogin, useVerifyIfEmailExist } from '../hooks/useAuth';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/store/auth-store';
 import { authApi } from '@/features/auth/api/authApi';
+import { isSafeNextPath, setAfterAuthPath } from '@/features/auth/lib/afterAuth';
 
 const loginSchema = z.object({
     email: z.string().min(1, "L'email est requis").email("Format d'email invalide"),
@@ -34,6 +35,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const loginMutation = useLogin();
     const verifyIfEmailExistMutation = useVerifyIfEmailExist();
 
@@ -93,8 +95,9 @@ export function LoginForm() {
                     console.error("Erreur lors de la récupération du profil:", err);
                 }
 
-                // ✅ Redirection vers le dashboard
-                router.push('/dashboard');
+                const next = searchParams.get('next');
+                if (isSafeNextPath(next)) setAfterAuthPath(next);
+                router.push(isSafeNextPath(next) ? next : '/dashboard');
             } else {
                 setError("Une erreur est survenue lors de la connexion.");
             }
@@ -133,7 +136,8 @@ export function LoginForm() {
                             variant="outline"
                             className="w-full cursor-pointer h-12 bg-zinc-900/50 border-zinc-800 text-white hover:bg-zinc-800/50 hover:text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
                             onClick={() => {
-                                // ✅ Redirection vers le backend OAuth
+                                const next = searchParams.get('next');
+                                if (isSafeNextPath(next)) setAfterAuthPath(next);
                                 window.location.href = "/api/v1/auth/google/login";
                             }}
                         >
@@ -272,7 +276,14 @@ export function LoginForm() {
 
             <p className="text-zinc-500 text-sm font-medium pt-4">
                 Vous n'aviez pas un compte ?{" "}
-                <Link href="/register" className="text-[#2563EB] hover:text-sky-400 font-bold underline-offset-4 hover:underline">
+                <Link
+                    href={
+                        isSafeNextPath(searchParams.get("next"))
+                            ? `/register?next=${encodeURIComponent(searchParams.get("next")!)}`
+                            : "/register"
+                    }
+                    className="text-[#2563EB] hover:text-sky-400 font-bold underline-offset-4 hover:underline"
+                >
                     Créer
                 </Link>
             </p>

@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/features/auth/types";
+import { useAuthStore } from "@/store/auth-store";
 
 export interface ProfileUpdateData {
     full_name?: string;
@@ -15,6 +16,7 @@ export interface ProfileUpdateData {
     payment_info?: string;
     country?: string;
     currency?: string;
+    signature_image?: string | null;
 }
 
 export function useUpdateProfile() {
@@ -25,6 +27,7 @@ export function useUpdateProfile() {
         mutationFn: (data: ProfileUpdateData) =>
             api.put<User>("/api/v1/auth/me", data),
         onSuccess: (updated) => {
+            useAuthStore.getState().setUser(updated);
             queryClient.setQueryData(["currentUser"], updated);
             queryClient.invalidateQueries({ queryKey: ["currentUser"] });
             queryClient.invalidateQueries({ queryKey: ["user"] });

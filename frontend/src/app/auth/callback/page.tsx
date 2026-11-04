@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { authApi } from '@/features/auth/api/authApi';
 import { API_URL } from '@/lib/api';
 import { OAuthHandshake } from '@/features/auth/components/OAuthHandshake';
+import { consumeAfterAuthPath, isSafeNextPath } from '@/features/auth/lib/afterAuth';
 
 function OAuthCallbackInner() {
     const router = useRouter();
@@ -53,7 +54,8 @@ function OAuthCallbackInner() {
                     console.error('Erreur lors de la récupération du profil:', err);
                 }
 
-                router.replace('/dashboard');
+                const next = consumeAfterAuthPath();
+                router.replace(isSafeNextPath(next) ? next : '/dashboard');
             } catch (err) {
                 console.error(err);
                 setStatus('error');

@@ -8,6 +8,7 @@ export interface User {
     payment_info?: string;
     country?: string;
     currency?: string;
+    signature_image?: string | null;
     phone?: string;
     avatar?: string | null;
 }

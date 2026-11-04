@@ -188,6 +188,8 @@ class DocumentCreate(BaseModel):
     font_family: Optional[str] = "Inter"
     show_bank_details: Optional[bool] = True
     show_tax_id: Optional[bool] = True
+    provider_signature_name: Optional[str] = None
+    provider_signature_image: Optional[str] = None
 
     @field_validator("layout_style")
     @classmethod
@@ -242,6 +244,7 @@ class DocumentRead(BaseModel):
     signature_name: Optional[str] = None
     provider_signature_name: Optional[str] = None
     provider_signed_at: Optional[datetime] = None
+    has_provider_signature: bool = False
     signature_revision: int = 1
     signatures_reset: bool = False
     model_config = {"from_attributes": True}
@@ -281,6 +284,11 @@ class DocumentUpdate(BaseModel):
         if v not in valid_layouts:
             raise ValueError(f"Layout invalide. Options: {', '.join(valid_layouts)}")
         return v
+
+
+class StampSignatureRequest(BaseModel):
+    signature_image: Optional[str] = None
+    save_to_profile: bool = False
 
 
 class DocumentStatusUpdate(BaseModel):
@@ -335,6 +343,12 @@ class DocumentPreviewRequest(BaseModel):
     provider_signature_name: Optional[str] = None
     provider_signed_at: Optional[datetime] = None
     signature_revision: int = 1
+    issuer_name: Optional[str] = None
+    issuer_email: Optional[str] = None
+    issuer_phone: Optional[str] = None
+    issuer_address: Optional[str] = None
+    provider_signature_image: Optional[str] = None
+    currency: Optional[str] = None
 
 
 class DocumentListRead(BaseModel):

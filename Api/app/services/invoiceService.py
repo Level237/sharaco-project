@@ -90,6 +90,7 @@ class InvoiceService:
 
         await db.flush()
         await db.refresh(invoice, ["items"])
+        await InvoiceService._stamp_from_owner(db, invoice, quote.user_id)
         logger.info(f"✅ Facture {invoice.number} (type={kind.value}) créée depuis devis {quote.number}")
         return invoice
 
@@ -186,12 +187,22 @@ class InvoiceService:
 
         await db.flush()
         await db.refresh(invoice, ["items"])
-        
+        await InvoiceService._stamp_from_owner(db, invoice, quote.user_id)
+
         logger.info(
             f"✅ Facture {invoice.number} ({kind.value}) créée pour milestone "
             f"'{milestone.title}' ({milestone.percent}%) - project={invoice.project_id}"
         )
         return invoice
+
+    @staticmethod
+    async def _stamp_from_owner(db: AsyncSession, invoice: Document, user_id: UUID) -> None:
+        result = await db.execute(select(User).where(User.id == user_id))
+        owner = result.scalar_one_or_none()
+        if not owner:
+            return
+        if DocumentService.apply_issuer_stamp(invoice, owner):
+            db.add(invoice)
 
     @staticmethod
     async def _generate_invoice_number(db: AsyncSession, user_id: UUID) -> str:

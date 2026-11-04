@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button"
 import { invoicesApi } from "../api/invoicesApi"
 import { formatCurrency } from "@/features/quotes/lib/formatCurrency"
 import {
-    Mail, Download, ArrowLeft, Loader2, FileText,
+    Mail, Download, ArrowLeft, Loader2, FileText, PenLine,
 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import { useCurrentUser } from "@/features/auth/hooks/useAuth"
+import { SignaturePad } from "@/features/public-invoice/components/SignaturePad"
 
 import { cn } from "@/lib/utils"
 import { SendEmailModal } from "@/features/quotes/components/sendEmailModal"
@@ -18,6 +21,8 @@ import { SendEmailModal } from "@/features/quotes/components/sendEmailModal"
 export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
     const [isMounted, setIsMounted] = useState(false)
     const { data: invoice, isLoading, error, refetch } = useInvoice(invoiceId)
+    const { data: user } = useCurrentUser()
+    const queryClient = useQueryClient()
     const { toast } = useToast()
 
     const [isMarkingPaid, setIsMarkingPaid] = useState(false)
@@ -25,6 +30,9 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
     // ✅ NOUVEAU : Modal d'envoi
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
     const [isDownloading, setIsDownloading] = useState(false)
+    const [stampBusy, setStampBusy] = useState(false)
+    const [padImage, setPadImage] = useState<string | null>(null)
+    const [previewKey, setPreviewKey] = useState(0)
 
     useEffect(() => {
         setIsMounted(true)
@@ -54,6 +62,33 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
     const isPaid = invoice.status === "PAID"
     const isSent = invoice.status === "SENT" || invoice.status === "VIEWED"
     const isOverdue = invoice.status === "OVERDUE"
+    const isDraft = invoice.status === "DRAFT"
+    const isSigned = Boolean(invoice.has_provider_signature)
+
+    const handleStamp = async (image?: string | null) => {
+        setStampBusy(true)
+        try {
+            const updated = await invoicesApi.stampSignature(invoiceId, {
+                signature_image: image || undefined,
+                save_to_profile: Boolean(image) && !user?.signature_image,
+            })
+            queryClient.setQueryData(["documents", invoiceId], updated)
+            queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+            setPreviewKey((key) => key + 1)
+            toast({
+                title: "Signature appliquée",
+                description: "Le tampon apparaît sur la facture.",
+            })
+        } catch (err: any) {
+            toast({
+                title: "Erreur",
+                description: err.message || "Impossible d'appliquer la signature.",
+                variant: "destructive",
+            })
+        } finally {
+            setStampBusy(false)
+        }
+    }
 
     // ═══════════════════════════════════════════════════════════════
     // HANDLERS
@@ -212,6 +247,7 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                             <DocumentPreview
                                 documentId={invoiceId}
                                 layoutStyle={invoice.layout_style || "modern"}
+                                refreshKey={previewKey}
                             />
                         </div>
                     </div>
@@ -225,6 +261,71 @@ export function InvoiceDetail({ invoiceId }: { invoiceId: string }) {
                                 {actionButtons}
                             </div>
                         </section>
+
+                        {isDraft && (
+                            <section className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                                <h2 className="mb-3 text-[11px] font-semibold uppercase text-slate-500">
+                                    Signature
+                                </h2>
+                                {isSigned ? (
+                                    <p className="text-xs text-slate-400">
+                                        Tampon émetteur appliqué. Il ne pourra plus être changé après l&apos;envoi.
+                                    </p>
+                                ) : user?.signature_image ? (
+                                    <div className="space-y-3">
+                                        <div className="rounded-md bg-white px-3 py-2">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={user.signature_image}
+                                                alt="Signature du compte"
+                                                className="mx-auto h-12 max-w-[160px] object-contain"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            onClick={() => void handleStamp()}
+                                            disabled={stampBusy}
+                                            className="h-10 w-full bg-[#2563EB] text-xs font-semibold text-white hover:bg-[#1d4ed8]"
+                                        >
+                                            {stampBusy ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <PenLine className="h-4 w-4" />
+                                            )}
+                                            Appliquer ma signature
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <p className="text-xs text-slate-400">
+                                            Aucun tampon dans les paramètres. Dessinez-le ici, ou{" "}
+                                            <Link href="/dashboard/settings" className="text-[#2563EB] underline">
+                                                enregistrez-le au compte
+                                            </Link>
+                                            .
+                                        </p>
+                                        <SignaturePad
+                                            label=""
+                                            value={padImage}
+                                            onChange={setPadImage}
+                                        />
+                                        <Button
+                                            type="button"
+                                            onClick={() => void handleStamp(padImage)}
+                                            disabled={stampBusy || !padImage}
+                                            className="h-10 w-full bg-[#2563EB] text-xs font-semibold text-white hover:bg-[#1d4ed8]"
+                                        >
+                                            {stampBusy ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <PenLine className="h-4 w-4" />
+                                            )}
+                                            Appliquer
+                                        </Button>
+                                    </div>
+                                )}
+                            </section>
+                        )}
 
                         <section className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
                             <h2 className="mb-3 text-[11px] font-semibold uppercase  text-slate-500">

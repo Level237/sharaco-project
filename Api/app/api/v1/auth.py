@@ -280,6 +280,15 @@ async def update_profile(
         currency = update_data.get("currency", current_user.currency)
         update_data["currency"] = resolve_currency(currency, country)
 
+    if "signature_image" in update_data:
+        from app.utils.signatureImage import normalize_png_data_url
+        try:
+            update_data["signature_image"] = normalize_png_data_url(
+                update_data.get("signature_image")
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
     # Appliquer les champs fournis
     for field, value in update_data.items():
         setattr(current_user, field, value)

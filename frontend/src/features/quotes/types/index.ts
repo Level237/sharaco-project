@@ -74,6 +74,7 @@ export interface Document {
     signature_name?: string | null;
     provider_signature_name?: string | null;
     provider_signed_at?: string | null;
+    has_provider_signature?: boolean;
     signature_revision?: number;
     signatures_reset?: boolean;
 }
@@ -99,6 +100,8 @@ export interface DocumentCreate {
     notes?: string | null;
     rules?: { title: string; body: string }[];
     payment_schedule?: MilestonePreview[] | null;
+    provider_signature_name?: string | null;
+    provider_signature_image?: string | null;
 }
 
 export interface DocumentStatusUpdate {
@@ -142,6 +145,12 @@ export interface DocumentPreviewRequest {
     provider_signature_name?: string | null;
     provider_signed_at?: string | null;
     signature_revision?: number;
+    issuer_name?: string | null;
+    issuer_email?: string | null;
+    issuer_phone?: string | null;
+    issuer_address?: string | null;
+    provider_signature_image?: string | null;
+    currency?: string | null;
 }
 
 // Re-export de QuoteDraft pour useAutoSave et useDocumentUpdate

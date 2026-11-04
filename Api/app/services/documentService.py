@@ -28,6 +28,34 @@ logger = logging.getLogger(__name__)
 class DocumentService:
 
     @staticmethod
+    def apply_issuer_stamp(
+        document: Document,
+        user: User,
+        image: str | None = None,
+        *,
+        force: bool = False,
+    ) -> bool:
+        from app.utils.signatureImage import normalize_png_data_url
+
+        if document.type != DocumentType.FACTURE:
+            return False
+        raw = image if image is not None else getattr(user, "signature_image", None)
+        try:
+            png = normalize_png_data_url(raw)
+        except ValueError:
+            return False
+        if not png:
+            return False
+        if document.provider_signature_image and not force:
+            return False
+        document.provider_signature_image = png
+        document.provider_signature_name = (
+            getattr(user, "full_name", None) or getattr(user, "company_name", None)
+        )
+        document.provider_signed_at = to_naive_utc(datetime.now(timezone.utc))
+        return True
+
+    @staticmethod
     def encode_rules(rules: Optional[list] = None) -> Optional[str]:
         if not rules:
             return None
@@ -284,6 +312,12 @@ class DocumentService:
         provider_signature_name: Optional[str] = None,
         provider_signed_at: Optional[datetime] = None,
         signature_revision: int = 1,
+        issuer_name: Optional[str] = None,
+        issuer_email: Optional[str] = None,
+        issuer_phone: Optional[str] = None,
+        issuer_address: Optional[str] = None,
+        provider_signature_image: Optional[str] = None,
+        public_gate: bool = False,
     ) -> str:
         # ✅ CHANGÉ : default tax_rate à 0 au lieu de 20
         if items is None:
@@ -332,7 +366,23 @@ class DocumentService:
             provider_signature_name=provider_signature_name,
             provider_signed_at=to_naive_utc(provider_signed_at) if provider_signed_at else None,
             signature_revision=signature_revision or 1,
+            provider_signature_image=provider_signature_image,
         )
+
+        preview_user = user
+        if issuer_name or issuer_email or issuer_address:
+            preview_user = User(
+                id=getattr(user, "id", uuid4()),
+                email=issuer_email or getattr(user, "email", None) or "preview@sharaco.local",
+                hashed_password=getattr(user, "hashed_password", None) or "!",
+                company_name=issuer_name or getattr(user, "company_name", None),
+                full_name=issuer_name or getattr(user, "full_name", None),
+                address=issuer_address or getattr(user, "address", None),
+                tax_id=getattr(user, "tax_id", None) if not issuer_name else None,
+                payment_info=getattr(user, "payment_info", None) if not issuer_name else None,
+                currency=getattr(user, "currency", None) or "XOF",
+                country=getattr(user, "country", None),
+            )
 
         fake_doc.items = [
             DocumentItem(
@@ -372,15 +422,24 @@ class DocumentService:
             email=client_email,
             address=client_address,
             phone=client_phone,
-            user_id=user.id,
+            user_id=preview_user.id,
         )
 
-        return pdf_renderer.render_html_preview(
+        html = pdf_renderer.render_html_preview(
             document=fake_doc,
             template=template,
-            user=user,
+            user=preview_user,
             client=fake_client,
+            extra={"issuer_phone": issuer_phone} if issuer_phone else None,
         )
+        if public_gate:
+            html = html.replace(
+                "</head>",
+                "<style>html,body{-webkit-user-select:none;user-select:none}"
+                "@media print{html,body{display:none!important}}</style></head>",
+                1,
+            )
+        return html
 
     @staticmethod
     async def create_document(

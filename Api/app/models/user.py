@@ -18,6 +18,10 @@ class User(SQLModel, table=True):
     templates: List["DocumentTemplate"] = Relationship(back_populates="owner")
     reminder_configs: List["ReminderConfig"] = Relationship(back_populates="owner")
     country: Optional[str] = None
-    currency: str = Field(default="XOF") 
+    currency: str = Field(default="XOF")
+    signature_image: Optional[str] = Field(
+        default=None,
+        description="PNG data URL de la signature manuscrite (tampon par défaut)",
+    ) 
 
     projects: List["Project"] = Relationship(back_populates="owner")

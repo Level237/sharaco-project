@@ -10,6 +10,8 @@ import Image from 'next/image'
 import Logo from '@/components/ui/logo'
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import { PublicTemplateModal } from '@/features/home/components/PublicTemplateModal';
+import { useAuthStore } from '@/store/auth-store'
+import { useCurrentUser } from '@/features/auth/hooks/useAuth'
 
 // Types
 interface NavItem {
@@ -57,6 +59,10 @@ export default function Hero() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
   const router = useRouter()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const storeUser = useAuthStore((state) => state.user)
+  const { data: profile } = useCurrentUser()
+  const signedIn = Boolean(isAuthenticated && (profile || storeUser))
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,15 +97,25 @@ export default function Hero() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-6">
-            <Link href="/login" className="text-sm font-semibold text-slate-300 transition-colors hover:text-white">
-              Connexion
+            <Link href="/nouvelle-facture" className="text-sm font-semibold text-slate-300 transition-colors hover:text-white">
+              Créer une facture
             </Link>
-            <Link href="/register">
-              <button className="bg-[#2563EB] text-white  px-6 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-[#1d4ed8] cursor-pointer shadow-md">
-                Créer un compte
-              </button>
-            </Link>
-            
+            {signedIn ? (
+              <Link href="/dashboard/invoices" className="text-sm font-semibold text-slate-300 transition-colors hover:text-white">
+                Mes factures
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm font-semibold text-slate-300 transition-colors hover:text-white">
+                  Connexion
+                </Link>
+                <Link href="/register">
+                  <button className="bg-[#2563EB] text-white  px-6 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-[#1d4ed8] cursor-pointer shadow-md">
+                    Créer un compte
+                  </button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -135,16 +151,31 @@ export default function Hero() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3">
-              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                <Button variant="outline" className="h-11 w-full rounded-lg border-slate-700 bg-transparent text-base font-bold text-white hover:bg-white/5">
-                  Connexion
+              <Link href="/nouvelle-facture" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                <Button className="h-11 w-full rounded-lg text-base font-bold bg-[#2563EB] hover:bg-[#1d4ed8] text-white">
+                  Créer une facture
                 </Button>
               </Link>
-              <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
-                <Button className="w-full h-11 rounded-lg text-base font-bold bg-[#2563EB] hover:bg-[#1d4ed8] text-white">
-                  Commencer gratuitement
-                </Button>
-              </Link>
+              {signedIn ? (
+                <Link href="/dashboard/invoices" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                  <Button variant="outline" className="h-11 w-full rounded-lg border-slate-700 bg-transparent text-base font-bold text-white hover:bg-white/5">
+                    Mes factures
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                    <Button variant="outline" className="h-11 w-full rounded-lg border-slate-700 bg-transparent text-base font-bold text-white hover:bg-white/5">
+                      Connexion
+                    </Button>
+                  </Link>
+                  <Link href="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full">
+                    <Button className="w-full h-11 rounded-lg text-base font-bold bg-[#2563EB] hover:bg-[#1d4ed8] text-white">
+                      Commencer gratuitement
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -196,9 +227,9 @@ export default function Hero() {
           <BackgroundRippleEffect />
 
               <div className="mt-12 flex z-10  sm:flex-row items-center justify-center gap-5 max-sm:gap-0">
-                <Link href="/register">
+                <Link href="/nouvelle-facture">
                   <button className="bg-[#2563EB] max-sm:text-xs text-white  px-8 py-4 rounded-full text-lg font-bold cursor-pointer shadow-xl shadow-black/10 dark:shadow-white/10 flex items-center justify-center">
-                    Créer mon compte
+                    Créer une facture
                   </button>
                 </Link>
                 <button onClick={() => setShowTemplates(true)} className="z-10 flex items-center justify-center rounded-full px-8 py-4 text-lg font-bold text-slate-300 transition-all hover:bg-slate-800 max-sm:text-xs group">

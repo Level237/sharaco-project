@@ -7,6 +7,8 @@ export const settingsApi = {
         address?: string;
         tax_id?: string;
         payment_info?: string;
+        currency?: string;
+        signature_image?: string | null;
     }): Promise<User> => {
         return api.put<User>('/api/v1/auth/me', data);
     },

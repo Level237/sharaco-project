@@ -75,6 +75,15 @@ def _normalize(code: str | None) -> str:
     return _ALIASES.get(raw, raw)
 
 
+def first_country_for_currency(code: str | None) -> str | None:
+    """Premier pays connu pour un code ISO, afin d'afficher la devise choisie."""
+    raw = _normalize(code)
+    for country, currency in COUNTRY_CURRENCY.items():
+        if currency == raw:
+            return country
+    return None
+
+
 def resolve_currency(code: str | None, country: str | None = None) -> str:
     """Devise du pays de l'utilisateur, identique sur le devis et l'interface.
 

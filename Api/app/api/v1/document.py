@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import Response
-from app.core.currency import get_currency_symbol, resolve_currency
+from app.core.currency import (
+    CURRENCY_DISPLAY,
+    first_country_for_currency,
+    get_currency_symbol,
+    resolve_currency,
+)
 from app.models.payment_schedule import PaymentSchedule, MilestoneStatus
 from sqlalchemy import func, distinct
 from app.services.pdfRenderer import pdf_renderer
@@ -11,7 +16,7 @@ from datetime import datetime, timezone
 from app.services.paymentScheduleService import PaymentScheduleService
 from app.core.config import settings
 from app.services.notificationService import NotificationService
-from uuid import UUID
+from uuid import UUID, uuid4
 from typing import Optional
 from app.db.engine import get_db
 from app.core.deps import get_current_user
@@ -34,6 +39,7 @@ from app.schemas.document import (
     SharedDocumentRead,
     AcceptDocumentRequest,
     RefuseDocumentRequest,
+    StampSignatureRequest,
     TotalsCalculateRequest,
 )
 from app.core.limiter import limiter
@@ -241,6 +247,66 @@ async def preview_document_live(
         provider_signature_name=preview_data.provider_signature_name,
         provider_signed_at=preview_data.provider_signed_at,
         signature_revision=preview_data.signature_revision,
+        issuer_name=preview_data.issuer_name,
+        issuer_email=preview_data.issuer_email,
+        issuer_phone=preview_data.issuer_phone,
+        issuer_address=preview_data.issuer_address,
+        provider_signature_image=preview_data.provider_signature_image,
+    )
+    return HTMLResponse(content=html_content)
+
+
+@router.post("/public-preview", response_class=HTMLResponse)
+@limiter.limit("20/minute")
+async def public_invoice_preview(
+    request: Request,
+    preview_data: DocumentPreviewRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    from app.utils.signatureImage import normalize_png_data_url
+
+    try:
+        signature_image = normalize_png_data_url(preview_data.provider_signature_image)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    items = [item.model_dump() for item in (preview_data.items or [])[:20]]
+    layout = preview_data.layout_style if preview_data.layout_style in ("classic", "modern", "minimal") else "classic"
+    requested = (preview_data.currency or "").strip().upper()
+    currency = requested if requested in CURRENCY_DISPLAY else resolve_currency(preview_data.currency)
+
+    guest = User(
+        id=uuid4(),
+        email=preview_data.issuer_email or "preview@sharaco.local",
+        hashed_password="!",
+        company_name=preview_data.issuer_name or "Votre entreprise",
+        full_name=preview_data.issuer_name,
+        address=preview_data.issuer_address,
+        currency=currency,
+        country=first_country_for_currency(currency),
+    )
+    html_content = await DocumentService.render_preview(
+        db=db,
+        user=guest,
+        type=DocumentType.FACTURE,
+        client_name=preview_data.client_name,
+        client_email=preview_data.client_email,
+        client_address=preview_data.client_address,
+        client_phone=preview_data.client_phone,
+        items=items,
+        layout_style=layout,
+        primary_color=preview_data.primary_color,
+        notes=preview_data.notes,
+        reference=preview_data.reference,
+        due_date=preview_data.due_date,
+        issuer_name=preview_data.issuer_name,
+        issuer_email=preview_data.issuer_email,
+        issuer_phone=preview_data.issuer_phone,
+        issuer_address=preview_data.issuer_address,
+        provider_signature_name=preview_data.provider_signature_name,
+        provider_signed_at=preview_data.provider_signed_at,
+        provider_signature_image=signature_image,
+        public_gate=True,
     )
     return HTMLResponse(content=html_content)
 
@@ -316,6 +382,11 @@ async def preview_document_pdf(
         provider_signature_name=preview_data.provider_signature_name,
         provider_signed_at=preview_data.provider_signed_at,
         signature_revision=preview_data.signature_revision,
+        issuer_name=preview_data.issuer_name,
+        issuer_email=preview_data.issuer_email,
+        issuer_phone=preview_data.issuer_phone,
+        issuer_address=preview_data.issuer_address,
+        provider_signature_image=preview_data.provider_signature_image,
     )
 
     pdf_buffer = await pdf_renderer.render_pdf_from_html(html_content)
@@ -1594,6 +1665,51 @@ async def sign_document_as_provider(
     return _enrich_document(document, totals)
 
 
+@router.post("/{document_id}/stamp-signature", response_model=DocumentRead)
+async def stamp_invoice_signature(
+    document_id: UUID,
+    data: StampSignatureRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    document = await DocumentService.get_by_id(db, document_id, current_user.id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document introuvable")
+    if document.type != DocumentType.FACTURE:
+        raise HTTPException(status_code=400, detail="La signature émetteur s'applique aux factures")
+    if document.status != DocumentStatus.DRAFT:
+        raise HTTPException(
+            status_code=400,
+            detail="La signature ne peut plus être modifiée une fois la facture envoyée",
+        )
+
+    image = data.signature_image
+    if image is None:
+        image = current_user.signature_image
+    try:
+        stamped = DocumentService.apply_issuer_stamp(
+            document, current_user, image, force=True
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not stamped:
+        raise HTTPException(
+            status_code=400,
+            detail="Ajoutez une signature dans les paramètres du compte, ou dessinez-la ici",
+        )
+
+    if data.save_to_profile and document.provider_signature_image:
+        current_user.signature_image = document.provider_signature_image
+        db.add(current_user)
+
+    db.add(document)
+    pdf_renderer.invalidate_document_cache(document.id)
+    await db.commit()
+    await db.refresh(document, ["items", "client", "payment_schedule"])
+    totals = DocumentService.calculate_totals(document.items)
+    return _enrich_document(document, totals)
+
+
 @router.patch("/{document_id}/project", response_model=DocumentRead)
 async def link_document_to_project(
     document_id: UUID,
@@ -2117,6 +2233,27 @@ async def create_document(
             source_document_id=source_document_id,
             rules=[r.model_dump() for r in document_data.rules] if document_data.rules else None,
         )
+        if document_data.provider_signature_image or document_data.provider_signature_name:
+            from app.utils.signatureImage import normalize_png_data_url
+            try:
+                image = normalize_png_data_url(document_data.provider_signature_image)
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            document.provider_signature_image = image
+            document.provider_signature_name = (
+                document_data.provider_signature_name
+                or current_user.full_name
+                or current_user.company_name
+            )
+            document.provider_signed_at = to_naive_utc(datetime.now(timezone.utc))
+            db.add(document)
+            await db.commit()
+            await db.refresh(document)
+        elif document.type == DocumentType.FACTURE:
+            if DocumentService.apply_issuer_stamp(document, current_user):
+                db.add(document)
+                await db.commit()
+                await db.refresh(document)
         if document_data.payment_schedule:
             try:
                 await PaymentScheduleService.set_schedule(
@@ -2206,6 +2343,10 @@ def _enrich_document(doc, totals: dict) -> dict:
         "signature_name": getattr(doc, "signature_name", None),
         "provider_signature_name": getattr(doc, "provider_signature_name", None),
         "provider_signed_at": getattr(doc, "provider_signed_at", None),
+        "has_provider_signature": bool(
+            getattr(doc, "provider_signature_image", None)
+            or getattr(doc, "provider_signature_name", None)
+        ),
         "signature_revision": getattr(doc, "signature_revision", 1) or 1,
         "signatures_reset": bool(getattr(doc, "_signatures_reset", False)),
     }

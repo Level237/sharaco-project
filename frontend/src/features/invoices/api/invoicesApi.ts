@@ -48,6 +48,13 @@ export const invoicesApi = {
         return api.patch<Document>(`/api/v1/documents/${id}/status`, { status });
     },
 
+    stampSignature: async (
+        id: string,
+        data?: { signature_image?: string | null; save_to_profile?: boolean }
+    ): Promise<Document> => {
+        return api.post<Document>(`/api/v1/documents/${id}/stamp-signature`, data || {});
+    },
+
     getPreview: async (id: string): Promise<string> => {
         return api.get<string>(`/api/v1/documents/${id}/preview`);
     },

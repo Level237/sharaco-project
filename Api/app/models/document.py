@@ -86,6 +86,10 @@ class Document(SQLModel, table=True):
     signature_name: Optional[str] = Field(default=None, max_length=255)
     provider_signature_name: Optional[str] = Field(default=None, max_length=255)
     provider_signed_at: Optional[datetime] = None
+    provider_signature_image: Optional[str] = Field(
+        default=None,
+        description="PNG data URL de la signature manuscrite de l'émetteur",
+    )
     signature_revision: int = Field(default=1, description="Incrémenté à chaque invalidation des signatures")
 
     paid_at: Optional[datetime] = Field(

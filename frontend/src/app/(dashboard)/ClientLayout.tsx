@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster"
 
 function isFullScreenEditor(pathname: string) {
     if (pathname.startsWith("/dashboard/quotes/create")) return true
+    if (pathname.startsWith("/dashboard/invoices/create")) return true
     if (pathname.startsWith("/dashboard/contracts/edit")) return true
     if (pathname.startsWith("/dashboard/specifications/edit")) return true
     if (pathname.startsWith("/dashboard/templates/preview")) return true

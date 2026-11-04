@@ -1,7 +1,6 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { Metadata } from "next"
-import { Button } from "@/components/ui/button"
-import Logo from "@/components/ui/logo"
 import { LoginForm } from "@/features/auth/components/LoginForm"
 
 export const metadata: Metadata = {
@@ -17,7 +16,9 @@ export default function LoginPage() {
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col items-center justify-center px-4 -mt-20">
-                <LoginForm />
+                <Suspense fallback={<div className="text-zinc-500">Chargement...</div>}>
+                    <LoginForm />
+                </Suspense>
             </main>
 
             {/* Footer */}

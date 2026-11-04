@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/features/quotes/lib/formatCurrency";
+import { SignaturePad } from "@/features/public-invoice/components/SignaturePad";
 import {
     CURRENCY_LABELS,
     locationCurrencyUpdate,
@@ -35,6 +36,7 @@ export default function SettingsPage() {
         payment_info: "",
         country: "",
         currency: "XOF",
+        signature_image: null as string | null,
     });
 
     const [pwd, setPwd] = useState({ current: "", next: "", confirm: "" });
@@ -55,6 +57,7 @@ export default function SettingsPage() {
                 payment_info: user.payment_info || "",
                 country,
                 currency,
+                signature_image: user.signature_image || null,
             });
         }
     }, [user]);
@@ -228,6 +231,20 @@ export default function SettingsPage() {
                             />
                             <p className="text-[11px] text-slate-400">
                                 Affichées en bas de vos factures et devis.
+                            </p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold">Signature</Label>
+                            <SignaturePad
+                                label=""
+                                value={form.signature_image}
+                                onChange={(signature_image) =>
+                                    setForm((prev) => ({ ...prev, signature_image }))
+                                }
+                            />
+                            <p className="text-[11px] text-slate-400">
+                                Tampon recopié sur vos factures à l&apos;émission. Dessinez-le une fois.
                             </p>
                         </div>
 

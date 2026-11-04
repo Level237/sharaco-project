@@ -29,6 +29,7 @@ import Logo from '@/components/ui/logo';
 import { useRegister, useVerifyIfEmailExist } from '../hooks/useAuth';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
+import { consumeAfterAuthPath, isSafeNextPath, setAfterAuthPath } from '@/features/auth/lib/afterAuth';
 
 // ✅ Schéma avec validation libphonenumber
 const registerSchema = z.object({
@@ -160,7 +161,8 @@ export function RegisterForm() {
                     console.error("Erreur lors de la récupération du profil:", err);
                 }
 
-                router.push('/dashboard');
+                const next = searchParams.get('next') || consumeAfterAuthPath();
+                router.push(isSafeNextPath(next) ? next : '/dashboard');
             } else {
                 setError("Une erreur est survenue (pas de token reçu).");
             }
@@ -204,6 +206,8 @@ export function RegisterForm() {
                             variant="outline"
                             className="w-full cursor-pointer h-12 bg-zinc-900/50 border-zinc-800 text-white hover:bg-zinc-800/50 hover:text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
                             onClick={() => {
+                                const next = searchParams.get('next');
+                                if (isSafeNextPath(next)) setAfterAuthPath(next);
                                 window.location.href = "/api/v1/auth/google/login";
                             }}
                         >
@@ -250,7 +254,14 @@ export function RegisterForm() {
 
                         <p className="text-zinc-500 text-sm font-medium pt-4">
                             Vous avez déjà un compte ?{" "}
-                            <Link href="/login" className="text-[#2563EB] hover:text-blue-400 font-bold underline-offset-4 hover:underline">
+                            <Link
+                                href={
+                                    isSafeNextPath(searchParams.get("next"))
+                                        ? `/login?next=${encodeURIComponent(searchParams.get("next")!)}`
+                                        : "/login"
+                                }
+                                className="text-[#2563EB] hover:text-blue-400 font-bold underline-offset-4 hover:underline"
+                            >
                                 Connectez-vous
                             </Link>
                         </p>

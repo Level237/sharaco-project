@@ -543,6 +543,7 @@ class PDFRenderer:
             "currency": currency_label(currency_code),
             "currency_code": currency_code,
             "source_quote_number": source_quote_number,
+            "issuer_phone": None,
             "reglement": _decode_contract_rules(getattr(document, "rules", None)),
             "contract_title": contract_title(getattr(document, "layout_style", None)),
             "accent": getattr(document, "primary_color", None)
@@ -582,7 +583,8 @@ class PDFRenderer:
             "provider": {
                 "name": provider_name,
                 "date": cls._format_sign_date(getattr(document, "provider_signed_at", None)),
-            } if provider_name else None,
+                "image": getattr(document, "provider_signature_image", None),
+            } if (provider_name or getattr(document, "provider_signature_image", None)) else None,
         }
 
     async def render_html(
@@ -626,6 +628,7 @@ class PDFRenderer:
         user: User,
         client: Client,
         currency: str = None,
+        extra: dict | None = None,
     ) -> str:
         """
         Rend le HTML pour le preview en temps réel (pas de DB).
@@ -636,6 +639,8 @@ class PDFRenderer:
             layout_file = self._get_layout_file(layout_key, document.type)
             tmpl = self.env.get_template(layout_file)
             context = self._build_context(document, template, user, client, currency)
+            if extra:
+                context.update(extra)
             return tmpl.render(**context)
         except Exception as e:
             logger.error(f"Erreur lors du rendu HTML preview: {e}", exc_info=True)

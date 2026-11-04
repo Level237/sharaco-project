@@ -150,7 +150,21 @@ export function InvoiceList({ invoices, onDeleteSuccess, projectId, searchQuery 
                 animate="show"
                 className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-6 gap-4 md:gap-6"
             >
-        
+                <motion.div variants={cardVariants} className="h-full min-w-0">
+                    <Link href="/dashboard/invoices/create" className="group flex h-full w-full flex-col">
+                        <div className="flex aspect-[4/5] w-full flex-col items-center justify-center rounded-lg border border-white/5 bg-white/[0.02] transition-all duration-300 group-hover:-translate-y-1 group-hover:border-blue-500/30 group-hover:bg-white/[0.05]">
+                            <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-lg bg-[#2563EB] text-white sm:mb-3">
+                                <Plus className="h-5 w-5" />
+                            </div>
+                            <span className="px-2 text-center text-xs font-bold text-slate-300 sm:text-sm">
+                                Nouvelle facture
+                            </span>
+                        </div>
+                        <div className="mt-2 opacity-0 sm:mt-3">
+                            <h4 className="text-xs font-bold sm:text-sm">X</h4>
+                        </div>
+                    </Link>
+                </motion.div>
 
                 {/* Document Cards */}
                 <AnimatePresence mode="popLayout">

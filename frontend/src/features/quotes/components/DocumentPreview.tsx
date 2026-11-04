@@ -8,9 +8,10 @@ import { quotesApi } from "@/features/quotes/api/quotesApi"
 interface DocumentPreviewProps {
     documentId: string
     layoutStyle?: string
+    refreshKey?: string | number
 }
 
-export function DocumentPreview({ documentId, layoutStyle }: DocumentPreviewProps) {
+export function DocumentPreview({ documentId, layoutStyle, refreshKey }: DocumentPreviewProps) {
     const [isLoading, setIsLoading] = useState(true)
     const [hasError, setHasError] = useState(false)
     const [imageUrl, setImageUrl] = useState<string | null>(null)
@@ -52,7 +53,7 @@ export function DocumentPreview({ documentId, layoutStyle }: DocumentPreviewProp
                 URL.revokeObjectURL(objectUrl)
             }
         }
-    }, [documentId])
+    }, [documentId, refreshKey])
 
     return (
         <div className="relative w-full aspect-[3/4] bg-slate-100 dark:bg-slate-900  overflow-hidden">

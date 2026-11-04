@@ -6,6 +6,7 @@ import { authApi } from '../api/authApi';
 import type { LoginRequest, RegisterRequest } from '../types';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
+import { consumeAfterAuthPath, isSafeNextPath } from '@/features/auth/lib/afterAuth';
 
 export function useCurrentUser() {
     const token = useAuthStore((s) => s.token);
@@ -37,8 +38,8 @@ export function useLogin() {
                 // Si getMe échoue, on redirige quand même
             }
 
-            // 3. Rediriger vers le dashboard
-            router.push('/dashboard');
+            const next = consumeAfterAuthPath();
+            router.push(isSafeNextPath(next) ? next : '/dashboard');
         },
     });
 }
@@ -76,7 +77,8 @@ export function useRegister() {
             } catch {
                 // Si getMe échoue, on redirige quand même
             }
-            router.push('/dashboard');
+            const next = consumeAfterAuthPath();
+            router.push(isSafeNextPath(next) ? next : '/dashboard');
         },
     });
 }

@@ -27,6 +27,7 @@ class UserRead(BaseModel):
     payment_info: Optional[str] = None
     country: Optional[str] = None
     currency: Optional[str] = None
+    signature_image: Optional[str] = None
     model_config = {"from_attributes": True}
 
 
@@ -39,6 +40,7 @@ class UserUpdate(BaseModel):
     country: Optional[str] = None
     currency: Optional[str] = None
     payment_info: Optional[str] = None
+    signature_image: Optional[str] = None
 
 
 class Token(BaseModel):

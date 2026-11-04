@@ -767,8 +767,8 @@ export function PublicInvoiceEditor({ mode }: PublicInvoiceEditorProps) {
                         COLONNE DROITE — MINI APERÇU + PARAMÈTRES + ACTIONS
                     ═══════════════════════════════════════════════════════════ */}
                     <aside className="space-y-5 lg:sticky lg:top-6">
-                        {/* Miniature A4 cliquable */}
-                        <div className="space-y-1.5">
+                        {/* Miniature A4 cliquable — desktop only */}
+                        <div className="hidden space-y-1.5 lg:block">
                             <PublicInvoicePreview
                                 draft={draft}
                                 variant="thumbnail"

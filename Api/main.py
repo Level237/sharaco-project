@@ -15,6 +15,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.db.engine import async_session  # ⚠️ adapte selon ton chemin
 from app.services.overdueService import OverdueService
+from app.services.reminderService import reminder_service
 from app.services.pdfRenderer import pdf_renderer
 
 # Routers
@@ -53,6 +54,22 @@ async def _job_check_overdue():
         logger.info(f"🔴 Cron OVERDUE terminé: {summary}")
 
 
+async def _job_quote_reminders():
+    """Job quotidien : relances devis (max 1 mail par devis et par passage)."""
+    logger.info("📬 Cron relances devis démarré")
+    async with async_session() as db:
+        summary = await reminder_service.process_quote_reminders(db)
+        logger.info(f"📬 Cron relances devis terminé: {summary}")
+
+
+async def _job_due_invoices():
+    """Job quotidien : rappels facture J-3 et J-1 au client."""
+    logger.info("⏰ Cron rappels facture J-3/J-1 démarré")
+    async with async_session() as db:
+        summary = await reminder_service.check_due_invoices(db)
+        logger.info(f"⏰ Cron rappels facture terminé: {summary}")
+
+
 # ═══════════════════════════════════════════════════════════════
 # Lifespan (remplace @app.on_event startup/shutdown)
 # ═══════════════════════════════════════════════════════════════
@@ -68,8 +85,20 @@ async def lifespan(app: FastAPI):
         id="check_overdue",
         replace_existing=True,
     )
+    scheduler.add_job(
+        _job_quote_reminders,
+        CronTrigger(hour=7, minute=0),
+        id="check_quote_reminders",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        _job_due_invoices,
+        CronTrigger(hour=7, minute=10),
+        id="check_due_invoices",
+        replace_existing=True,
+    )
     scheduler.start()
-    logger.info("⏰ Scheduler démarré (OVERDUE à 00:05 UTC)")
+    logger.info("⏰ Scheduler démarré (OVERDUE, devis 07:00 UTC, factures J-3/J-1 07:10 UTC)")
 
     # Préchauffer Chromium pour un rendu PNG/PDF immédiat
     asyncio.create_task(pdf_renderer.warmup())
@@ -114,7 +143,10 @@ app.add_middleware(
         settings.FRONTEND_URL,
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
     ],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$|https?://(192\.168|10)\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

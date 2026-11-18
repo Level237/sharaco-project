@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 
 const require = createRequire(import.meta.url);
 const isDev = process.env.NODE_ENV !== "production";
+const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
 const cspDirectives = [
   "default-src 'self'",
@@ -11,10 +12,12 @@ const cspDirectives = [
   isDev ? "script-src 'self' 'unsafe-eval' 'unsafe-inline'" : "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   isDev
-    ? "img-src 'self' data: blob: https: http://localhost:8000"
+    ? `img-src 'self' data: blob: https: ${apiUrl} http://localhost:8000 http://127.0.0.1:8000`
     : "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  isDev ? "connect-src 'self' http://localhost:8000 https:" : "connect-src 'self' https:",
+  isDev
+    ? `connect-src 'self' ${apiUrl} http://localhost:8000 http://127.0.0.1:8000 ws: wss: https:`
+    : "connect-src 'self' https:",
   "frame-ancestors 'none'",
 ];
 
@@ -81,6 +84,10 @@ const nextConfig: NextConfig = {
       {
         source: "/dashboard/contracts/:id/edit",
         destination: "/dashboard/contracts/edit/:id",
+      },
+      {
+        source: "/dashboard/relance",
+        destination: "/dashboard/relances",
       },
     ];
   },

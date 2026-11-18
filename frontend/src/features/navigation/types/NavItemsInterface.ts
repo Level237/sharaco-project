@@ -4,4 +4,5 @@ export interface NavItemInterface {
   href?: any
   submenu?: NavItemInterface[]
   isHeader?: boolean
+  badge?: string
 }

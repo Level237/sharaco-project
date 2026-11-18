@@ -5,7 +5,7 @@ import { useState } from "react"  // ✅ AJOUTÉ
 import { cn } from "@/lib/utils"
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { navItems } from '../data/navItemsData'
-import { Plus, Bell, X, User, LogOut, HelpCircle, Menu, Home, Users, FileText, CreditCard } from 'lucide-react'
+import { Plus, Bell, X, User, LogOut, HelpCircle, Menu, Home, Users, FileText, CreditCard, GitBranch } from 'lucide-react'
 import Link from "next/link"
 import Logo from "@/components/ui/logo"
 import { motion, AnimatePresence } from "framer-motion"
@@ -97,10 +97,15 @@ export default function Sidebar({ setIsSidebarOpen, isSidebarOpen }: { setIsSide
                     )}
                   >
                     <div className={cn(
-                      "p-3 rounded-xl mb-1.5 transition-transform duration-300 group-hover:scale-110",
+                      "relative p-3 rounded-xl mb-1.5 transition-transform duration-300 group-hover:scale-110",
                       isActive ? "bg-white/5 shadow-sm text-[#2563EB]" : "hover:bg-white/5"
                     )}>
                       {item.icon}
+                      {item.badge && (
+                        <span className="absolute -top-1 -right-1 rounded-full bg-blue-600 px-1 py-px text-[8px] font-bold uppercase leading-none text-white tracking-wide">
+                          {item.badge}
+                        </span>
+                      )}
                     </div>
                     <span className="text-[12px] font-bold text-center w-full px-1 truncate tracking-wide">
                       {item.title}
@@ -155,6 +160,17 @@ export default function Sidebar({ setIsSidebarOpen, isSidebarOpen }: { setIsSide
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{user?.email || "Chargement..."}</p>
                 </div>
                 <DropdownMenuSeparator className="bg-slate-100 dark:bg-white/5 mb-1.5" />
+                <DropdownMenuItem asChild className="gap-3 cursor-pointer rounded-xl font-bold focus:bg-slate-100 dark:focus:bg-white/5 py-2.5 transition-colors">
+                  <Link href="/dashboard/relances">
+                    <div className="p-1.5 bg-slate-100 dark:bg-white/5 rounded-lg text-slate-500 dark:text-slate-400">
+                      <GitBranch className="h-4 w-4" />
+                    </div>
+                    <span className="flex-1">Relances</span>
+                    <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                      New
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild className="gap-3 cursor-pointer rounded-xl font-bold focus:bg-slate-100 dark:focus:bg-white/5 py-2.5 transition-colors">
                   <Link href="/dashboard/settings">
                     <div className="p-1.5 bg-slate-100 dark:bg-white/5 rounded-lg text-slate-500 dark:text-slate-400">

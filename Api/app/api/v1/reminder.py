@@ -11,7 +11,7 @@ from app.services.clientService import ClientService
 from app.services.pdfRenderer import pdf_renderer
 from app.services.templateService import TemplateService
 from app.schemas.reminder import ReminderConfigCreate, ReminderConfigRead, ReminderConfigUpdate, ReminderLogRead
-from app.models.document import DocumentStatus
+from app.models.document import DocumentStatus, DocumentType
 from app.core.limiter import limiter
 
 router = APIRouter(tags=["reminders"])
@@ -37,13 +37,16 @@ async def update_reminder_config(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Modifier la configuration des relances."""
+    """Modifier la configuration des relances devis."""
     config = await reminder_service.get_or_create_config(db, current_user.id)
-    updated = await reminder_service.update_config(
-        db=db,
-        config=config,
-        **config_data.model_dump(exclude_unset=True),
-    )
+    try:
+        updated = await reminder_service.update_config(
+            db=db,
+            config=config,
+            **config_data.model_dump(exclude_unset=True),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     return updated
 
 
@@ -119,6 +122,12 @@ async def send_reminder(
             detail="Document introuvable",
         )
 
+    if document.type != DocumentType.DEVIS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Les relances configurables concernent uniquement les devis",
+        )
+
     if document.status == DocumentStatus.DRAFT:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -139,6 +148,7 @@ async def send_reminder(
             user=current_user,
             client=client,
             reminder_level=level,
+            force=True,
         )
     except ValueError as e:
         raise HTTPException(

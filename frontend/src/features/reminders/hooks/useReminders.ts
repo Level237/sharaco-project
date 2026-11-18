@@ -5,10 +5,13 @@ import { remindersApi } from '../api/remindersApi';
 import type { ReminderConfigUpdate } from '../types';
 import { useToast } from '@/hooks/use-toast';
 
-export function useReminderConfig() {
+export function useReminderConfig(enabled = true) {
     return useQuery({
         queryKey: ['reminders', 'config'],
         queryFn: () => remindersApi.getConfig(),
+        enabled,
+        retry: 1,
+        staleTime: 60_000,
     });
 }
 
@@ -25,10 +28,12 @@ export function useUpdateReminderConfig() {
                 description: 'Les paramètres de relance ont été mis à jour.',
             });
         },
-        onError: () => {
+        onError: (error: Error) => {
             toast({
                 title: 'Erreur',
-                description: 'Impossible de sauvegarder la configuration. Veuillez réessayer.',
+                description:
+                    error.message ||
+                    'Impossible de sauvegarder la configuration. Veuillez réessayer.',
                 variant: 'destructive',
             });
         },

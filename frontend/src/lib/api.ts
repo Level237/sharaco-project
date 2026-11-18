@@ -51,11 +51,18 @@ async function apiFetch<T>(
         await syncCurrencyWithLocation().catch(() => {});
     }
 
-    // 3. Faire la requête
-    const res = await fetch(url, {
-        ...options,
-        headers,
-    });
+    let res: Response;
+    try {
+        res = await fetch(url, {
+            ...options,
+            headers,
+        });
+    } catch {
+        throw new ApiError(
+            0,
+            `Impossible de joindre l'API (${API_URL}). Vérifiez que le serveur répond et votre connexion.`,
+        );
+    }
 
     // 4. Intercepter les erreurs 401
     if (res.status === 401) {
@@ -75,7 +82,14 @@ async function apiFetch<T>(
         let detail = `Erreur ${res.status}`;
         try {
             const errorData = await res.json();
-            detail = errorData.detail || errorData.message || detail;
+            const raw = errorData.detail ?? errorData.message;
+            if (typeof raw === 'string') {
+                detail = raw;
+            } else if (Array.isArray(raw) && raw[0]?.msg) {
+                detail = raw.map((item: { msg?: string }) => item.msg).filter(Boolean).join(' ');
+            } else if (raw) {
+                detail = JSON.stringify(raw);
+            }
         } catch {
             // Impossible de parser l'erreur, on garde le message par défaut
         }

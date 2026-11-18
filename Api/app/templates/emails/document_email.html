@@ -238,7 +238,11 @@
                 <p class="text-body">
                     Bonjour <strong>{{ client_name }}</strong>,<br><br>
                     {% if is_reminder %}
+                    {% if reminder_intro %}
+                    {{ reminder_intro }}
+                    {% else %}
                     Nous vous contactons concernant le {{ doc_type|lower }} que nous vous avons envoyé le {{ sent_date }}. Celui-ci est toujours en attente de votre réponse.
+                    {% endif %}
                     {% else %}
                     Veuillez trouver ci-joint notre {{ doc_type|lower }} pour consultation.
                     {% endif %}

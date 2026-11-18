@@ -220,6 +220,13 @@ export default function QuoteDetailPage() {
                             </div>
 
                             
+                        ) : quote.status === "VIEWED" ? (
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium text-yellow-400">
+                                <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                <span className=" sm:inline">Consulté</span>
+                            </div>
+
+                            
                         ) : (
                             <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-medium text-slate-500">
                                 <span className="relative flex h-2 w-2">

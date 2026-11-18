@@ -9,6 +9,7 @@ from .billing_settings import BillingSettings
 from .payment_schedule import PaymentSchedule, MilestoneStatus
 from .password_reset import PasswordResetToken
 from .specification import Specification
+from .invoice_reminder import InvoiceReminder
 __all__ = [
     "SQLModel", "User", "Client",
     "Document", "DocumentItem", "DocumentType", "DocumentStatus",
@@ -17,4 +18,5 @@ __all__ = [
     "Project","ProjectAttachment", "BillingSettings", "PaymentSchedule", "MilestoneStatus",
     "PasswordResetToken",
     "Specification",
+    "InvoiceReminder",
 ]

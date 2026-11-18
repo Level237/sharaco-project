@@ -5,7 +5,7 @@ from fastapi import APIRouter, Header, HTTPException, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.engine import async_session
 from app.core.config import settings
-from app.services.reminderService import ReminderService
+from app.services.reminderService import ReminderService, reminder_service
 from app.services.overdueService import OverdueService
 
 router = APIRouter(tags=["cron"])
@@ -61,4 +61,14 @@ async def trigger_check_due_invoices():
         summary = await ReminderService.check_due_invoices(db)
 
     logger.info(f"⏰ Cron factures terminé: {summary}")
+    return summary
+
+
+@router.post("/check-quote-reminders", dependencies=[Depends(verify_cron_secret)])
+async def trigger_check_quote_reminders():
+    """Relances devis automatiques (J+2 / J+5 / J+10, max 1 mail par passage)."""
+    async with async_session() as db:
+        summary = await reminder_service.process_quote_reminders(db)
+
+    logger.info(f"📬 Cron relances devis terminé: {summary}")
     return summary

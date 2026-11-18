@@ -206,6 +206,32 @@ body {
   display: none !important;
 }
 
+@media (max-width: 640px) {
+  .driver-popover {
+    max-width: calc(100vw - 16px) !important;
+    margin: 8px !important;
+  }
+
+  .driver-popover-title {
+    font-size: 16px !important;
+    padding-right: 28px;
+  }
+
+  .driver-popover-description {
+    font-size: 13px !important;
+    line-height: 1.45 !important;
+  }
+
+  .driver-popover-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .driver-popover-footer button {
+    flex: 1 1 auto;
+  }
+}
+
 /* Stage highlight */
 .driver-active-element {
   box-shadow: 0 0 0 2px #2563EB, 0 0 0 9999px rgba(0, 0, 0, 0.6) !important;

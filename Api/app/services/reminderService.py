@@ -18,9 +18,22 @@ from app.services.emailService import EmailService
 from app.services.pdfRenderer import pdf_renderer
 from app.services.templateService import TemplateService
 from app.services.documentService import DocumentService
+from app.services.quoteReminders import (
+    next_quote_reminder_level,
+    quote_reminder_intro,
+    validate_quote_reminder_config,
+)
 from app.core.config import settings
 from app.core.currency import get_currency_symbol
 from app.utils.datetime import to_naive_utc
+
+QUOTE_REMINDER_STOP_STATUSES = {
+    DocumentStatus.ACCEPTED,
+    DocumentStatus.REFUSED,
+    DocumentStatus.PAID,
+    DocumentStatus.DRAFT,
+    DocumentStatus.OVERDUE,
+}
 
 logger = logging.getLogger(__name__)
 
@@ -195,10 +208,11 @@ class ReminderService:
 
     @staticmethod
     async def update_config(db: AsyncSession, config: ReminderConfig, **kwargs) -> ReminderConfig:
-        """Met à jour la config de relances."""
+        """Met à jour la config de relances devis."""
         for key, value in kwargs.items():
             if value is not None and hasattr(config, key):
                 setattr(config, key, value)
+        validate_quote_reminder_config(config)
         config.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         db.add(config)
         await db.commit()
@@ -284,32 +298,43 @@ class ReminderService:
         user: User,
         client: Client,
         reminder_level: int,
+        force: bool = False,
     ) -> ReminderLog:
-        """Envoie une relance pour un document (V2 - à activer plus tard)."""
+        """Envoie une relance devis (auto ou manuelle). Max 3 niveaux, jamais un 4e."""
+        if document.type != DocumentType.DEVIS:
+            raise ValueError("Les relances configurables concernent uniquement les devis")
+
+        if document.status in QUOTE_REMINDER_STOP_STATUSES:
+            raise ValueError("Ce devis n'est plus en attente de décision")
+
         config = await self.get_or_create_config(db, user.id)
 
-        if not config.is_active:
+        if not force and not config.is_active:
             raise ValueError("Les relances automatiques sont désactivées")
 
-        if config.stop_on_payment and document.status == DocumentStatus.PAID:
-            raise ValueError("Le document est déjà payé")
-
-        if config.stop_on_view and document.status == DocumentStatus.VIEWED:
-            raise ValueError("Le document a déjà été consulté")
+        if config.stop_on_view and (
+            document.status == DocumentStatus.VIEWED or document.viewed_at is not None
+        ):
+            raise ValueError("Le devis a déjà été ouvert : relance coupée")
 
         level_enabled = getattr(config, f"reminder_{reminder_level}_enabled", False)
         if not level_enabled:
             raise ValueError(f"Relance niveau {reminder_level} désactivée")
 
         existing = await self._get_reminder_log(db, document.id, reminder_level)
-        if existing and existing.status == ReminderStatus.SENT:
+        if existing and existing.status in (ReminderStatus.SENT, ReminderStatus.PENDING):
             raise ValueError(f"Relance niveau {reminder_level} déjà envoyée")
 
-        log = ReminderLog(
-            document_id=document.id,
-            reminder_level=reminder_level,
-            status=ReminderStatus.PENDING,
-        )
+        if existing:
+            log = existing
+            log.status = ReminderStatus.PENDING
+            log.error_message = None
+        else:
+            log = ReminderLog(
+                document_id=document.id,
+                reminder_level=reminder_level,
+                status=ReminderStatus.PENDING,
+            )
         db.add(log)
         await db.flush()
 
@@ -332,34 +357,33 @@ class ReminderService:
             document_link = f"{base_url}/client/{document.client_token}"
             totals = self._calculate_totals_simple(document)
 
+            expiry = document.due_date.strftime("%d/%m/%Y") if document.due_date else ""
             subject_template = getattr(config, f"reminder_{reminder_level}_subject", "")
-            subject = subject_template.format(
-                number=document.number,
-                company=user.company_name or "Sharaco"
-            )
+            try:
+                subject = subject_template.format(
+                    number=document.number or "",
+                    company=user.company_name or "Sharaco",
+                    expiry=expiry,
+                )
+            except (KeyError, IndexError, ValueError):
+                subject = subject_template
 
-            html_content = self._render_email(
+            intro = quote_reminder_intro(reminder_level, expiry)
+            context = self._email_context(
                 document=document,
                 user=user,
                 client=client,
                 totals=totals,
                 document_link=document_link,
                 is_reminder=True,
+                reminder_intro=intro,
             )
 
-            # ✅ Utilise send_notification au lieu de send_reminder_email (inexistant)
             result = await EmailService.send_notification(
                 to_email=client.email,
                 subject=subject,
                 template="document_email.html",
-                context={
-                    "to_name": client.name,
-                    "document_number": document.number or "",
-                    "total_amount": totals["grand_total"],
-                    "document_link": document_link,
-                    "user_company": user.company_name or "Sharaco",
-                    "is_reminder": True,
-                },
+                context=context,
             )
 
             if result.get("success"):
@@ -379,6 +403,96 @@ class ReminderService:
             await db.commit()
             logger.error(f"Erreur relance {document.number}: {str(e)}")
             raise
+
+    async def process_quote_reminders(self, db: AsyncSession) -> dict:
+        """Envoie au plus une relance devis par document et par passage."""
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        stmt = (
+            select(Document)
+            .options(
+                selectinload(Document.items),
+                selectinload(Document.client),
+                selectinload(Document.owner),
+            )
+            .where(
+                Document.type == DocumentType.DEVIS,
+                Document.status.in_([DocumentStatus.SENT, DocumentStatus.VIEWED]),
+                Document.sent_at != None,  # noqa: E711
+            )
+        )
+        result = await db.execute(stmt)
+        quotes = list(result.scalars().all())
+
+        sent_count = 0
+        skipped_count = 0
+        details: list[dict] = []
+        config_by_user: dict[UUID, Optional[ReminderConfig]] = {}
+
+        for quote in quotes:
+            user_id = quote.user_id
+            if user_id not in config_by_user:
+                cfg_result = await db.execute(
+                    select(ReminderConfig).where(ReminderConfig.user_id == user_id)
+                )
+                config_by_user[user_id] = cfg_result.scalar_one_or_none()
+            config = config_by_user[user_id]
+            if not config or not config.is_active:
+                skipped_count += 1
+                continue
+            if config.stop_on_view and (
+                quote.status == DocumentStatus.VIEWED or quote.viewed_at is not None
+            ):
+                skipped_count += 1
+                continue
+
+            sent_at = quote.sent_at
+            if sent_at.tzinfo is not None:
+                sent_at = sent_at.replace(tzinfo=None)
+            days_since_sent = (now - sent_at).days
+
+            logs = await self.get_reminder_history(db, quote.id)
+            already_sent = {
+                log.reminder_level
+                for log in logs
+                if log.status in (ReminderStatus.SENT, ReminderStatus.PENDING)
+            }
+            level = next_quote_reminder_level(days_since_sent, config, already_sent)
+            if not level:
+                skipped_count += 1
+                continue
+
+            user = quote.owner
+            client = quote.client
+            if not user or not client or not client.email:
+                skipped_count += 1
+                continue
+
+            try:
+                await self.send_reminder(
+                    db=db,
+                    document=quote,
+                    user=user,
+                    client=client,
+                    reminder_level=level,
+                    force=False,
+                )
+                sent_count += 1
+                details.append({
+                    "quote": quote.number,
+                    "level": level,
+                    "days_since_sent": days_since_sent,
+                    "email": client.email,
+                })
+            except Exception as e:
+                skipped_count += 1
+                logger.error(f"❌ Relance devis {quote.number}: {e}")
+
+        return {
+            "checked": len(quotes),
+            "sent": sent_count,
+            "skipped": skipped_count,
+            "details": details,
+        }
 
     # ═══════════════════════════════════════════════════════════════
     # === TRACKING ===
@@ -457,7 +571,11 @@ class ReminderService:
             ReminderLog.reminder_level == level,
         )
         result = await db.execute(statement)
-        return result.scalar_one_or_none()
+        logs = list(result.scalars().all())
+        for log in logs:
+            if log.status in (ReminderStatus.SENT, ReminderStatus.PENDING):
+                return log
+        return logs[0] if logs else None
 
     def _calculate_totals_simple(self, document: Document) -> dict:
         subtotal = sum(i.quantity * i.unit_price_cents for i in document.items)
@@ -473,25 +591,40 @@ class ReminderService:
             "grand_total": f"{(subtotal + tax) / 100:,.2f} {symbol}",
         }
 
+    def _email_context(
+        self,
+        document,
+        user,
+        client,
+        totals,
+        document_link,
+        is_reminder,
+        reminder_intro: str = "",
+    ) -> dict:
+        return {
+            "company_name": user.company_name or "Sharaco",
+            "company_address": user.address or "",
+            "primary_color": "#2563EB",
+            "client_name": client.name,
+            "doc_type": document.type.value if hasattr(document.type, "value") else document.type,
+            "doc_number": document.number or "",
+            "grand_total": totals["grand_total"],
+            "due_date": document.due_date.strftime("%d/%m/%Y") if document.due_date else "",
+            "sent_date": document.sent_at.strftime("%d/%m/%Y") if document.sent_at else "",
+            "document_link": document_link,
+            "is_reminder": is_reminder,
+            "reminder_intro": reminder_intro,
+        }
+
     def _render_email(self, document, user, client, totals, document_link, is_reminder):
+        context = self._email_context(
+            document, user, client, totals, document_link, is_reminder
+        )
         try:
             tmpl = self.env.get_template("document_email.html")
-            return tmpl.render(
-                company_name=user.company_name or "Sharaco",
-                company_address=user.address or "",
-                primary_color="#2563EB",
-                client_name=client.name,
-                doc_type=document.type.value if hasattr(document.type, 'value') else document.type,
-                doc_number=document.number or "",
-                grand_total=totals["grand_total"],
-                due_date=document.due_date.strftime("%d/%m/%Y") if document.due_date else "",
-                sent_date=document.sent_at.strftime("%d/%m/%Y") if document.sent_at else "",
-                document_link=document_link,
-                is_reminder=is_reminder,
-            )
+            return tmpl.render(**context)
         except Exception as e:
             logger.warning(f"⚠️ Template document_email.html introuvable: {e}")
-            # Fallback simple
             return f"""
             <html><body>
             <h2>{document.type.value} {document.number}</h2>

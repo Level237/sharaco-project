@@ -26,6 +26,7 @@ export const metadata: Metadata = {
 }
 
 export default function Home() {
+  console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL)
   return (
     <div className="min-h-[100dvh] bg-slate-950">
       <Hero />

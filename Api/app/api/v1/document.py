@@ -23,6 +23,7 @@ from app.core.deps import get_current_user
 from app.models.user import User
 from app.models.document import DocumentType, DocumentStatus, DocumentItem
 from app.services.documentService import DocumentService
+from app.services.documentStats import compute_invoice_collection
 from app.services.templateService import TemplateService
 from app.utils.datetime import to_naive_utc
 from datetime import datetime, timezone, timedelta
@@ -148,21 +149,11 @@ async def get_documents_stats(
     pipeline_result = await db.execute(pipeline_stmt)
     pipeline_cents = int(pipeline_result.scalar() or 0)
 
-    paid = invoices_by_status.get("PAID", {"count": 0, "total_cents": 0})
-    revenue_cents = paid["total_cents"]
-    paid_count = paid["count"]
-
-    sent = invoices_by_status.get("SENT", {"count": 0, "total_cents": 0})
-    viewed = invoices_by_status.get("VIEWED", {"count": 0, "total_cents": 0})
-    receivables_cents = sent["total_cents"] + viewed["total_cents"]
-    receivables_count = sent["count"] + viewed["count"]
-
     drafts = invoices_by_status.get("DRAFT", {"count": 0, "total_cents": 0})
     drafts_cents = drafts["total_cents"]
     drafts_count = drafts["count"]
 
-    overdue_cents = 0
-    overdue_count = 0
+    collection = compute_invoice_collection(invoices_by_status)
 
     quotes_sent = (
         quotes_by_status.get("SENT", 0) +
@@ -173,25 +164,21 @@ async def get_documents_stats(
     quotes_accepted = quotes_by_status.get("ACCEPTED", 0)
     conversion_rate = (quotes_accepted / quotes_sent * 100) if quotes_sent > 0 else 0
 
-    total_invoices_count = paid_count + receivables_count + overdue_count
-    collection_rate = (
-        paid_count / total_invoices_count * 100
-        if total_invoices_count > 0 else 0
-    )
-
     return {
-        "revenue_cents": revenue_cents,
-        "paid_invoices_count": paid_count,
-        "receivables_cents": receivables_cents,
-        "receivables_count": receivables_count,
+        "revenue_cents": collection["revenue_cents"],
+        "paid_invoices_count": collection["paid_invoices_count"],
+        "receivables_cents": collection["receivables_cents"],
+        "receivables_count": collection["receivables_count"],
         "drafts_cents": drafts_cents,
         "drafts_count": drafts_count,
-        "overdue_cents": overdue_cents,
-        "overdue_count": overdue_count,
+        "overdue_cents": collection["overdue_cents"],
+        "overdue_count": collection["overdue_count"],
+        "issued_cents": collection["issued_cents"],
+        "issued_count": collection["issued_count"],
         "pipeline_cents": pipeline_cents,
         "accepted_quotes_count": quotes_accepted,
         "conversion_rate": round(conversion_rate, 1),
-        "collection_rate": round(collection_rate, 1),
+        "collection_rate": collection["collection_rate"],
         "quotes_by_status": quotes_by_status,
         "invoices_by_status": invoices_by_status,
     }

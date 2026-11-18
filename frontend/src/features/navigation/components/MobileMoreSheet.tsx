@@ -114,6 +114,11 @@ export function MobileMoreSheet({ open, onOpenChange }: MobileMoreSheetProps) {
                                             <span className="flex-1 text-sm font-semibold text-slate-200">
                                                 {item.title}
                                             </span>
+                                            {item.badge && (
+                                                <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                                                    {item.badge}
+                                                </span>
+                                            )}
                                             <ChevronRight className="h-4 w-4 text-slate-600" />
                                         </Link>
                                     ))}

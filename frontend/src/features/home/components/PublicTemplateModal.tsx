@@ -17,7 +17,7 @@ export function PublicTemplateModal({ isOpen, onClose }: PublicTemplateModalProp
     const { data: layouts, isLoading } = useLayouts()
     const router = useRouter()
     const [selectedId, setSelectedId] = React.useState<string | null>(null)
-
+    console.log(API_URL)
     if (!isOpen) return null
 
     const handleContinue = () => {

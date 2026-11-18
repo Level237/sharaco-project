@@ -83,6 +83,11 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
         );
     }
 
+    const issuedCents =
+        stats.issued_cents ??
+        (stats.revenue_cents + stats.receivables_cents + (stats.overdue_cents || 0))
+    const collectionRate = Math.min(100, Math.max(0, Number(stats.collection_rate) || 0))
+
     const metricCards = [
         {
             key: "REVENUE",
@@ -117,13 +122,15 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
         },
         {
             key: "COLLECTION",
-            label: "Encaissement",
-            sublabel: "Taux de paiement",
+            label: "Taux d'encaissement",
+            sublabel: "Payé / toutes les factures",
             icon: TrendingUp,
             color: "violet",
-            value: `${stats.collection_rate}%`,
-            count: stats.conversion_rate,
-            countLabel: `% conversion devis`,
+            value: `${collectionRate}%`,
+            count: collectionRate,
+            countLabel: issuedCents > 0
+                ? `${formatCurrency(stats.revenue_cents)} sur ${formatCurrency(issuedCents)}`
+                : "Aucune facture envoyée",
             isPercentage: true,
         },
     ];
@@ -262,19 +269,18 @@ export function DocumentsStats({ onFilterByStatus, currentFilter }: DocumentsSta
                                         </div>
 
                                         {/* Sous-info */}
-                                        {!card.isPercentage && (
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <div className={cn("h-1.5 w-1.5 rounded-full", colors?.bar)} />
-                                                <p className="text-xs font-semibold text-slate-600 dark:text-zinc-400 truncate">
-                                                    {card.count} {card.countLabel}
-                                                </p>
-                                            </div>
-                                        )}
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <div className={cn("h-1.5 w-1.5 rounded-full", colors?.bar)} />
+                                            <p className="text-xs font-semibold text-slate-600 dark:text-zinc-400 truncate">
+                                                {card.isPercentage
+                                                    ? card.countLabel
+                                                    : `${card.count} ${card.countLabel}`}
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    {/* Barre de progression pour les pourcentages */}
                                     {card.isPercentage && (
-                                        <div className="w-full bg-slate-100 dark:bg-white/5 rounded-full h-1.5 mt-2 overflow-hidden">
+                                        <div className="w-full bg-slate-100 dark:bg-white/5 rounded-full h-1.5 overflow-hidden">
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${card.count}%` }}

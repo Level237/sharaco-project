@@ -6,7 +6,7 @@ from enum import Enum
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class ReminderStatus(str, Enum):
@@ -21,34 +21,36 @@ class ReminderConfig(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="user.id", index=True)
     owner: "User" = Relationship(back_populates="reminder_configs")
 
-    # Relance J+1 : rappel doux
-    reminder_1_enabled: bool = Field(default=True, description="Activer la relance J+1")
-    reminder_1_days: int = Field(default=1, description="Nombre de jours après envoi")
+    # Relance 1 : J+2 — reçu ?
+    reminder_1_enabled: bool = Field(default=True, description="Activer la relance 1")
+    reminder_1_days: int = Field(default=2, description="Jours après envoi du devis")
     reminder_1_subject: str = Field(
-        default="Rappel : Votre devis {number} est en attente",
-        description="Sujet de l'email (supporte {number}, {company})"
+        default="Vous avez bien reçu le devis {number} ?",
+        description="Sujet (placeholders : {number}, {company}, {expiry})",
     )
 
-    # Relance J+3 : relance medium
-    reminder_2_enabled: bool = Field(default=True, description="Activer la relance J+3")
-    reminder_2_days: int = Field(default=3, description="Nombre de jours après envoi")
+    # Relance 2 : J+5 — questions ?
+    reminder_2_enabled: bool = Field(default=True, description="Activer la relance 2")
+    reminder_2_days: int = Field(default=5, description="Jours après envoi du devis")
     reminder_2_subject: str = Field(
-        default="Suivi : Devis {number} - Avez-vous bien reçu ?",
-        description="Sujet de l'email"
+        default="Une question sur le devis {number} ?",
+        description="Sujet de l'email",
     )
 
-    # Relance J+7 : relance forte
-    reminder_3_enabled: bool = Field(default=False, description="Activer la relance J+7")
-    reminder_3_days: int = Field(default=7, description="Nombre de jours après envoi")
+    # Relance 3 : J+10 — dernier rappel
+    reminder_3_enabled: bool = Field(default=True, description="Activer la relance 3")
+    reminder_3_days: int = Field(default=10, description="Jours après envoi du devis")
     reminder_3_subject: str = Field(
-        default="Dernier rappel : Devis {number} expire bientôt",
-        description="Sujet de l'email"
+        default="Dernier rappel : le devis {number} expire bientôt",
+        description="Sujet de l'email",
     )
 
-    # Paramètres généraux
-    is_active: bool = Field(default=True, description="Activer les relances auto")
-    stop_on_view: bool = Field(default=True, description="Arrêter les relances si le devis est vu")
-    stop_on_payment: bool = Field(default=True, description="Arrêter les relances si le devis est payé")
+    is_active: bool = Field(default=True, description="Activer les relances devis auto")
+    stop_on_view: bool = Field(default=True, description="Arrêter si le client ouvre le devis")
+    stop_on_payment: bool = Field(
+        default=True,
+        description="Arrêter si le devis est accepté ou refusé",
+    )
 
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)

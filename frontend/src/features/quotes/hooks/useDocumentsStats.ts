@@ -26,6 +26,8 @@ export interface DocumentsStatsData {
     // 📈 Taux
     conversion_rate: number;
     collection_rate: number;
+    issued_cents: number;
+    issued_count: number;
     
     // Détails par statut (pour graphiques)
     quotes_by_status: Record<string, number>;

@@ -112,6 +112,11 @@ export default function SettingsPage() {
                         </h1>
                         <p className="text-xs sm:text-sm text-slate-400">
                             Ces informations apparaissent sur vos devis et factures.
+                            {" "}
+                            <Link href="/dashboard/relances" className="text-blue-400 hover:text-blue-300">
+                                Relances
+                            </Link>
+                            {" "}dans le menu dédié.
                         </p>
                     </div>
                 </div>

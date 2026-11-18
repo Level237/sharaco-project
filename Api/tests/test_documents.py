@@ -175,6 +175,48 @@ class TestDocumentCalculations(unittest.TestCase):
 
         asyncio.run(run_tests())
 
+    def test_collection_rate_is_paid_over_issued_amount(self):
+        from app.services.documentStats import compute_invoice_collection
+
+        stats = compute_invoice_collection({
+            "PAID": {"count": 1, "total_cents": 30000},
+            "SENT": {"count": 1, "total_cents": 70000},
+            "DRAFT": {"count": 1, "total_cents": 100000},
+            "REFUSED": {"count": 1, "total_cents": 50000},
+        })
+        self.assertEqual(stats["collection_rate"], 15.0)
+        self.assertEqual(stats["issued_cents"], 200000)
+        self.assertEqual(stats["revenue_cents"], 30000)
+        self.assertEqual(stats["receivables_cents"], 70000)
+
+    def test_collection_rate_includes_overdue_in_denominator(self):
+        from app.services.documentStats import compute_invoice_collection
+
+        stats = compute_invoice_collection({
+            "PAID": {"count": 1, "total_cents": 50000},
+            "OVERDUE": {"count": 1, "total_cents": 50000},
+        })
+        self.assertEqual(stats["collection_rate"], 50.0)
+        self.assertEqual(stats["overdue_cents"], 50000)
+        self.assertEqual(stats["overdue_count"], 1)
+
+    def test_collection_rate_counts_unpaid_drafts(self):
+        from app.services.documentStats import compute_invoice_collection
+
+        stats = compute_invoice_collection({
+            "PAID": {"count": 1, "total_cents": 10000},
+            "DRAFT": {"count": 1, "total_cents": 90000},
+        })
+        self.assertEqual(stats["collection_rate"], 10.0)
+        self.assertEqual(stats["issued_cents"], 100000)
+
+    def test_collection_rate_empty_is_zero(self):
+        from app.services.documentStats import compute_invoice_collection
+
+        stats = compute_invoice_collection({})
+        self.assertEqual(stats["collection_rate"], 0.0)
+        self.assertEqual(stats["issued_cents"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()

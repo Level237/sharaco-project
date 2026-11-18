@@ -3,6 +3,7 @@
 import Link from "next/link"
 import {
     FileText,
+    GitBranch,
     LayoutDashboard,
     Receipt,
     Settings,
@@ -22,6 +23,7 @@ const ACCOUNT_LINKS = [
     { href: "/nouvelle-facture", label: "Nouvelle facture", icon: Receipt },
     { href: "/dashboard/quotes/create", label: "Nouveau devis", icon: FileText },
     { href: "/dashboard/clients", label: "Mes clients", icon: Users },
+    { href: "/dashboard/relances", label: "Relances", icon: GitBranch, badge: "New" },
     { href: "/dashboard/settings", label: "Mon profil", icon: Settings },
 ]
 
@@ -73,7 +75,12 @@ export function HomeAccountMenu({ user }: HomeAccountMenuProps) {
                     <DropdownMenuItem key={item.href} asChild className="cursor-pointer rounded-md px-2.5 py-2 focus:bg-white/5 focus:text-white">
                         <Link href={item.href} className="flex items-center gap-2.5 text-sm font-medium">
                             <item.icon className="h-4 w-4 text-slate-400" />
-                            {item.label}
+                            <span className="flex-1">{item.label}</span>
+                            {"badge" in item && item.badge ? (
+                                <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                                    {item.badge}
+                                </span>
+                            ) : null}
                         </Link>
                     </DropdownMenuItem>
                 ))}

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { remindersApi } from '../api/remindersApi';
-import type { ReminderConfigUpdate } from '../types';
+import type { ReminderConfigUpdate, ReminderJournalKind } from '../types';
 import { useToast } from '@/hooks/use-toast';
 
 export function useReminderConfig(enabled = true) {
@@ -70,6 +70,7 @@ export function useSendReminder() {
             remindersApi.sendReminder(documentId, level),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['reminders', 'history'] });
+            queryClient.invalidateQueries({ queryKey: ['reminders', 'journal'] });
             toast({
                 title: 'Relance envoyée',
                 description: 'La relance a été envoyée avec succès.',
@@ -90,5 +91,14 @@ export function useReminderHistory(documentId?: string) {
         queryKey: ['reminders', 'history', documentId],
         queryFn: () => remindersApi.getHistory(documentId),
         enabled: !!documentId,
+    });
+}
+
+export function useReminderJournal(kind?: ReminderJournalKind, limit = 80, enabled = true) {
+    return useQuery({
+        queryKey: ['reminders', 'journal', kind ?? 'all', limit],
+        queryFn: () => remindersApi.getJournal(kind, limit),
+        enabled,
+        staleTime: 30_000,
     });
 }

@@ -6,6 +6,7 @@ from app.services.quoteReminders import (
     quote_reminder_intro,
     validate_quote_reminder_config,
 )
+from app.services.reminderJournal import invoice_step_label, quote_step_label
 
 
 def _cfg(**overrides):
@@ -56,3 +57,10 @@ class TestQuoteReminders(unittest.TestCase):
         text = quote_reminder_intro(3, "28/11/2026")
         self.assertIn("28/11/2026", text)
         self.assertIn("Dernier", text)
+
+    def test_journal_step_labels(self):
+        self.assertIn("Bien reçu", quote_step_label(1))
+        self.assertIn("Questions", quote_step_label(2))
+        self.assertIn("Expiration", quote_step_label(3))
+        self.assertIn("J-3", invoice_step_label("DUE_3_DAYS"))
+        self.assertIn("J-1", invoice_step_label("DUE_1_DAY"))

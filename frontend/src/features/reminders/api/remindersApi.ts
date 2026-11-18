@@ -1,5 +1,11 @@
 import { api } from '@/lib/api';
-import type { ReminderConfig, ReminderConfigUpdate, ReminderLog } from '../types';
+import type {
+    ReminderConfig,
+    ReminderConfigUpdate,
+    ReminderJournalEntry,
+    ReminderJournalKind,
+    ReminderLog,
+} from '../types';
 
 export const remindersApi = {
     getConfig: async (): Promise<ReminderConfig> => {
@@ -38,5 +44,12 @@ export const remindersApi = {
     getHistory: async (documentId?: string): Promise<ReminderLog[]> => {
         if (!documentId) return [];
         return api.get<ReminderLog[]>(`/api/v1/reminders/documents/${documentId}/history`);
+    },
+
+    getJournal: async (kind?: ReminderJournalKind, limit = 80): Promise<ReminderJournalEntry[]> => {
+        const params = new URLSearchParams();
+        if (kind) params.set("kind", kind);
+        params.set("limit", String(limit));
+        return api.get<ReminderJournalEntry[]>(`/api/v1/reminders/logs?${params.toString()}`);
     },
 };

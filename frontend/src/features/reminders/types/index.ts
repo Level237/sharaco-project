@@ -42,3 +42,19 @@ export interface ReminderLog {
     sent_at?: string;
     error_message?: string;
 }
+
+export type ReminderJournalKind = "devis" | "facture";
+
+export interface ReminderJournalEntry {
+    id: string;
+    kind: ReminderJournalKind;
+    document_id: string;
+    document_number?: string | null;
+    client_name?: string | null;
+    client_email?: string | null;
+    step_label: string;
+    reminder_level?: number | null;
+    status: ReminderStatus;
+    sent_at?: string | null;
+    error_message?: string | null;
+}

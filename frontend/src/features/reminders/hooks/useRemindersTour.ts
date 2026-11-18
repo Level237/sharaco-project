@@ -16,6 +16,7 @@ type Options = {
     select: ReminderTourApi["select"];
     focusNode: ReminderTourApi["focusNode"];
     force?: boolean;
+    enabled?: boolean;
 };
 
 function waitForSelector(selector: string | undefined, timeoutMs = 5000) {
@@ -43,7 +44,13 @@ function waitForSelector(selector: string | undefined, timeoutMs = 5000) {
     });
 }
 
-export function useRemindersTour({ scope, select, focusNode, force = false }: Options) {
+export function useRemindersTour({
+    scope,
+    select,
+    focusNode,
+    force = false,
+    enabled = true,
+}: Options) {
     const selectRef = useRef(select);
     const focusRef = useRef(focusNode);
     const scopeRef = useRef(scope);
@@ -116,6 +123,7 @@ export function useRemindersTour({ scope, select, focusNode, force = false }: Op
     }, []);
 
     useEffect(() => {
+        if (!enabled) return;
         const seen = readStorage(TOUR_STORAGE_KEY[scope]);
         if (!force && seen) return;
 
@@ -134,7 +142,7 @@ export function useRemindersTour({ scope, select, focusNode, force = false }: Op
             instanceRef.current?.destroy();
             instanceRef.current = null;
         };
-    }, [scope, force, startTour]);
+    }, [scope, force, startTour, enabled]);
 
     return { startTour };
 }

@@ -67,3 +67,17 @@ class ReminderLogRead(BaseModel):
     error_message: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+class ReminderJournalEntry(BaseModel):
+    id: UUID
+    kind: str
+    document_id: UUID
+    document_number: Optional[str] = None
+    client_name: Optional[str] = None
+    client_email: Optional[str] = None
+    step_label: str
+    reminder_level: Optional[int] = None
+    status: str
+    sent_at: Optional[datetime] = None
+    error_message: Optional[str] = None

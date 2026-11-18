@@ -1,6 +1,8 @@
 # app/services/reminderService.py
 import os
 from sqlmodel import select
+from sqlalchemy import desc
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from datetime import datetime, timezone, timedelta
@@ -23,6 +25,7 @@ from app.services.quoteReminders import (
     quote_reminder_intro,
     validate_quote_reminder_config,
 )
+from app.services.reminderJournal import invoice_step_label, quote_step_label
 from app.core.config import settings
 from app.core.currency import get_currency_symbol
 from app.utils.datetime import to_naive_utc
@@ -541,6 +544,101 @@ class ReminderService:
         )
         result = await db.execute(statement)
         return list(result.scalars().all())
+
+    @classmethod
+    async def list_journal(
+        cls,
+        db: AsyncSession,
+        user_id: UUID,
+        kind: Optional[str] = None,
+        limit: int = 80,
+    ) -> list[dict]:
+        """Journal unifié devis + factures, limité au compte courant."""
+        cap = max(1, min(limit, 200))
+        rows: list[dict] = []
+
+        if kind in (None, "", "devis"):
+            quote_stmt = (
+                select(ReminderLog, Document, Client)
+                .join(Document, Document.id == ReminderLog.document_id)
+                .join(Client, Client.id == Document.client_id)
+                .where(
+                    Document.user_id == user_id,
+                    Client.user_id == user_id,
+                    Document.type == DocumentType.DEVIS,
+                )
+                .order_by(desc(ReminderLog.sent_at), desc(ReminderLog.id))
+                .limit(cap)
+            )
+            for log, document, client in await cls._journal_rows(db, quote_stmt):
+                rows.append(
+                    {
+                        "id": log.id,
+                        "kind": "devis",
+                        "document_id": document.id,
+                        "document_number": document.number,
+                        "client_name": client.name,
+                        "client_email": client.email,
+                        "step_label": quote_step_label(log.reminder_level),
+                        "reminder_level": log.reminder_level,
+                        "status": log.status.value if hasattr(log.status, "value") else str(log.status),
+                        "sent_at": log.sent_at,
+                        "error_message": log.error_message,
+                    }
+                )
+
+        if kind in (None, "", "facture"):
+            invoice_stmt = (
+                select(InvoiceReminder, Document, Client)
+                .join(Document, Document.id == InvoiceReminder.invoice_id)
+                .join(Client, Client.id == Document.client_id)
+                .where(
+                    Document.user_id == user_id,
+                    Client.user_id == user_id,
+                    Document.type == DocumentType.FACTURE,
+                )
+                .order_by(desc(InvoiceReminder.sent_at), desc(InvoiceReminder.id))
+                .limit(cap)
+            )
+            for log, document, client in await cls._journal_rows(db, invoice_stmt):
+                rows.append(
+                    {
+                        "id": log.id,
+                        "kind": "facture",
+                        "document_id": document.id,
+                        "document_number": document.number,
+                        "client_name": client.name,
+                        "client_email": log.recipient_email or client.email,
+                        "step_label": invoice_step_label(log.reminder_type),
+                        "reminder_level": None,
+                        "status": ReminderStatus.SENT.value,
+                        "sent_at": log.sent_at,
+                        "error_message": None,
+                    }
+                )
+
+        rows.sort(key=lambda item: cls._journal_sort_at(item.get("sent_at")), reverse=True)
+        return rows[:cap]
+
+    @staticmethod
+    async def _journal_rows(db: AsyncSession, statement) -> list:
+        try:
+            return list((await db.execute(statement)).all())
+        except SQLAlchemyError as exc:
+            logger.warning("Journal relances: requête ignorée (%s)", exc)
+            try:
+                await db.rollback()
+            except SQLAlchemyError:
+                pass
+            return []
+
+    @staticmethod
+    def _journal_sort_at(value: Optional[datetime]) -> datetime:
+        if value is None:
+            return datetime.min
+        if getattr(value, "tzinfo", None) is not None:
+            return value.replace(tzinfo=None)
+        return value
 
     # ═══════════════════════════════════════════════════════════════
     # === HELPERS ===

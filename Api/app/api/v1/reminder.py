@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import Response, HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,11 +11,18 @@ from app.services.documentService import DocumentService
 from app.services.clientService import ClientService
 from app.services.pdfRenderer import pdf_renderer
 from app.services.templateService import TemplateService
-from app.schemas.reminder import ReminderConfigCreate, ReminderConfigRead, ReminderConfigUpdate, ReminderLogRead
+from app.schemas.reminder import (
+    ReminderConfigCreate,
+    ReminderConfigRead,
+    ReminderConfigUpdate,
+    ReminderJournalEntry,
+    ReminderLogRead,
+)
 from app.models.document import DocumentStatus, DocumentType
 from app.core.limiter import limiter
 
 router = APIRouter(tags=["reminders"])
+logger = logging.getLogger(__name__)
 
 
 # ============================================================
@@ -167,6 +175,35 @@ async def send_reminder(
 # ============================================================
 # HISTORIQUE DES RELANCES
 # ============================================================
+
+@router.get("/logs", response_model=list[ReminderJournalEntry])
+async def list_reminder_logs(
+    kind: str | None = None,
+    limit: int = 80,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Journal des relances du compte (devis et/ou factures)."""
+    normalized = (kind or "").strip().lower() or None
+    if normalized not in (None, "devis", "facture"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le filtre doit être devis ou facture",
+        )
+    try:
+        return await reminder_service.list_journal(
+            db,
+            current_user.id,
+            kind=normalized,
+            limit=limit,
+        )
+    except Exception as exc:
+        logger.exception("Journal relances: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Impossible de charger le journal des relances.",
+        )
+
 
 @router.get("/documents/{document_id}/history", response_model=list[ReminderLogRead])
 async def get_reminder_history(

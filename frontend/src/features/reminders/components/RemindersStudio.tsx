@@ -2,15 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, ChevronRight, CircleHelp, GitBranch, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, ChevronRight, CircleHelp, GitBranch, Loader2, RotateCcw, ScrollText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useReminderConfig, useUpdateReminderConfig } from "../hooks/useReminders";
 import type { ReminderConfigUpdate } from "../types";
 import { QUOTE_DEFAULTS, WORKFLOWS, type WorkflowId } from "../data/workflows";
-import { workflowFromSearch } from "../lib/workflowUrl";
+import { journalFromSearch, workflowFromSearch } from "../lib/workflowUrl";
 import { useRemindersTour } from "../hooks/useRemindersTour";
+import { JournalPreview, ReminderJournal } from "./ReminderJournal";
 import { WorkflowCanvas } from "./WorkflowCanvas";
 import {
     InspectorEmpty,
@@ -41,6 +42,7 @@ export function RemindersStudio() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const openId = workflowFromSearch(searchParams);
+    const journalFilter = journalFromSearch(searchParams);
     const [selected, setSelected] = useState<SelectedNode | null>(null);
     const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
     const [form, setForm] = useState<ReminderConfigUpdate>(QUOTE_DEFAULTS);
@@ -55,6 +57,7 @@ export function RemindersStudio() {
         select: selectNode,
         focusNode,
         force: searchParams.get("guide") === "1",
+        enabled: !journalFilter,
     });
 
     const configQuery = useReminderConfig(openId === "devis");
@@ -80,7 +83,22 @@ export function RemindersStudio() {
         router.push(`${pathname}?${id}`);
     };
 
+    const openJournal = (filter: "all" | "devis" | "facture" = "all") => {
+        setSelected(null);
+        router.push(filter === "all" ? `${pathname}?journal` : `${pathname}?journal=${filter}`);
+    };
+
     const workflow = WORKFLOWS.find((item) => item.id === openId);
+
+    if (journalFilter) {
+        return (
+            <ReminderJournal
+                filter={journalFilter}
+                onFilter={openJournal}
+                onBack={() => openWorkflow(null)}
+            />
+        );
+    }
 
     if (!workflow) {
         return (
@@ -147,6 +165,27 @@ export function RemindersStudio() {
                             </button>
                         ))}
                     </div>
+
+                    <button
+                        type="button"
+                        onClick={() => openJournal("all")}
+                        className="w-full rounded-lg border border-white/10 bg-[#111113] p-4 sm:p-5 text-left hover:bg-white/[0.03] transition-colors flex items-center justify-between gap-4"
+                    >
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2.5">
+                                <ScrollText className="h-4 w-4 text-blue-400 shrink-0" />
+                                <span className="text-base font-semibold text-white">
+                                    Journal des envois
+                                </span>
+                            </div>
+                            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                                Voir les emails partis, les échecs, et ouvrir le document.
+                            </p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-slate-500 shrink-0" />
+                    </button>
+
+                    <JournalPreview onOpen={() => openJournal("all")} />
                 </div>
             </div>
         );
